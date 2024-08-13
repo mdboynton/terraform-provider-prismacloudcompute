@@ -53,30 +53,38 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"prismacloudcompute_alertprofile":                     resourceAlertprofile(),
-			"prismacloudcompute_collection":                       resourceCollection(),
-			"prismacloudcompute_custom_rule":                      resourceCustomRule(),
-			"prismacloudcompute_admission_policy":                 resourcePoliciesAdmission(),
+            // Compliance
+			"prismacloudcompute_coderepo_compliance_policy":       resourcePoliciesComplianceCoderepo(),
+			"prismacloudcompute_ci_coderepo_compliance_policy":    resourcePoliciesComplianceCiCoderepo(),
 			"prismacloudcompute_ci_image_compliance_policy":       resourcePoliciesComplianceCiImage(),
 			"prismacloudcompute_container_compliance_policy":      resourcePoliciesComplianceContainer(),
 			"prismacloudcompute_host_compliance_policy":           resourcePoliciesComplianceHost(),
-			"prismacloudcompute_container_runtime_policy":         resourcePoliciesRuntimeContainer(),
-			"prismacloudcompute_host_runtime_policy":              resourcePoliciesRuntimeHost(),
+			"prismacloudcompute_custom_compliance":                resourceCustomCompliance(),
+            // Vulnerability
 			"prismacloudcompute_ci_coderepo_vulnerability_policy": resourcePoliciesVulnerabilityCiCoderepo(),
 			"prismacloudcompute_ci_image_vulnerability_policy":    resourcePoliciesVulnerabilityCiImage(),
 			"prismacloudcompute_coderepo_vulnerability_policy":    resourcePoliciesVulnerabilityCoderepo(),
-			"prismacloudcompute_coderepo_compliance_policy":       resourcePoliciesComplianceCoderepo(),
-			"prismacloudcompute_ci_coderepo_compliance_policy":    resourcePoliciesComplianceCiCoderepo(),
 			"prismacloudcompute_host_vulnerability_policy":        resourcePoliciesVulnerabilityHost(),
 			"prismacloudcompute_image_vulnerability_policy":       resourcePoliciesVulnerabilityImage(),
-			"prismacloudcompute_registry_settings":                resourceRegistrySettings(),
-			"prismacloudcompute_registry":                         resourceRegistry(),
+            // Runtime
+			"prismacloudcompute_container_runtime_policy":         resourcePoliciesRuntimeContainer(),
+			"prismacloudcompute_host_runtime_policy":              resourcePoliciesRuntimeHost(),
+			"prismacloudcompute_custom_rule":                      resourceCustomRule(),
+            // Collections & Tags
+			"prismacloudcompute_collection":                       resourceCollection(),
+            // Alerts
+			"prismacloudcompute_alertprofile":                     resourceAlertprofile(),
+            // Access
+			"prismacloudcompute_admission_policy":                 resourcePoliciesAdmission(),
+            // Authentication
 			"prismacloudcompute_user":                             resourceUsers(),
 			"prismacloudcompute_group":                            resourceGroups(),
 			"prismacloudcompute_role":                             resourceRbacRoles(),
 			"prismacloudcompute_credential":                       resourceCredentials(),
-			"prismacloudcompute_custom_compliance":                resourceCustomCompliance(),
 			"prismacloudcompute_cloud_account":                    resourceCloudAccount(),
+            // Other
+			"prismacloudcompute_registry_settings":                resourceRegistrySettings(),
+			"prismacloudcompute_registry":                         resourceRegistry(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{

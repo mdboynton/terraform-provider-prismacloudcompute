@@ -7,6 +7,7 @@ const (
 	policyTypeComplianceCiCoderepo    = "ciCodeRepoCompliance"
 	policyTypeComplianceContainer     = "containerCompliance"
 	policyTypeComplianceHost          = "hostCompliance"
+    policyTypeComplianceTrustedImages = "trust"
 	policyTypeRuntimeContainer        = "containerRuntime"
 	policyTypeRuntimeHost             = "hostRuntime"
 	policyTypeVulnerabilityCiCoderepo = "ciCodeRepoVulnerability"
