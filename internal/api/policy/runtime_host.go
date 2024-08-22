@@ -106,7 +106,7 @@ type RuntimeHostPort struct {
 }
 
 // Get the current host runtime policy.
-func GetRuntimeHost(c api.Client) (RuntimeHostPolicy, error) {
+func GetRuntimeHost(c api.PrismaCloudComputeAPIClient) (RuntimeHostPolicy, error) {
 	var ans RuntimeHostPolicy
 	if err := c.Request(http.MethodGet, RuntimeHostEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting host runtime policy: %s", err)
@@ -115,6 +115,6 @@ func GetRuntimeHost(c api.Client) (RuntimeHostPolicy, error) {
 }
 
 // Update the current host runtime policy.
-func UpdateRuntimeHost(c api.Client, policy RuntimeHostPolicy) error {
+func UpdateRuntimeHost(c api.PrismaCloudComputeAPIClient, policy RuntimeHostPolicy) error {
 	return c.Request(http.MethodPut, RuntimeHostEndpoint, nil, policy, nil)
 }

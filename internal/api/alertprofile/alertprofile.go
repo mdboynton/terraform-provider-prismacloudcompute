@@ -292,7 +292,7 @@ type AlertProfile struct {
 }
 
 // Get all Alertprofiles.
-func ListAlertprofiles(c api.Client) ([]AlertProfile, error) {
+func ListAlertprofiles(c api.PrismaCloudComputeAPIClient) ([]AlertProfile, error) {
 	var ans []AlertProfile
 	if err := c.Request(http.MethodGet, AlertprofilesEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing Alert Profiles: %s", err)
@@ -301,7 +301,7 @@ func ListAlertprofiles(c api.Client) ([]AlertProfile, error) {
 }
 
 // Get a specific Alertprofile.
-func GetAlertprofile(c api.Client, name string) (*AlertProfile, error) {
+func GetAlertprofile(c api.PrismaCloudComputeAPIClient, name string) (*AlertProfile, error) {
 	Alertprofiles, err := ListAlertprofiles(c)
 	if err != nil {
 		return nil, err
@@ -315,16 +315,16 @@ func GetAlertprofile(c api.Client, name string) (*AlertProfile, error) {
 }
 
 // Create a new Alertprofile.
-func CreateAlertprofile(c api.Client, Alertprofile AlertProfile) error {
+func CreateAlertprofile(c api.PrismaCloudComputeAPIClient, Alertprofile AlertProfile) error {
 	return c.Request(http.MethodPost, AlertprofilesEndpoint, nil, Alertprofile, nil)
 }
 
 // Update an existing Alertprofile.
-func UpdateAlertprofile(c api.Client, Alertprofile AlertProfile) error {
+func UpdateAlertprofile(c api.PrismaCloudComputeAPIClient, Alertprofile AlertProfile) error {
 	return c.Request(http.MethodPost, AlertprofilesEndpoint, nil, Alertprofile, nil)
 }
 
 // Delete an existing Alertprofile.
-func DeleteAlertprofile(c api.Client, name string) error {
+func DeleteAlertprofile(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", AlertprofilesEndpoint, name), nil, nil, nil)
 }

@@ -54,7 +54,7 @@ type CloudScanRule struct {
 }
 
 // Get all cloud can rules
-func ListCloudScanRules(c api.Client) ([]CloudScanRule, error) {
+func ListCloudScanRules(c api.PrismaCloudComputeAPIClient) ([]CloudScanRule, error) {
 	var ans []CloudScanRule
 	if err := c.Request(http.MethodGet, CloudScanRulesEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing Cloud Scan Rules: %s", err)
@@ -63,7 +63,7 @@ func ListCloudScanRules(c api.Client) ([]CloudScanRule, error) {
 }
 
 // Get a specific cloud scan rule
-func GetCloudScanRule(c api.Client, name string) (*CloudScanRule, error) {
+func GetCloudScanRule(c api.PrismaCloudComputeAPIClient, name string) (*CloudScanRule, error) {
 	var ans []CloudScanRule
 
 	if err := c.Request(http.MethodGet, CloudScanRulesEndpoint, map[string]string{"search": name}, nil, &ans); err != nil {
@@ -78,11 +78,11 @@ func GetCloudScanRule(c api.Client, name string) (*CloudScanRule, error) {
 }
 
 // Create/Update cloud scan rules
-func UpdateCloudScanRule(c api.Client, rule []CloudScanRule) error {
+func UpdateCloudScanRule(c api.PrismaCloudComputeAPIClient, rule []CloudScanRule) error {
 	return c.Request(http.MethodPut, CloudScanRulesEndpoint, nil, rule, nil)
 }
 
 // Delete an existing cloud scan rule
-func DeleteCloudScanRule(c api.Client, name string) error {
+func DeleteCloudScanRule(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", CloudScanRulesEndpoint, name), nil, nil, nil)
 }

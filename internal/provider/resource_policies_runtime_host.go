@@ -437,7 +437,7 @@ func resourcePoliciesRuntimeHost() *schema.Resource {
 }
 
 func createPolicyRuntimeHost(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToRuntimeHostRules(d)
 	if err != nil {
 		return diag.Errorf("error creating %s policy: %s", policyTypeRuntimeHost, err)
@@ -456,7 +456,7 @@ func createPolicyRuntimeHost(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func readPolicyRuntimeHost(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -473,7 +473,7 @@ func readPolicyRuntimeHost(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func updatePolicyRuntimeHost(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToRuntimeHostRules(d)
 	if err != nil {
 		return diag.Errorf("error updating %s policy: %s", policyTypeRuntimeHost, err)

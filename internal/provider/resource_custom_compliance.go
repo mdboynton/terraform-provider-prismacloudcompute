@@ -57,7 +57,7 @@ func resourceCustomCompliance() *schema.Resource {
 }
 
 func createCustomCompliance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedCustomCompliance := convert.SchemaToCustomCompliance(d)
 	err := policy.CreateCustomCompliance(*client, parsedCustomCompliance)
 
@@ -70,7 +70,7 @@ func createCustomCompliance(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func readCustomCompliance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	retrievedCustomCompliance, err := policy.GetCustomComplianceByName(*client, d.Id())
 	if err != nil {
 		return diag.Errorf("error reading custom Compliance: %s", err)
@@ -96,7 +96,7 @@ func readCustomCompliance(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func updateCustomCompliance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedCustomCompliance := convert.SchemaToCustomCompliance(d)
 
 	if err := policy.UpdateCustomCompliance(*client, parsedCustomCompliance); err != nil {
@@ -107,7 +107,7 @@ func updateCustomCompliance(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func deleteCustomCompliance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

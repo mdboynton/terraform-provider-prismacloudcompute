@@ -26,7 +26,7 @@ type Collection struct {
 }
 
 // Get all collections.
-func ListCollections(c api.Client) ([]Collection, error) {
+func ListCollections(c api.PrismaCloudComputeAPIClient) ([]Collection, error) {
 	var ans []Collection
 	if err := c.Request(http.MethodGet, CollectionsEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing collections: %s", err)
@@ -35,7 +35,7 @@ func ListCollections(c api.Client) ([]Collection, error) {
 }
 
 // Get a specific collection.
-func GetCollection(c api.Client, name string) (*Collection, error) {
+func GetCollection(c api.PrismaCloudComputeAPIClient, name string) (*Collection, error) {
 	collections, err := ListCollections(c)
 	if err != nil {
 		return nil, err
@@ -49,16 +49,16 @@ func GetCollection(c api.Client, name string) (*Collection, error) {
 }
 
 // Create a new collection.
-func CreateCollection(c api.Client, collection Collection) error {
+func CreateCollection(c api.PrismaCloudComputeAPIClient, collection Collection) error {
 	return c.Request(http.MethodPost, CollectionsEndpoint, nil, collection, nil)
 }
 
 // Update an existing collection.
-func UpdateCollection(c api.Client, collection Collection) error {
+func UpdateCollection(c api.PrismaCloudComputeAPIClient, collection Collection) error {
 	return c.Request(http.MethodPut, fmt.Sprintf("%s/%s", CollectionsEndpoint, collection.Name), nil, collection, nil)
 }
 
 // Delete an existing collection.
-func DeleteCollection(c api.Client, name string) error {
+func DeleteCollection(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", CollectionsEndpoint, name), nil, nil, nil)
 }

@@ -110,7 +110,7 @@ func CustomRuleParseId(id string) (string, string, error) {
 }
 
 func createCustomRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedCustomRule := convert.SchemaToCustomRule(d)
 	id, err := rule.CreateCustomRule(*client, parsedCustomRule)
 
@@ -125,7 +125,7 @@ func createCustomRule(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func readCustomRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -158,7 +158,7 @@ func readCustomRule(ctx context.Context, d *schema.ResourceData, meta interface{
 }
 
 func updateCustomRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedCustomRule := convert.SchemaToCustomRule(d)
 
 	if err := rule.UpdateCustomRule(*client, parsedCustomRule); err != nil {
@@ -169,7 +169,7 @@ func updateCustomRule(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func deleteCustomRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

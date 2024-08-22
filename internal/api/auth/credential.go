@@ -44,7 +44,7 @@ type TemporaryToken struct {
 }
 
 // Get all credentials.
-func ListCredentials(c api.Client) ([]Credential, error) {
+func ListCredentials(c api.PrismaCloudComputeAPIClient) ([]Credential, error) {
 	var ans []Credential
 	if err := c.Request(http.MethodGet, CredentialsEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing credentials: %s", err)
@@ -53,7 +53,7 @@ func ListCredentials(c api.Client) ([]Credential, error) {
 }
 
 // Get a specific credential.
-func GetCredential(c api.Client, name string) (*Credential, error) {
+func GetCredential(c api.PrismaCloudComputeAPIClient, name string) (*Credential, error) {
 	credentials, err := ListCredentials(c)
 	if err != nil {
 		return nil, err
@@ -67,11 +67,11 @@ func GetCredential(c api.Client, name string) (*Credential, error) {
 }
 
 // Create a new or update an existing credential.
-func UpdateCredential(c api.Client, credential Credential) error {
+func UpdateCredential(c api.PrismaCloudComputeAPIClient, credential Credential) error {
 	return c.Request(http.MethodPost, CredentialsEndpoint, nil, credential, nil)
 }
 
 // Delete an existing credential.
-func DeleteCredential(c api.Client, name string) error {
+func DeleteCredential(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", CredentialsEndpoint, name), nil, nil, nil)
 }

@@ -128,7 +128,7 @@ func resourceCollection() *schema.Resource {
 }
 
 func createCollection(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedCollection := convert.SchemaToCollection(d)
 	if err := collection.CreateCollection(*client, parsedCollection); err != nil {
 		return diag.Errorf("error creating collection '%+v': %s", parsedCollection, err)
@@ -140,7 +140,7 @@ func createCollection(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func readCollection(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -187,7 +187,7 @@ func readCollection(ctx context.Context, d *schema.ResourceData, meta interface{
 }
 
 func updateCollection(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	parsedCollection := convert.SchemaToCollection(d)
 
@@ -199,7 +199,7 @@ func updateCollection(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func deleteCollection(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

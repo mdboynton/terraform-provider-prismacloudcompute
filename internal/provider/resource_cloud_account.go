@@ -328,7 +328,7 @@ func resourceCloudAccount() *schema.Resource {
 }
 
 func createCloudAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	parsedCredential, err := convert.SchemaToCloudAccountCredential(d)
 	if err != nil {
@@ -354,7 +354,7 @@ func createCloudAccount(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func readCloudAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -388,7 +388,7 @@ func readCloudAccount(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func updateCloudAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	parsedCloudAccountCredential, err := convert.SchemaToCloudAccountCredential(d)
 	if err != nil {
@@ -413,7 +413,7 @@ func updateCloudAccount(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func deleteCloudAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

@@ -2,138 +2,340 @@ package provider
 
 import (
 	"context"
+    "fmt"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/auth"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/convert"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+    "github.com/hashicorp/terraform-plugin-framework/diag"
+    "github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+    //"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func resourceUsers() *schema.Resource {
-	return &schema.Resource{
-		CreateContext: createUser,
-		ReadContext:   readUser,
-		UpdateContext: updateUser,
-		DeleteContext: deleteUser,
+var _ resource.Resource = &UserResource{}
+var _ resource.ResourceWithImportState = &UserResource{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"id": {
-				Description: "The ID of the user.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"authentication_type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The user authentication type.",
-			},
-			"password": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Password.",
-			},
-			"permissions": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				MaxItems:    1,
-				Description: "List of permissions.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"collections": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "Specifies the set of Defenders in-scope for working on a scan job.",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"project": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Names of projects which the user can access.",
-						},
-					},
-				},
-			},
-			"role": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Role.",
-			},
-			"username": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Username.",
-			},
-		},
-	}
+func NewUserResource() resource.Resource {
+    return &UserResource{}
 }
 
-func createUser(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
-	parsedUser, err := convert.SchemaToUser(d)
+type UserResource struct {
+    client *api.PrismaCloudComputeAPIClient
+}
+
+type UserResourceModel struct {
+    AuthenticationType types.String                    `tfsdk:"authentication_type"`
+    Username           types.String                    `tfsdk:"username"`
+    Password           types.String                    `tfsdk:"password"`
+    Role               types.String                    `tfsdk:"role"`
+    Permissions        *[]UserPermissionsResourceModel `tfsdk:"permissions"`
+}
+
+type UserPermissionsResourceModel struct {
+    Project     types.String `tfsdk:"project"`
+    Collections types.List   `tfsdk:"collections"`
+}
+
+func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+    resp.TypeName = req.ProviderTypeName + "_user"
+}
+
+func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+    resp.Schema = schema.Schema{
+        MarkdownDescription: "TODO",
+        Attributes: map[string]schema.Attribute{
+            "authentication_type": schema.StringAttribute{
+                MarkdownDescription: "TODO",
+                Required: true,
+            },
+            "username": schema.StringAttribute{
+                MarkdownDescription: "TODO",
+                Required: true,
+                PlanModifiers: []planmodifier.String{
+                    stringplanmodifier.RequiresReplace(),
+                },
+            },
+            "password": schema.StringAttribute{
+                MarkdownDescription: "TODO",
+                Required: true,
+                Sensitive: true,
+            },
+            "role": schema.StringAttribute{
+                MarkdownDescription: "TODO",
+                Required: true,
+                PlanModifiers: []planmodifier.String{
+                    stringplanmodifier.RequiresReplaceIf(
+                        func(
+                            ctx context.Context,
+                            sr planmodifier.StringRequest,
+                            rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse,
+                        ) {
+                            rrifr.RequiresReplace = (sr.PlanValue.ValueString() != sr.StateValue.ValueString()) && (sr.PlanValue.ValueString() == "admin" || sr.PlanValue.ValueString() == "operator")
+                        },
+                        "TODO",
+                        "TODO",
+                    ),
+                },
+            },
+            "permissions": schema.SetNestedAttribute{
+                NestedObject: schema.NestedAttributeObject {
+                    Attributes: map[string]schema.Attribute{
+                        "project": schema.StringAttribute{
+                            MarkdownDescription: "TODO",
+                            Required: true,
+                        },
+                        "collections": schema.ListAttribute{
+                            ElementType: types.StringType,
+                            MarkdownDescription: "TODO",
+                            Required: true,
+                        },
+                    },
+                },
+                Optional: true,
+            },
+        },
+    }
+}
+
+func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+    if req.ProviderData == nil {
+        return
+    }
+
+    client, ok := req.ProviderData.(*api.PrismaCloudComputeAPIClient)
+
+    if !ok {
+        resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+        return
+    }
+
+    r.client = client
+}
+
+func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+    // Retrieve values from plan
+    var plan UserResourceModel
+    diags := req.Plan.Get(ctx, &plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Handle state changes that would cause API errors
+    if (plan.Role.ValueString() == "admin" || plan.Role.ValueString() == "operator") && plan.Permissions != nil {
+        resp.Diagnostics.AddError(
+            "Invalid Resource Configuration",
+            "Users with role 'admin' or 'operator' cannot have assigned permissions",
+        )
+        return
+    }
+
+    // TODO: dont think we need this, since sending an empty array for permissions in this case seems to work 
+    //if (plan.Role.ValueString() != "admin" && plan.Role.ValueString() != "operator") && plan.Permissions == nil {
+    //    resp.Diagnostics.AddError(
+    //        "Invalid Resource Configuration",
+    //        "Users with role other than 'admin' or 'operator' must have assigned permissions",
+    //    )
+    //    return
+    //}
+
+    // Generate API request body from plan
+    user, diags := schemaToUser(ctx, &plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Create new user
+    _, err := auth.CreateUser(*r.client, user)
 	if err != nil {
-		return diag.Errorf("failed to create user '%+v': %s", parsedUser, err)
+		resp.Diagnostics.AddError(
+            "Error creating User resource", 
+            "Failed to create user: " + err.Error(),
+        )
+        return
 	}
 
-	if err := auth.CreateUser(*client, parsedUser); err != nil {
-		return diag.Errorf("failed to create user '%+v': %s", parsedUser, err)
-	}
+    // TODO: retrieve newly created resource and use that data to populate
+    //       state instead of using plan data (see below)
 
-	d.SetId(parsedUser.Username)
-	return readUser(ctx, d, meta)
+    // Set state to plan data
+    diags = resp.State.Set(ctx, plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
-func readUser(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+    // Get current state
+    var state UserResourceModel
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-	var diags diag.Diagnostics
+    // Get user value from Prisma Cloud
+    user, err := auth.GetUser(*r.client, state.Username.ValueString())
+    if err != nil {
+        resp.Diagnostics.AddError(
+            "Error reading User resource", 
+            "Failed to read username " + state.Username.ValueString()  + ": " + err.Error(),
+        )
+        return
+    }
+  
+    // Overwrite state values with Prisma Cloud data
+    state, diags = userToSchema(ctx, *user) 
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-	retrievedUser, err := auth.GetUser(*client, d.Id())
+    // Set refreshed state
+    diags = resp.State.Set(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+}
+
+func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+    // Retrieve values from plan
+    var plan UserResourceModel
+    diags := req.Plan.Get(ctx, &plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Generate API request body from plan
+    user, diags := schemaToUser(ctx, &plan)
+
+    // Update exsting user
+	err := auth.UpdateUser(*r.client, user)
 	if err != nil {
-		return diag.Errorf("failed to read user: %s", err)
+		resp.Diagnostics.AddError(
+            "Error updating User resource", 
+            "Failed to update user: " + err.Error(),
+        )
+        return
 	}
 
-	d.Set("authentication_type", retrievedUser.AuthType)
-	d.Set("password", retrievedUser.Password)
-	if err := d.Set("permissions", convert.UserPermissionsToSchema(retrievedUser.Permissions)); err != nil {
-		return diag.Errorf("failed to read user: %s", err)
-	}
-	d.Set("role", retrievedUser.Role)
-	d.Set("username", retrievedUser.Username)
+    // Fetch updated user from Prisma Cloud
+    updatedUser, err := auth.GetUser(*r.client, plan.Username.ValueString())
+    if err != nil {
+        resp.Diagnostics.AddError(
+            "Error updating User resource", 
+            "Failed to read username " + plan.Username.ValueString()  + ": " + err.Error(),
+        )
+        return
+    }
 
-	return diags
+    // Update plan values from user data
+    plan, diags = userToSchema(ctx, *updatedUser)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    
+    // Set updated state
+    diags = resp.State.Set(ctx, plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
-func updateUser(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
-	parsedUser, err := convert.SchemaToUser(d)
+func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+    // Retrieve values from state
+	var state UserResourceModel
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    
+    // Delete existing user
+    user := state.Username.ValueString()
+    err := auth.DeleteUser(*r.client, user)
 	if err != nil {
-		return diag.Errorf("failed to update user: %s", err)
+		resp.Diagnostics.AddError(
+            "Error deleting User resource", 
+            "Failed to delete user: " + err.Error(),
+        )
+        return
 	}
-
-	if err := auth.UpdateUser(*client, parsedUser); err != nil {
-		return diag.Errorf("failed to update user: %s", err)
-	}
-
-	return readUser(ctx, d, meta)
 }
 
-func deleteUser(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+// TODO: Define ImportState to work properly with this resource
+func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
 
-	var diags diag.Diagnostics
+func schemaToUser(ctx context.Context, plan *UserResourceModel) (auth.User, diag.Diagnostics) {
+    var diags diag.Diagnostics
 
-	if err := auth.DeleteUser(*client, d.Id()); err != nil {
-		return diag.Errorf("failed to delete user '%s': %s", d.Id(), err)
-	}
+    user := auth.User{
+        AuthType: plan.AuthenticationType.ValueString(),
+        Username: plan.Username.ValueString(),
+        Password: plan.Password.ValueString(),
+        Role: plan.Role.ValueString(),
+    }
 
-	d.SetId("")
+    if plan.Permissions != nil {
+        permissions := []auth.UserPermission{}
+        for _, permissionsObject := range *plan.Permissions {
+            collections := make([]string, 0, len(permissionsObject.Collections.Elements()))
+            diags = permissionsObject.Collections.ElementsAs(ctx, &collections, false)
+            if diags.HasError() {
+                return user, diags
+            }
+            permissions = append(permissions, auth.UserPermission{
+                Project: permissionsObject.Project.ValueString(),
+                Collections: collections,
+            })
+        }
+        user.Permissions = permissions
+    }
 
-	return diags
+	return user, diags 
+}
+
+func userToSchema(ctx context.Context, user auth.User) (UserResourceModel, diag.Diagnostics) {
+    var diags diag.Diagnostics
+
+    schema := UserResourceModel{
+        AuthenticationType: types.StringValue(user.AuthType),
+        Username: types.StringValue(user.Username),
+        Password: types.StringValue(user.Password),
+        Role: types.StringValue(user.Role),
+    }
+
+    if user.Permissions != nil {
+        permissions := []UserPermissionsResourceModel{}
+        for _, permissionsObject := range user.Permissions {
+            collections, diags := types.ListValueFrom(ctx, types.StringType, permissionsObject.Collections)
+            if diags.HasError() {
+                return schema, diags
+            }
+
+            permissions = append(permissions, UserPermissionsResourceModel{
+                Project: types.StringValue(permissionsObject.Project),
+                Collections: collections,
+            })
+        }
+        schema.Permissions = &permissions
+    }
+
+    return schema, diags
 }

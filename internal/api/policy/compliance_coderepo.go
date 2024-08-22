@@ -53,7 +53,7 @@ type ComplianceCoderepoGraceDaysPolicy struct {
 }
 
 // Get the current CI coderepo compliance policy.
-func GetComplianceCiCoderepo(c api.Client) (ComplianceCoderepoPolicy, error) {
+func GetComplianceCiCoderepo(c api.PrismaCloudComputeAPIClient) (ComplianceCoderepoPolicy, error) {
 	var ans ComplianceCoderepoPolicy
 	if err := c.Request(http.MethodGet, ComplianceCiCodereposEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting CI coderepo compliance policy: %s", err)
@@ -62,7 +62,7 @@ func GetComplianceCiCoderepo(c api.Client) (ComplianceCoderepoPolicy, error) {
 }
 
 // Get the current coderepo compliance policy.
-func GetComplianceCoderepo(c api.Client) (ComplianceCoderepoPolicy, error) {
+func GetComplianceCoderepo(c api.PrismaCloudComputeAPIClient) (ComplianceCoderepoPolicy, error) {
 	var ans ComplianceCoderepoPolicy
 	if err := c.Request(http.MethodGet, ComplianceCodereposEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting coderepo compliance policy: %s", err)
@@ -71,11 +71,11 @@ func GetComplianceCoderepo(c api.Client) (ComplianceCoderepoPolicy, error) {
 }
 
 // Update the current CI coderepo compliance policy.
-func UpdateComplianceCiCoderepo(c api.Client, policy ComplianceCoderepoPolicy) error {
+func UpdateComplianceCiCoderepo(c api.PrismaCloudComputeAPIClient, policy ComplianceCoderepoPolicy) error {
 	return c.Request(http.MethodPut, ComplianceCiCodereposEndpoint, nil, policy, nil)
 }
 
 // Update the current coderepo compliance policy.
-func UpdateComplianceCoderepo(c api.Client, policy ComplianceCoderepoPolicy) error {
+func UpdateComplianceCoderepo(c api.PrismaCloudComputeAPIClient, policy ComplianceCoderepoPolicy) error {
 	return c.Request(http.MethodPut, ComplianceCodereposEndpoint, nil, policy, nil)
 }

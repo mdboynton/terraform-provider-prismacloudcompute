@@ -22,7 +22,7 @@ type CustomRule struct {
 }
 
 // Get all custom rules.
-func ListCustomRules(c api.Client) ([]CustomRule, error) {
+func ListCustomRules(c api.PrismaCloudComputeAPIClient) ([]CustomRule, error) {
 	var ans []CustomRule
 	if err := c.Request(http.MethodGet, CustomRulesEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing custom rules: %s", err)
@@ -31,7 +31,7 @@ func ListCustomRules(c api.Client) ([]CustomRule, error) {
 }
 
 // Get a specific custom rule by ID.
-func GetCustomRuleById(c api.Client, id int) (*CustomRule, error) {
+func GetCustomRuleById(c api.PrismaCloudComputeAPIClient, id int) (*CustomRule, error) {
 	rules, err := ListCustomRules(c)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func GetCustomRuleById(c api.Client, id int) (*CustomRule, error) {
 }
 
 // Get a specific custom rule by name.
-func GetCustomRuleByName(c api.Client, name string) (*CustomRule, error) {
+func GetCustomRuleByName(c api.PrismaCloudComputeAPIClient, name string) (*CustomRule, error) {
 	rules, err := ListCustomRules(c)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func GetCustomRuleByName(c api.Client, name string) (*CustomRule, error) {
 }
 
 // Create a new custom rule.
-func CreateCustomRule(c api.Client, rule CustomRule) (int, error) {
+func CreateCustomRule(c api.PrismaCloudComputeAPIClient, rule CustomRule) (int, error) {
 	id, err := GenerateCustomRuleId(c)
 	if err != nil {
 		return -1, err
@@ -70,7 +70,7 @@ func CreateCustomRule(c api.Client, rule CustomRule) (int, error) {
 
 // Helper method to generate an ID for new custom rule.
 // Finds the maximum custom rule ID and increments it by 1.
-func GenerateCustomRuleId(c api.Client) (int, error) {
+func GenerateCustomRuleId(c api.PrismaCloudComputeAPIClient) (int, error) {
 	rules, err := ListCustomRules(c)
 	if err != nil {
 		return -1, err
@@ -87,11 +87,11 @@ func GenerateCustomRuleId(c api.Client) (int, error) {
 }
 
 // Update an existing custom rule.
-func UpdateCustomRule(c api.Client, rule CustomRule) error {
+func UpdateCustomRule(c api.PrismaCloudComputeAPIClient, rule CustomRule) error {
 	return c.Request(http.MethodPut, fmt.Sprintf("%s/%d", CustomRulesEndpoint, rule.Id), nil, rule, nil)
 }
 
 // Delete an existing custom rule.
-func DeleteCustomRule(c api.Client, id int) error {
+func DeleteCustomRule(c api.PrismaCloudComputeAPIClient, id int) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%d", CustomRulesEndpoint, id), nil, nil, nil)
 }

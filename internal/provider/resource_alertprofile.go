@@ -793,7 +793,7 @@ func resourceAlertprofile() *schema.Resource {
 }
 
 func createAlertprofile(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedAlertprofile, err := convert.SchemaToAlertprofile(d)
 	if err != nil {
 		return diag.Errorf("failed to create Alert Profile '%+v': %s", parsedAlertprofile, err)
@@ -808,7 +808,7 @@ func createAlertprofile(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func readAlertprofile(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -843,7 +843,7 @@ func readAlertprofile(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func updateAlertprofile(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	parsedAlertprofile, err := convert.SchemaToAlertprofile(d)
 	if err != nil {
@@ -858,7 +858,7 @@ func updateAlertprofile(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func deleteAlertprofile(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

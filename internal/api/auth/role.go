@@ -21,7 +21,7 @@ type RolePermission struct {
 }
 
 // Get all roles.
-func ListRoles(c api.Client) ([]Role, error) {
+func ListRoles(c api.PrismaCloudComputeAPIClient) ([]Role, error) {
 	var ans []Role
 	if err := c.Request(http.MethodGet, RolesEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing roles: %s", err)
@@ -30,7 +30,7 @@ func ListRoles(c api.Client) ([]Role, error) {
 }
 
 // Get a specific role.
-func GetRole(c api.Client, name string) (*Role, error) {
+func GetRole(c api.PrismaCloudComputeAPIClient, name string) (*Role, error) {
 	roles, err := ListRoles(c)
 	if err != nil {
 		return nil, err
@@ -44,16 +44,16 @@ func GetRole(c api.Client, name string) (*Role, error) {
 }
 
 // Create a new role.
-func CreateRole(c api.Client, role Role) error {
+func CreateRole(c api.PrismaCloudComputeAPIClient, role Role) error {
 	return c.Request(http.MethodPost, RolesEndpoint, nil, role, nil)
 }
 
 // Update an existing role.
-func UpdateRole(c api.Client, role Role) error {
+func UpdateRole(c api.PrismaCloudComputeAPIClient, role Role) error {
 	return c.Request(http.MethodPut, RolesEndpoint, nil, role, nil)
 }
 
 // Delete an existing role.
-func DeleteRole(c api.Client, name string) error {
+func DeleteRole(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", RolesEndpoint, name), nil, nil, nil)
 }

@@ -48,7 +48,7 @@ func dataSourceCustomCompliance() *schema.Resource {
 }
 
 func dataSourceCustomComplianceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	if name := d.Get("name").(string); name != "" {
 		retrievedCustomCompliance, err := policy.GetCustomComplianceByName(*client, name)

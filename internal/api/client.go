@@ -13,17 +13,17 @@ import (
 	"time"
 )
 
-type APIClientConfig struct {
-	ConsoleURL           string `json:"console_url"`
-	Project              string `json:"project"`
-	Username             string `json:"username"`
-	Password             string `json:"password"`
-	SkipCertVerification bool   `json:"skip_cert_verification"`
+type PrismaCloudComputeAPIClientConfig struct {
+	ConsoleURL           string `tfsdk:"console_url"`
+	//Project              string `tfsdk:"project"`
+	Username             string `tfsdk:"username"`
+	Password             string `tfsdk:"password"`
+	Insecure             bool   `tfsdk:"insecure"`
+	//ConfigFile           string `tfsdk:"config_file"`
 }
 
-// A connection to Prisma Cloud Compute.
-type Client struct {
-	Config     APIClientConfig
+type PrismaCloudComputeAPIClient struct {
+	Config     PrismaCloudComputeAPIClientConfig
 	HTTPClient *http.Client
 	JWT        string
 }
@@ -32,8 +32,8 @@ type ErrResponse struct {
 	Err string
 }
 
-func (c *Client) Initialize(filename string) error {
-	c2 := Client{}
+func (c *PrismaCloudComputeAPIClient) Initialize(filename string) error {
+	c2 := PrismaCloudComputeAPIClient{}
 
 	if filename != "" {
 		var (
@@ -56,9 +56,9 @@ func (c *Client) Initialize(filename string) error {
 		c.Config.ConsoleURL = c2.Config.ConsoleURL
 	}
 
-	if c.Config.Project == "" && c2.Config.Project != "" {
-		c.Config.Project = c2.Config.Project
-	}
+	//if c.Config.Project == "" && c2.Config.Project != "" {
+	//	c.Config.Project = c2.Config.Project
+	//}
 
 	if c.Config.Username == "" && c2.Config.Username != "" {
 		c.Config.Username = c2.Config.Username
@@ -73,8 +73,7 @@ func (c *Client) Initialize(filename string) error {
 	return c.Authenticate()
 }
 
-// Communicate with the Prisma Cloud Compute API.
-func (c *Client) Request(method, endpoint string, query, data, response interface{}) (err error) {
+func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, data, response interface{}) (err error) {
 	parsedURL, err := url.Parse(c.Config.ConsoleURL)
 	if err != nil {
 		return err
@@ -102,18 +101,19 @@ func (c *Client) Request(method, endpoint string, query, data, response interfac
 	req.Header.Set("Content-Type", "application/json")
 
 	// TODO: simplify logic
-	if c.Config.Project != "" {
-		queryParams := req.URL.Query()
-		queryParams.Set("project", c.Config.Project)
-		if query != nil {
-			if queryMap, ok := query.(map[string]string); ok {
-				for key, val := range queryMap {
-					queryParams.Add(key, val)
-				}
-			}
-		}
-		req.URL.RawQuery = queryParams.Encode()
-	} else if query != nil {
+    //if c.Config.Project != "" {
+	//	queryParams := req.URL.Query()
+	//	//queryParams.Set("project", c.Config.Project)
+	//	if query != nil {
+	//		if queryMap, ok := query.(map[string]string); ok {
+	//			for key, val := range queryMap {
+	//				queryParams.Add(key, val)
+	//			}
+	//		}
+	//	}
+	//	req.URL.RawQuery = queryParams.Encode()
+	//} else if query != nil {
+    if query != nil {
 		queryParams := req.URL.Query()
 		if queryMap, ok := query.(map[string]string); ok {
 			for key, val := range queryMap {
@@ -163,9 +163,7 @@ func (c *Client) Request(method, endpoint string, query, data, response interfac
 	return nil
 }
 
-// Authenticate with the Prisma Cloud Compute Console.
-func (c *Client) Authenticate() (err error) {
-
+func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
 	type AuthRequest struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -180,16 +178,17 @@ func (c *Client) Authenticate() (err error) {
 		return fmt.Errorf("error POSTing to authenticate endpoint: %v", err)
 	}
 	c.JWT = res.Token
+
 	return nil
 }
 
 // Create Client and authenticate.
-func APIClient(config APIClientConfig) (*Client, error) {
-	apiClient := &Client{
+func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPIClient, error) {
+	apiClient := &PrismaCloudComputeAPIClient{
 		Config: config,
 	}
 
-	if config.SkipCertVerification {
+	if config.Insecure {
 		apiClient.HTTPClient = &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{

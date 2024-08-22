@@ -32,7 +32,7 @@ type RegistrySpecification struct {
 }
 
 // Get the current registry scan settings.
-func GetRegistrySettings(c api.Client) (RegistrySettings, error) {
+func GetRegistrySettings(c api.PrismaCloudComputeAPIClient) (RegistrySettings, error) {
 	var ans RegistrySettings
 	if err := c.Request(http.MethodGet, SettingsRegistryEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting registry settings: %s", err)
@@ -41,10 +41,10 @@ func GetRegistrySettings(c api.Client) (RegistrySettings, error) {
 }
 
 // Update the current registry scan settings.
-func UpdateRegistrySettings(c api.Client, registry RegistrySettings) error {
+func UpdateRegistrySettings(c api.PrismaCloudComputeAPIClient, registry RegistrySettings) error {
 	return c.Request(http.MethodPut, SettingsRegistryEndpoint, nil, registry, nil)
 }
 
-func AddRegistrySetting(c api.Client, registry RegistrySpecification) error {
+func AddRegistrySetting(c api.PrismaCloudComputeAPIClient, registry RegistrySpecification) error {
 	return c.Request(http.MethodPost, SettingsRegistryEndpoint, nil, registry, nil)
 }

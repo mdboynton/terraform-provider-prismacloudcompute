@@ -67,7 +67,7 @@ func resourcePoliciesAdmission() *schema.Resource {
 }
 
 func createPolicyAdmission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToAdmissionRules(d)
 
 	if err != nil {
@@ -88,7 +88,7 @@ func createPolicyAdmission(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func readPolicyAdmission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -105,7 +105,7 @@ func readPolicyAdmission(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func updatePolicyAdmission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToAdmissionRules(d)
 	if err != nil {
 		return diag.Errorf("error updating %s policy: %s", policyTypeAdmission, err)

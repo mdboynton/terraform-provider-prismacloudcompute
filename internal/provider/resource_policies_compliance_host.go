@@ -102,7 +102,7 @@ func resourcePoliciesComplianceHost() *schema.Resource {
 }
 
 func createPolicyComplianceHost(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToComplianceDeployedRules(d)
 	if err != nil {
 		return fmt.Errorf("error creating %s policy: %s", policyTypeComplianceHost, err)
@@ -122,7 +122,7 @@ func createPolicyComplianceHost(d *schema.ResourceData, meta interface{}) error 
 }
 
 func readPolicyComplianceHost(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	retrievedPolicy, err := policy.GetComplianceHost(*client)
 	if err != nil {
 		return fmt.Errorf("error reading %s policy: %s", policyTypeComplianceHost, err)
@@ -135,7 +135,7 @@ func readPolicyComplianceHost(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updatePolicyComplianceHost(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToComplianceDeployedRules(d)
 	if err != nil {
 		return fmt.Errorf("error updating %s policy: %s", policyTypeComplianceHost, err)

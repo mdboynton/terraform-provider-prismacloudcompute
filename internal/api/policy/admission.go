@@ -23,7 +23,7 @@ type AdmissionRule struct {
 }
 
 // Get the current admission policy.
-func GetAdmission(c api.Client) (AdmissionPolicy, error) {
+func GetAdmission(c api.PrismaCloudComputeAPIClient) (AdmissionPolicy, error) {
 	var ans AdmissionPolicy
 	if err := c.Request(http.MethodGet, AdmissionEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting admission policy: %s", err)
@@ -32,6 +32,6 @@ func GetAdmission(c api.Client) (AdmissionPolicy, error) {
 }
 
 // Update the current admission policy.
-func UpdateAdmission(c api.Client, policy AdmissionPolicy) error {
+func UpdateAdmission(c api.PrismaCloudComputeAPIClient, policy AdmissionPolicy) error {
 	return c.Request(http.MethodPut, AdmissionEndpoint, nil, policy, nil)
 }

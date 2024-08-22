@@ -128,7 +128,7 @@ func resourceRegistrySettings() *schema.Resource {
 }
 
 func createRegistrySettings(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRegistry := settings.RegistrySettings{
 		Specifications: convert.SchemaToRegistrySpecification(d),
 	}
@@ -142,7 +142,7 @@ func createRegistrySettings(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func readRegistrySettings(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -159,7 +159,7 @@ func readRegistrySettings(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func updateRegistrySettings(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRegistry := settings.RegistrySettings{
 		Specifications: convert.SchemaToRegistrySpecification(d),
 	}
@@ -172,7 +172,7 @@ func updateRegistrySettings(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func deleteRegistrySettings(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

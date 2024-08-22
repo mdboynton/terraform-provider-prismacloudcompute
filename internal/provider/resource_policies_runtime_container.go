@@ -505,7 +505,7 @@ func resourcePoliciesRuntimeContainer() *schema.Resource {
 }
 
 func createPolicyRuntimeContainer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToRuntimeContainerRules(d)
 	if err != nil {
 		return diag.Errorf("error creating %s policy: %s", policyTypeRuntimeContainer, err)
@@ -532,7 +532,7 @@ func createPolicyRuntimeContainer(ctx context.Context, d *schema.ResourceData, m
 }
 
 func readPolicyRuntimeContainer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -549,7 +549,7 @@ func readPolicyRuntimeContainer(ctx context.Context, d *schema.ResourceData, met
 }
 
 func updatePolicyRuntimeContainer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var learningDisabled bool
 	if val, ok := d.GetOk("learning_disabled"); ok {

@@ -61,7 +61,7 @@ func resourceRbacRoles() *schema.Resource {
 }
 
 func createRbacRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRole, err := convert.SchemaToRbacRole(d)
 	if err != nil {
 		return diag.Errorf("error creating role '%+v': %s", parsedRole, err)
@@ -76,7 +76,7 @@ func createRbacRole(ctx context.Context, d *schema.ResourceData, meta interface{
 }
 
 func readRbacRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -95,7 +95,7 @@ func readRbacRole(ctx context.Context, d *schema.ResourceData, meta interface{})
 }
 
 func updateRbacRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRole, err := convert.SchemaToRbacRole(d)
 	if err != nil {
 		return diag.Errorf("error updating role: %s", err)
@@ -109,7 +109,7 @@ func updateRbacRole(ctx context.Context, d *schema.ResourceData, meta interface{
 }
 
 func deleteRbacRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

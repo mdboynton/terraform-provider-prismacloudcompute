@@ -54,7 +54,7 @@ func dataSourceCustomRule() *schema.Resource {
 }
 
 func dataSourceCustomRuleRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	if name := d.Get("name").(string); name != "" {
 		retrievedCustomRule, err := rule.GetCustomRuleByName(*client, name)

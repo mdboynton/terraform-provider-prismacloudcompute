@@ -97,7 +97,7 @@ func resourceGroups() *schema.Resource {
 }
 
 func createGroup(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedGroup, err := convert.SchemaToGroup(d)
 	if err != nil {
 		return diag.Errorf("error creating group '%+v': %s", parsedGroup, err)
@@ -112,7 +112,7 @@ func createGroup(ctx context.Context, d *schema.ResourceData, meta interface{}) 
 }
 
 func readGroup(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -138,7 +138,7 @@ func readGroup(ctx context.Context, d *schema.ResourceData, meta interface{}) di
 }
 
 func updateGroup(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedGroup, err := convert.SchemaToGroup(d)
 	if err != nil {
 		return diag.Errorf("error updating group: %s", err)
@@ -152,7 +152,7 @@ func updateGroup(ctx context.Context, d *schema.ResourceData, meta interface{}) 
 }
 
 func deleteGroup(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

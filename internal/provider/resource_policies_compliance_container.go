@@ -103,7 +103,7 @@ func resourcePoliciesComplianceContainer() *schema.Resource {
 }
 
 func createPolicyComplianceContainer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToComplianceDeployedRules(d)
 	if err != nil {
 		return diag.Errorf("error creating %s policy: %s", policyTypeComplianceContainer, err)
@@ -123,7 +123,7 @@ func createPolicyComplianceContainer(ctx context.Context, d *schema.ResourceData
 }
 
 func readPolicyComplianceContainer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -139,7 +139,7 @@ func readPolicyComplianceContainer(ctx context.Context, d *schema.ResourceData, 
 }
 
 func updatePolicyComplianceContainer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToComplianceDeployedRules(d)
 	if err != nil {
 		return diag.Errorf("error updating %s policy: %s", policyTypeComplianceContainer, err)

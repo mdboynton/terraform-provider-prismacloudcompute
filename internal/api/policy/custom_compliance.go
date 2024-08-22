@@ -18,7 +18,7 @@ type CustomCompliance struct {
 }
 
 // Get all custom Compliances.
-func ListCustomCompliance(c api.Client) ([]CustomCompliance, error) {
+func ListCustomCompliance(c api.PrismaCloudComputeAPIClient) ([]CustomCompliance, error) {
 	var ans []CustomCompliance
 	if err := c.Request(http.MethodGet, CustomCompliancesEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing custom Compliances: %s", err)
@@ -27,7 +27,7 @@ func ListCustomCompliance(c api.Client) ([]CustomCompliance, error) {
 }
 
 // Get a specific custom Compliance by ID.
-func GetCustomComplianceById(c api.Client, id int) (*CustomCompliance, error) {
+func GetCustomComplianceById(c api.PrismaCloudComputeAPIClient, id int) (*CustomCompliance, error) {
 	compliances, err := ListCustomCompliance(c)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func GetCustomComplianceById(c api.Client, id int) (*CustomCompliance, error) {
 }
 
 // Get a specific custom Compliance by name.
-func GetCustomComplianceByName(c api.Client, name string) (*CustomCompliance, error) {
+func GetCustomComplianceByName(c api.PrismaCloudComputeAPIClient, name string) (*CustomCompliance, error) {
 	compliances, err := ListCustomCompliance(c)
 	if err != nil {
 		return nil, err
@@ -55,14 +55,14 @@ func GetCustomComplianceByName(c api.Client, name string) (*CustomCompliance, er
 }
 
 // Create a new custom compliance.
-// func CreateCustomCompliance(c api.Client, compliance CustomCompliance) (int, error) {
-func CreateCustomCompliance(c api.Client, compliance CustomCompliance) error {
+// func CreateCustomCompliance(c api.PrismaCloudComputeAPIClient, compliance CustomCompliance) (int, error) {
+func CreateCustomCompliance(c api.PrismaCloudComputeAPIClient, compliance CustomCompliance) error {
 	return UpdateCustomCompliance(c, compliance)
 }
 
 // Helper method to generate an ID for new custom Compliance.
 // Finds the maximum custom Compliance ID and increments it by 1.
-func GenerateCustomComplianceId(c api.Client) (int, error) {
+func GenerateCustomComplianceId(c api.PrismaCloudComputeAPIClient) (int, error) {
 	compliances, err := ListCustomCompliance(c)
 	if err != nil {
 		return -1, err
@@ -79,14 +79,14 @@ func GenerateCustomComplianceId(c api.Client) (int, error) {
 }
 
 // Update an existing custom Compliance.
-func UpdateCustomCompliance(c api.Client, compliance CustomCompliance) error {
+func UpdateCustomCompliance(c api.PrismaCloudComputeAPIClient, compliance CustomCompliance) error {
 	var ans CustomCompliance
 
 	return c.Request(http.MethodPut, CustomCompliancesEndpoint, nil, compliance, &ans)
 }
 
 // Delete an existing custom Compliance.
-func DeleteCustomCompliance(c api.Client, name string) error {
+func DeleteCustomCompliance(c api.PrismaCloudComputeAPIClient, name string) error {
 	compliances, err := ListCustomCompliance(c)
 	if err != nil {
 		return err

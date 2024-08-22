@@ -132,7 +132,7 @@ func resourcePoliciesComplianceCoderepo() *schema.Resource {
 }
 
 func createPolicyComplianceCoderepo(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToComplianceCoderepoRules(d)
 	if err != nil {
 		return diag.Errorf("error creating %s policy: %s", policyTypeComplianceCoderepo, err)
@@ -152,7 +152,7 @@ func createPolicyComplianceCoderepo(ctx context.Context, d *schema.ResourceData,
 }
 
 func readPolicyComplianceCoderepo(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -169,7 +169,7 @@ func readPolicyComplianceCoderepo(ctx context.Context, d *schema.ResourceData, m
 }
 
 func updatePolicyComplianceCoderepo(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedRules, err := convert.SchemaToComplianceCoderepoRules(d)
 	if err != nil {
 		return diag.Errorf("error updating %s policy: %s", policyTypeComplianceCoderepo, err)

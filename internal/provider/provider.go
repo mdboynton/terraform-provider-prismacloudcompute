@@ -1,131 +1,138 @@
 package provider
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"os"
+    "context"
+	//"encoding/json"
+	//"fmt"
+	//"io/ioutil"
+	//"os"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+    "github.com/hashicorp/terraform-plugin-framework/datasource"
+	//"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+    "github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func Provider() *schema.Provider {
-	return &schema.Provider{
-		Schema: map[string]*schema.Schema{
-			"console_url": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The Prisma Cloud Compute Console URL",
-				DefaultFunc: schema.EnvDefaultFunc("PRISMACLOUDCOMPUTE_CONSOLE_URL", nil),
-			},
-			"project": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The Prisma Cloud Compute project",
-				DefaultFunc: schema.EnvDefaultFunc("PRISMACLOUDCOMPUTE_PROJECT", nil),
-			},
-			"username": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Prisma Cloud Compute username",
-				DefaultFunc: schema.EnvDefaultFunc("PRISMACLOUDCOMPUTE_USERNAME", nil),
-			},
-			"password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Prisma Cloud Compute password",
-				DefaultFunc: schema.EnvDefaultFunc("PRISMACLOUDCOMPUTE_PASSWORD", nil),
-				Sensitive:   true,
-			},
-			"skip_cert_verification": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether or not to skip certificate verification",
-				Default:     true,
-			},
-			"config_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Configuration file in JSON format. See examples/creds.json",
-				DefaultFunc: schema.EnvDefaultFunc("PRISMACLOUDCOMPUTE_CONFIG_FILE", nil),
-			},
-		},
+// Ensure KubernetesProvider satisfies various provider interfaces.
+var (
+	_ provider.Provider              = &PrismaCloudComputeProvider{}
+)
 
-		ResourcesMap: map[string]*schema.Resource{
-			"prismacloudcompute_alertprofile":                     resourceAlertprofile(),
-			"prismacloudcompute_collection":                       resourceCollection(),
-			"prismacloudcompute_custom_rule":                      resourceCustomRule(),
-			"prismacloudcompute_admission_policy":                 resourcePoliciesAdmission(),
-			"prismacloudcompute_ci_image_compliance_policy":       resourcePoliciesComplianceCiImage(),
-			"prismacloudcompute_container_compliance_policy":      resourcePoliciesComplianceContainer(),
-			"prismacloudcompute_host_compliance_policy":           resourcePoliciesComplianceHost(),
-			"prismacloudcompute_container_runtime_policy":         resourcePoliciesRuntimeContainer(),
-			"prismacloudcompute_host_runtime_policy":              resourcePoliciesRuntimeHost(),
-			"prismacloudcompute_ci_coderepo_vulnerability_policy": resourcePoliciesVulnerabilityCiCoderepo(),
-			"prismacloudcompute_ci_image_vulnerability_policy":    resourcePoliciesVulnerabilityCiImage(),
-			"prismacloudcompute_coderepo_vulnerability_policy":    resourcePoliciesVulnerabilityCoderepo(),
-			"prismacloudcompute_coderepo_compliance_policy":       resourcePoliciesComplianceCoderepo(),
-			"prismacloudcompute_ci_coderepo_compliance_policy":    resourcePoliciesComplianceCiCoderepo(),
-			"prismacloudcompute_host_vulnerability_policy":        resourcePoliciesVulnerabilityHost(),
-			"prismacloudcompute_image_vulnerability_policy":       resourcePoliciesVulnerabilityImage(),
-			"prismacloudcompute_registry_settings":                resourceRegistrySettings(),
-			"prismacloudcompute_registry":                         resourceRegistry(),
-			"prismacloudcompute_user":                             resourceUsers(),
-			"prismacloudcompute_group":                            resourceGroups(),
-			"prismacloudcompute_role":                             resourceRbacRoles(),
-			"prismacloudcompute_credential":                       resourceCredentials(),
-			"prismacloudcompute_custom_compliance":                resourceCustomCompliance(),
-			"prismacloudcompute_cloud_account":                    resourceCloudAccount(),
-		},
-
-		DataSourcesMap: map[string]*schema.Resource{
-			"prismacloudcompute_custom_rule":       dataSourceCustomRule(),
-			"prismacloudcompute_custom_compliance": dataSourceCustomCompliance(),
-		},
-
-		ConfigureFunc: configure,
-	}
+func New(version string) func() provider.Provider {
+    return func() provider.Provider {
+        return &PrismaCloudComputeProvider {
+            version: version,
+        }
+    }
 }
 
-func configure(d *schema.ResourceData) (interface{}, error) {
-	var config api.APIClientConfig
-	if val, ok := d.GetOk("config_file"); ok {
-		configFile, err := os.Open(val.(string))
-		if err != nil {
-			return nil, fmt.Errorf("error opening config file: %s", err)
-		}
-		defer configFile.Close()
+type PrismaCloudComputeProvider struct {
+    version string
+}
 
-		fileContent, err := ioutil.ReadAll(configFile)
-		if err != nil {
-			return nil, fmt.Errorf("error reading config file: %s", err)
-		}
-		if err := json.Unmarshal(fileContent, &config); err != nil {
-			return nil, fmt.Errorf("error unmarshalling config file: %s", err)
-		}
-	}
+type PrismaCloudComputeProviderModel struct {
+    ConsoleUrl types.String `tfsdk:"console_url"`
+    //Project types.String `tfsdk:"project"`
+    Username types.String `tfsdk:"username"`
+    Password types.String `tfsdk:"password"`
+    Insecure types.Bool `tfsdk:"insecure"`
+    //ConfigFile types.String `tfsdk:"config_file"`
+}
 
-	if val, ok := d.GetOk("console_url"); ok {
-		config.ConsoleURL = val.(string)
-	}
-	if val, ok := d.GetOk("project"); ok {
-		config.Project = val.(string)
-	}
-	if val, ok := d.GetOk("username"); ok {
-		config.Username = val.(string)
-	}
-	if val, ok := d.GetOk("password"); ok {
-		config.Password = val.(string)
-	}
-	if val, ok := d.GetOk("skip_cert_verification"); ok {
-		config.SkipCertVerification = val.(bool)
-	}
+func (p *PrismaCloudComputeProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+    resp.Schema = schema.Schema{
+        Attributes: map[string]schema.Attribute{
+            "console_url": schema.StringAttribute{
+				Optional:    true,
+				Description: "The Prisma Cloud Compute Console URL",
+            },
+            //"project": schema.StringAttribute{
+			//	Optional:    true,
+			//	Description: "The Prisma Cloud Compute project",
+            //},
+            "username": schema.StringAttribute{
+				Optional:    true,
+				Description: "Prisma Cloud Compute username",
+            },
+            "password": schema.StringAttribute{
+				Optional:    true,
+				Description: "Prisma Cloud Compute password",
+				Sensitive:   true,
+            },
+            "insecure": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Whether Prisma Cloud Compute host should be accessed without verifying the TLS certificate",
+            },
+            //"config_file": schema.StringAttribute{
+			//	Optional:    true,
+			//	Description: "Configuration file in JSON format. See examples/creds.json",
+            //},
+        },
+    }
+}
 
-	client, err := api.APIClient(config)
+func (p *PrismaCloudComputeProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+    resp.TypeName = "prismacloudcompute"
+    resp.Version = p.version
+}
+
+func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() resource.Resource {
+    return []func() resource.Resource{
+       NewUserResource, 
+    }
+}
+
+func (p *PrismaCloudComputeProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+    return []func() datasource.DataSource{}
+}
+
+func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+    var config api.PrismaCloudComputeAPIClientConfig
+    diags := req.Config.Get(ctx, &config)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    tflog.Debug(ctx, "provider configure: config created")
+
+    //// TODO: Error handling for attributes
+
+    //// Default values to environment variables, but override
+    //// with Terraform configuration if set
+    //consoleUrl := os.Getenv("PRISMACLOUDCOMPUTE_CONSOLE_URL")
+    //username := os.Getenv("PRISMACLOUDCOMPUTE_USERNAME")
+    //password := os.Getenv("PRISMACLOUDCOMPUTE_PASSWORD")
+    //// TODO: add remaining provider value defaults
+
+    //// TODO: add error handling for defaults/env vars
+
+    //config.ConsoleUrl = consoleUrl
+    //config.Username = username
+    //config.Password = password
+
+    //if !config.ConsoleUrl.IsNull() {
+    //    consoleUrl = config.ConsoleUrl.ValueString()
+    //}
+
+    //if !config.Username.IsNull() {
+    //    username = config.Username.ValueString()
+    //}
+
+    //if !config.Password.IsNull() {
+    //    password = config.Password.ValueString()
+    //}
+
+    client, err := api.Client(config)
 	if err != nil {
-		return nil, fmt.Errorf("error creating API client: %s", err)
-	}
+	    resp.Diagnostics.AddError("error creating API client", err.Error())
+    }
 
-	return client, nil
+	//return client
+    resp.DataSourceData = client
+    resp.ResourceData = client
 }

@@ -31,7 +31,7 @@ type GroupUser struct {
 }
 
 // Get all groups.
-func ListGroups(c api.Client) ([]Group, error) {
+func ListGroups(c api.PrismaCloudComputeAPIClient) ([]Group, error) {
 	var ans []Group
 	if err := c.Request(http.MethodGet, GroupsEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing groups: %s", err)
@@ -40,7 +40,7 @@ func ListGroups(c api.Client) ([]Group, error) {
 }
 
 // Get a specific group.
-func GetGroup(c api.Client, name string) (*Group, error) {
+func GetGroup(c api.PrismaCloudComputeAPIClient, name string) (*Group, error) {
 	groups, err := ListGroups(c)
 	if err != nil {
 		return nil, err
@@ -54,16 +54,16 @@ func GetGroup(c api.Client, name string) (*Group, error) {
 }
 
 // Create a new group.
-func CreateGroup(c api.Client, group Group) error {
+func CreateGroup(c api.PrismaCloudComputeAPIClient, group Group) error {
 	return c.Request(http.MethodPost, GroupsEndpoint, nil, group, nil)
 }
 
 // Update an existing group.
-func UpdateGroup(c api.Client, group Group) error {
+func UpdateGroup(c api.PrismaCloudComputeAPIClient, group Group) error {
 	return c.Request(http.MethodPut, fmt.Sprintf("%s/%s", GroupsEndpoint, group.Name), nil, group, nil)
 }
 
 // Delete an existing group.
-func DeleteGroup(c api.Client, name string) error {
+func DeleteGroup(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", GroupsEndpoint, name), nil, nil, nil)
 }

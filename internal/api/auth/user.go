@@ -22,8 +22,7 @@ type UserPermission struct {
 	Project     string   `json:"project,omitempty"`
 }
 
-// Get all users.
-func ListUsers(c api.Client) ([]User, error) {
+func ListUsers(c api.PrismaCloudComputeAPIClient) ([]User, error) {
 	var ans []User
 	if err := c.Request(http.MethodGet, UsersEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing users: %s", err)
@@ -31,8 +30,7 @@ func ListUsers(c api.Client) ([]User, error) {
 	return ans, nil
 }
 
-// Get a specific user.
-func GetUser(c api.Client, name string) (*User, error) {
+func GetUser(c api.PrismaCloudComputeAPIClient, name string) (*User, error) {
 	users, err := ListUsers(c)
 	if err != nil {
 		return nil, err
@@ -45,17 +43,19 @@ func GetUser(c api.Client, name string) (*User, error) {
 	return nil, fmt.Errorf("user '%s' not found", name)
 }
 
-// Create a new user.
-func CreateUser(c api.Client, user User) error {
-	return c.Request(http.MethodPost, UsersEndpoint, nil, user, nil)
+func CreateUser(c api.PrismaCloudComputeAPIClient, user User) (*User, error) {
+    err := c.Request(http.MethodPost, UsersEndpoint, nil, user, nil)
+	if err != nil {
+		return nil, err
+	}
+
+    return GetUser(c, user.Username)
 }
 
-// Update an existing user.
-func UpdateUser(c api.Client, user User) error {
+func UpdateUser(c api.PrismaCloudComputeAPIClient, user User) error {
 	return c.Request(http.MethodPut, UsersEndpoint, nil, user, nil)
 }
 
-// Delete an existing user.
-func DeleteUser(c api.Client, name string) error {
+func DeleteUser(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", UsersEndpoint, name), nil, nil, nil)
 }

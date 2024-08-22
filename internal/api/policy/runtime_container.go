@@ -105,7 +105,7 @@ type RuntimeContainerDeniedList struct {
 }
 
 // Get the current container runtime policy.
-func GetRuntimeContainer(c api.Client) (RuntimeContainerPolicy, error) {
+func GetRuntimeContainer(c api.PrismaCloudComputeAPIClient) (RuntimeContainerPolicy, error) {
 	var ans RuntimeContainerPolicy
 	if err := c.Request(http.MethodGet, RuntimeContainerEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting container runtime policy: %s", err)
@@ -114,12 +114,12 @@ func GetRuntimeContainer(c api.Client) (RuntimeContainerPolicy, error) {
 }
 
 // Update the current container runtime policy.
-func UpdateRuntimeContainer(c api.Client, policy RuntimeContainerPolicy) error {
+func UpdateRuntimeContainer(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy) error {
 	return c.Request(http.MethodPut, RuntimeContainerEndpoint, nil, policy, nil)
 }
 
 // Add new container runtime policy rule
-func SetRuntimeContainerRule(c api.Client, policy RuntimeContainerPolicy) error {
+func SetRuntimeContainerRule(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy) error {
 	var err error
 	for _, val := range policy.Rules {
 		err = c.Request(http.MethodPost, RuntimeContainerEndpoint, nil, val, nil)

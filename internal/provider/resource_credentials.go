@@ -133,7 +133,7 @@ func resourceCredentials() *schema.Resource {
 }
 
 func createCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 	parsedCredential, err := convert.SchemaToCredential(d)
 	if err != nil {
 		return diag.Errorf("error converting schema to credential: %s", err)
@@ -147,7 +147,7 @@ func createCredentials(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func readCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 
@@ -180,7 +180,7 @@ func readCredentials(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func updateCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	parsedCredential, err := convert.SchemaToCredential(d)
 	if err != nil {
@@ -195,7 +195,7 @@ func updateCredentials(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func deleteCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*api.Client)
+	client := meta.(*api.PrismaCloudComputeAPIClient)
 
 	var diags diag.Diagnostics
 

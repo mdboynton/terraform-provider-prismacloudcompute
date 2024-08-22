@@ -43,7 +43,7 @@ type ComplianceCheck struct {
 }
 
 // Get the current CI image compliance policy.
-func GetComplianceCiImage(c api.Client) (CompliancePolicy, error) {
+func GetComplianceCiImage(c api.PrismaCloudComputeAPIClient) (CompliancePolicy, error) {
 	var ans CompliancePolicy
 	if err := c.Request(http.MethodGet, ComplianceCiImagesEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting CI image compliance policy: %s", err)
@@ -52,7 +52,7 @@ func GetComplianceCiImage(c api.Client) (CompliancePolicy, error) {
 }
 
 // Get the current CI serverless compliance policy.
-func GetComplianceCiServerless(c api.Client) (CompliancePolicy, error) {
+func GetComplianceCiServerless(c api.PrismaCloudComputeAPIClient) (CompliancePolicy, error) {
 	var ans CompliancePolicy
 	if err := c.Request(http.MethodGet, ComplianceCiServerlessEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting CI serverless compliance policy: %s", err)
@@ -61,7 +61,7 @@ func GetComplianceCiServerless(c api.Client) (CompliancePolicy, error) {
 }
 
 // Get the current container compliance policy.
-func GetComplianceContainer(c api.Client) (CompliancePolicy, error) {
+func GetComplianceContainer(c api.PrismaCloudComputeAPIClient) (CompliancePolicy, error) {
 	var ans CompliancePolicy
 	if err := c.Request(http.MethodGet, ComplianceContainerEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting container compliance policy: %s", err)
@@ -70,7 +70,7 @@ func GetComplianceContainer(c api.Client) (CompliancePolicy, error) {
 }
 
 // Get the current host compliance policy.
-func GetComplianceHost(c api.Client) (CompliancePolicy, error) {
+func GetComplianceHost(c api.PrismaCloudComputeAPIClient) (CompliancePolicy, error) {
 	var ans CompliancePolicy
 	if err := c.Request(http.MethodGet, ComplianceHostEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting host compliance policy: %s", err)
@@ -79,7 +79,7 @@ func GetComplianceHost(c api.Client) (CompliancePolicy, error) {
 }
 
 // Get the current serverless compliance policy.
-func GetComplianceServerless(c api.Client) (CompliancePolicy, error) {
+func GetComplianceServerless(c api.PrismaCloudComputeAPIClient) (CompliancePolicy, error) {
 	var ans CompliancePolicy
 	if err := c.Request(http.MethodGet, ComplianceServerlessEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting serverless compliance policy: %s", err)
@@ -88,26 +88,26 @@ func GetComplianceServerless(c api.Client) (CompliancePolicy, error) {
 }
 
 // Update the current CI image compliance policy.
-func UpdateComplianceCiImage(c api.Client, policy CompliancePolicy) error {
+func UpdateComplianceCiImage(c api.PrismaCloudComputeAPIClient, policy CompliancePolicy) error {
 	return c.Request(http.MethodPut, ComplianceCiImagesEndpoint, nil, policy, nil)
 }
 
 // Update the current CI serverless compliance policy.
-func UpdateComplianceCiServerless(c api.Client, policy CompliancePolicy) error {
+func UpdateComplianceCiServerless(c api.PrismaCloudComputeAPIClient, policy CompliancePolicy) error {
 	return c.Request(http.MethodPut, ComplianceCiServerlessEndpoint, nil, policy, nil)
 }
 
 // Update the current container compliance policy.
-func UpdateComplianceContainer(c api.Client, policy CompliancePolicy) error {
+func UpdateComplianceContainer(c api.PrismaCloudComputeAPIClient, policy CompliancePolicy) error {
 	return c.Request(http.MethodPut, ComplianceContainerEndpoint, nil, policy, nil)
 }
 
 // Update the current host compliance policy.
-func UpdateComplianceHost(c api.Client, policy CompliancePolicy) error {
+func UpdateComplianceHost(c api.PrismaCloudComputeAPIClient, policy CompliancePolicy) error {
 	return c.Request(http.MethodPut, ComplianceHostEndpoint, nil, policy, nil)
 }
 
 // Update the current serverless compliance policy.
-func UpdateComplianceServerless(c api.Client, policy CompliancePolicy) error {
+func UpdateComplianceServerless(c api.PrismaCloudComputeAPIClient, policy CompliancePolicy) error {
 	return c.Request(http.MethodPut, ComplianceServerlessEndpoint, nil, policy, nil)
 }
