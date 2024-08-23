@@ -6,6 +6,7 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/convert"
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/attr"
@@ -14,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -40,7 +43,7 @@ type CollectionResourceModel struct {
     Images types.Set `tfsdk:"images"`
     Labels types.Set `tfsdk:"labels"`
     Name types.String `tfsdk:"name"`
-    Namespaces types.Set `tfsdk:"namespaces"`
+    Namespaces types.Set `tfsdk:"functions"`
     Owner types.String `tfsdk:"owner"`
     Prisma types.Bool `tfsdk:"prisma"`
     System types.Bool `tfsdk:"system"`
@@ -56,9 +59,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
         Attributes: map[string]schema.Attribute{
             "account_ids": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -70,9 +71,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "app_ids": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -84,9 +83,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "clusters": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -99,14 +96,11 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             "color": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
-                Computed: true,
                 Default: stringdefault.StaticString("#3FA2F7"),
             },
             "containers": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -119,14 +113,11 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             "description": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
-                Computed: true,
                 Default: stringdefault.StaticString(""),
             },
             "functions": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -138,9 +129,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "hosts": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -152,9 +141,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "images": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -166,9 +153,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "labels": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -184,9 +169,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "namespaces": schema.SetAttribute{
                 MarkdownDescription: "TODO",
-                ElementType: types.StringType,
                 Optional: true,
-                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -203,12 +186,10 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             "prisma": schema.BoolAttribute{
                 MarkdownDescription: "TODO",
                 Computed: true,
-                Default: booldefault.StaticBool(false),
             },
             "system": schema.BoolAttribute{
                 MarkdownDescription: "TODO",
                 Computed: true,
-                Default: booldefault.StaticBool(false),
             },
         },
     }
@@ -261,12 +242,11 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
         return
 	}
 
-    // Retrieve newly created collection
-    response, err := collectionAPI.GetCollection(*r.client, collection.Name)
-    updatedCollection, diags := collectionToSchema(ctx, *response)
+    // TODO: retrieve newly created resource and use that data to populate
+    //       state instead of using plan data (see below)
 
-    // Set state to collection data
-    diags = resp.State.Set(ctx, updatedCollection)
+    // Set state to plan data
+    diags = resp.State.Set(ctx, collection)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -308,17 +288,9 @@ func (r *CollectionResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-    // Get current state
-    var state CollectionResourceModel 
-    diags := req.State.Get(ctx, &state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
     // Retrieve values from plan
     var plan CollectionResourceModel
-    diags = req.Plan.Get(ctx, &plan)
+    diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -328,7 +300,7 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
     collection, diags := schemaToCollection(ctx, &plan)
 
     // Update exsting collection 
-	err := collectionAPI.UpdateCollection(*r.client, state.Name.ValueString(), collection)
+	err := collectionAPI.UpdateCollection(*r.client, collection)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Collection resource", 
@@ -393,10 +365,7 @@ func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (col
 
     collection := collectionAPI.Collection{
         Color: plan.Color.ValueString(),
-        Description: plan.Description.ValueString(),
         Name: plan.Name.ValueString(),
-        Prisma: plan.Prisma.ValueBool(),
-        System: plan.System.ValueBool(),
     }
 
     accountIds := make([]string, 0, len(plan.AccountIDs.Elements()))
@@ -408,60 +377,74 @@ func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (col
 
 
     appIds := make([]string, 0, len(plan.AppIDs.Elements()))
-    diags = plan.AppIDs.ElementsAs(ctx, &appIds, false)
+    diags = plan.AppIds.ElementsAs(ctx, &appIds, false)
     if diags.HasError() {   
         return collection, diags
     }
     collection.AppIDs = appIds 
 
-    clusters := make([]string, 0, len(plan.Clusters.Elements()))
-    diags = plan.Clusters.ElementsAs(ctx, &clusters, false)
-    if diags.HasError() {   
-        return collection, diags
+    if plan.Clusters != nil {
+        clusters := make([]string, 0, len(plan.Clusters.Elements()))
+        diags = plan.Clusters.ElementsAs(ctx, &clusters, false)
+        if diags.HasError() {   
+            return collection, diags
+        }
+        collection.Clusters = clusters 
     }
-    collection.Clusters = clusters 
 
-    containers := make([]string, 0, len(plan.Containers.Elements()))
-    diags = plan.Containers.ElementsAs(ctx, &containers, false)
-    if diags.HasError() {   
-        return collection, diags
+    if plan.Containers != nil {
+        containers := make([]string, 0, len(plan.Containers.Elements()))
+        diags = plan.Containers.ElementsAs(ctx, &containers, false)
+        if diags.HasError() {   
+            return collection, diags
+        }
+        collection.Containers = containers 
     }
-    collection.Containers = containers 
 
-    functions := make([]string, 0, len(plan.Functions.Elements()))
-    diags = plan.Functions.ElementsAs(ctx, &functions, false)
-    if diags.HasError() {   
-        return collection, diags
+    if plan.Functions != nil {
+        functions := make([]string, 0, len(plan.Functions.Elements()))
+        diags = plan.Functions.ElementsAs(ctx, &functions, false)
+        if diags.HasError() {   
+            return collection, diags
+        }
+        collection.Functions = functions 
     }
-    collection.Functions = functions 
 
-    hosts := make([]string, 0, len(plan.Hosts.Elements()))
-    diags = plan.Hosts.ElementsAs(ctx, &hosts, false)
-    if diags.HasError() {   
-        return collection, diags
+    if plan.Hosts != nil {
+        hosts := make([]string, 0, len(plan.Hosts.Elements()))
+        diags = plan.Hosts.ElementsAs(ctx, &hosts, false)
+        if diags.HasError() {   
+            return collection, diags
+        }
+        collection.Hosts = hosts 
     }
-    collection.Hosts = hosts 
 
-    images := make([]string, 0, len(plan.Images.Elements()))
-    diags = plan.Images.ElementsAs(ctx, &images, false)
-    if diags.HasError() {   
-        return collection, diags
+    if plan.Images != nil {
+        images := make([]string, 0, len(plan.Images.Elements()))
+        diags = plan.Images.ElementsAs(ctx, &Images, false)
+        if diags.HasError() {   
+            return collection, diags
+        }
+        collection.Images = images 
     }
-    collection.Images = images 
 
-    labels := make([]string, 0, len(plan.Labels.Elements()))
-    diags = plan.Labels.ElementsAs(ctx, &labels, false)
-    if diags.HasError() {   
-        return collection, diags
+    if plan.Labels != nil {
+        labels := make([]string, 0, len(plan.Labels.Elements()))
+        diags = plan.Labels.ElementsAs(ctx, &labels, false)
+        if diags.HasError() {   
+            return collection, diags
+        }
+        collection.Labels = labels 
     }
-    collection.Labels = labels 
 
-    namespaces := make([]string, 0, len(plan.Namespaces.Elements()))
-    diags = plan.Namespaces.ElementsAs(ctx, &namespaces, false)
-    if diags.HasError() {   
-        return collection, diags
+    if plan.Namespaces != nil {
+        namespaces := make([]string, 0, len(plan.Namespaces.Elements()))
+        diags = plan.Namespaces.ElementsAs(ctx, &namespaces, false)
+        if diags.HasError() {   
+            return collection, diags
+        }
+        collection.Namespaces = Namespaces 
     }
-    collection.Namespaces = namespaces 
 
 	return collection, diags 
 }
@@ -471,10 +454,8 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
 
     schema := CollectionResourceModel{
         Color: types.StringValue(collection.Color),
-        Description: types.StringValue(collection.Description),
         Name: types.StringValue(collection.Name),
         Prisma: types.BoolValue(collection.Prisma),
-        System: types.BoolValue(collection.System),
     }
 
     if collection.AccountIDs != nil {
@@ -483,7 +464,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.AccountIDs = accountIds
+        schema.AccountIDs = &accountIds
     }
 
     if collection.AppIDs != nil {
@@ -492,7 +473,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.AppIDs = appIds
+        schema.AppIDs = &appIds
     }
 
     if collection.Clusters != nil {
@@ -501,7 +482,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Clusters = clusters
+        schema.Clusters = &clusters
     }
 
     if collection.Containers != nil {
@@ -510,7 +491,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Containers = containers
+        schema.Containers = &containers
     }
 
     if collection.Functions != nil {
@@ -519,7 +500,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Functions = functions
+        schema.Functions = &functions
     }
 
     if collection.Hosts != nil {
@@ -528,7 +509,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Hosts = hosts
+        schema.Hosts = &hosts
     }
 
     if collection.Images != nil {
@@ -537,7 +518,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Images = images
+        schema.Images = &images
     }
 
     if collection.Labels != nil {
@@ -546,7 +527,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Labels = labels
+        schema.Labels = &labels
     }
 
     if collection.Namespaces != nil {
@@ -555,7 +536,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Namespaces = namespaces
+        schema.Namespaces = &namespaces
     }
 
     return schema, diags

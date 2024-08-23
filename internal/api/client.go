@@ -135,6 +135,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		time.Sleep(3 * time.Second)
 		return c.Request(method, endpoint, query, data, &response)
 	}
+    fmt.Println(res.StatusCode)
 
 	if res.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(res.Body)
@@ -155,7 +156,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		return err
 	}
 
-	if len(body) > 0 {
+	if len(body) > 0 && response != nil {
 		if err = json.Unmarshal(body, response); err != nil {
 			return err
 		}

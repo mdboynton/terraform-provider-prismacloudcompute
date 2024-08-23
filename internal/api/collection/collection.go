@@ -10,10 +10,9 @@ import (
 const CollectionsEndpoint = "api/v1/collections"
 
 type Collection struct {
-	AccountIds  []string `json:"accountIDs,omitempty"`
-	AppIds      []string `json:"appIDs,omitempty"`
+	AccountIDs  []string `json:"accountIDs,omitempty"`
+	AppIDs      []string `json:"appIDs,omitempty"`
 	Clusters    []string `json:"clusters,omitempty"`
-	CodeRepos   []string `json:"codeRepos,omitempty"`
 	Color       string   `json:"color,omitempty"`
 	Containers  []string `json:"containers,omitempty"`
 	Description string   `json:"description,omitempty"`
@@ -23,6 +22,8 @@ type Collection struct {
 	Labels      []string `json:"labels,omitempty"`
 	Name        string   `json:"name,omitempty"`
 	Namespaces  []string `json:"namespaces,omitempty"`
+    Prisma      bool     `json:"prisma,omitempty"`
+    System      bool     `json:"system,omitempty"`
 }
 
 // Get all collections.
@@ -54,8 +55,8 @@ func CreateCollection(c api.PrismaCloudComputeAPIClient, collection Collection) 
 }
 
 // Update an existing collection.
-func UpdateCollection(c api.PrismaCloudComputeAPIClient, collection Collection) error {
-	return c.Request(http.MethodPut, fmt.Sprintf("%s/%s", CollectionsEndpoint, collection.Name), nil, collection, nil)
+func UpdateCollection(c api.PrismaCloudComputeAPIClient, name string, collection Collection) error {
+	return c.Request(http.MethodPut, fmt.Sprintf("%s/%s", CollectionsEndpoint, name), nil, collection, nil)
 }
 
 // Delete an existing collection.
