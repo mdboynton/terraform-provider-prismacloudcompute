@@ -85,6 +85,7 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
     return []func() resource.Resource{
        NewUserResource,
        NewCollectionResource,
+       NewHostCompliancePolicyResource,
     }
 }
 

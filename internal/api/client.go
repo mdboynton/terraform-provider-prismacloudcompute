@@ -33,6 +33,7 @@ type ErrResponse struct {
 }
 
 func (c *PrismaCloudComputeAPIClient) Initialize(filename string) error {
+    // TODO: add logic to re-use API token if its still valid, instead of authing every time
 	c2 := PrismaCloudComputeAPIClient{}
 
 	if filename != "" {
@@ -74,7 +75,7 @@ func (c *PrismaCloudComputeAPIClient) Initialize(filename string) error {
 }
 
 func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, data, response interface{}) (err error) {
-	parsedURL, err := url.Parse(c.Config.ConsoleURL)
+    parsedURL, err := url.Parse(c.Config.ConsoleURL)
 	if err != nil {
 		return err
 	}
@@ -82,6 +83,10 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		parsedURL.Scheme = "https"
 	}
 	parsedURL.Path = path.Join(parsedURL.Path, endpoint)
+    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+    fmt.Println("sending " + method + " request to")
+    fmt.Println(parsedURL)
+    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
 
 	var buf bytes.Buffer
 
@@ -156,10 +161,17 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		return err
 	}
 
+    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+    fmt.Println("unmarshalling response body")
+    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
 	if len(body) > 0 && response != nil {
 		if err = json.Unmarshal(body, response); err != nil {
 			return err
 		}
+        fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+        fmt.Println("recieved response from endpoint: ")
+        fmt.Printf("%+v\n", response)
+        fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
 	}
 	return nil
 }

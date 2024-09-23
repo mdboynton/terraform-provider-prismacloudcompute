@@ -39,6 +39,7 @@ type CollectionResourceModel struct {
     Hosts types.Set `tfsdk:"hosts"`
     Images types.Set `tfsdk:"images"`
     Labels types.Set `tfsdk:"labels"`
+    Modified types.String `tfsdk:"modified"`
     Name types.String `tfsdk:"name"`
     Namespaces types.Set `tfsdk:"namespaces"`
     Owner types.String `tfsdk:"owner"`
@@ -177,6 +178,10 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
                         },
                     ),
                 ),
+            },
+            "modified": schema.StringAttribute{
+                MarkdownDescription: "TODO",
+                Computed: true,
             },
             "name": schema.StringAttribute{
                 MarkdownDescription: "TODO",
@@ -472,10 +477,15 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
     schema := CollectionResourceModel{
         Color: types.StringValue(collection.Color),
         Description: types.StringValue(collection.Description),
+        Modified: types.StringValue(collection.Modified),
         Name: types.StringValue(collection.Name),
         Prisma: types.BoolValue(collection.Prisma),
         System: types.BoolValue(collection.System),
     }
+
+    //if collection.Modified != nil {
+    //    schema.Modified = collection.Modified
+    //}
 
     if collection.AccountIDs != nil {
         accountIds, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)
@@ -548,7 +558,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
 
         schema.Labels = labels
     }
-
+    
     if collection.Namespaces != nil {
         namespaces, diags := types.SetValueFrom(ctx, types.StringType, collection.Namespaces)
         if diags.HasError() {

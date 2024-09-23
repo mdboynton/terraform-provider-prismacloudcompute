@@ -20,8 +20,10 @@ type Collection struct {
 	Hosts       []string `json:"hosts,omitempty"`
 	Images      []string `json:"images,omitempty"`
 	Labels      []string `json:"labels,omitempty"`
+    Modified    string   `json:"modified,omitempty"`
 	Name        string   `json:"name,omitempty"`
 	Namespaces  []string `json:"namespaces,omitempty"`
+    Owner       string   `json:"owner,omitempty"`
     Prisma      bool     `json:"prisma,omitempty"`
     System      bool     `json:"system,omitempty"`
 }
