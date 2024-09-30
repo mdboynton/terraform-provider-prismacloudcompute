@@ -56,7 +56,7 @@ func GetVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulnerabilities, err
 	return ans, nil
 }
 
-func GetComplianceHostVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulnerabilities, error) {
+func GetComplianceHostVulnerabilities(c api.PrismaCloudComputeAPIClient, onlyHighOrCritical bool) (Vulnerabilities, error) {
     // TODO: include custom compliance checks
 	var ans Vulnerabilities 
     vulnerabilities, err := GetVulnerabilities(c)
@@ -64,8 +64,14 @@ func GetComplianceHostVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulner
 		return ans, fmt.Errorf("error getting host compliance vulnerabilities: %s", err)
     }
 
+    //fmt.Sprintf("bool value is %t\n", onlyHighOrCritical)
+
     var complianceHostVulns Vulnerabilities
     for _, vuln := range vulnerabilities.ComplianceVulnerabilities {
+        if onlyHighOrCritical && (vuln.Severity == "low" || vuln.Severity == "medium") {
+            continue
+        }
+
         if vuln.Type == "host_config" ||
             vuln.Type == "windows" ||
             vuln.Type == "linux" ||
@@ -75,8 +81,8 @@ func GetComplianceHostVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulner
             strings.HasSuffix(vuln.Type, "_worker") ||
             strings.HasSuffix(vuln.Type, "_master") ||
             strings.HasSuffix(vuln.Type, "_federation") {
-            complianceHostVulns.ComplianceVulnerabilities = append(complianceHostVulns.ComplianceVulnerabilities, vuln)    
-        }
+                complianceHostVulns.ComplianceVulnerabilities = append(complianceHostVulns.ComplianceVulnerabilities, vuln)
+            }
     }
     
     sort.Slice(complianceHostVulns.ComplianceVulnerabilities, func(i, j int) bool {

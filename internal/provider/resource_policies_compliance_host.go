@@ -70,7 +70,7 @@ type HostCompliancePolicyRuleResourceModel struct {
     ////AlertThreshold *HostCompliancePolicyRuleAlertThresholdResourceModel `tfsdk:"alert_threshold"`
     //ReportAllCompliance types.Bool `tfsdk:"report_all_compliance"`
     ////AuditAllowed types.Bool `tfsdk:"audit_allowed"`
-    //BlockMessage types.String `tfsdk:"block_message"`
+    BlockMessage types.String `tfsdk:"block_message"`
     ////BlockThreshold  *HostCompliancePolicyRuleBlockThresholdResourceModel `tfsdk:"block_threshold"`
     //Condition *HostCompliancePolicyRuleConditionResourceModel `tfsdk:"condition"`
     Condition types.Object `tfsdk:"condition"`
@@ -360,12 +360,12 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                         //    Computed: true,
                         //    Default: booldefault.StaticBool(false), 
                         //},
-                        //"block_message": schema.StringAttribute{
-                        //    MarkdownDescription: "TODO",
-                        //    Optional: true,
-                        //    Computed: true,
-                        //    Default: stringdefault.StaticString(""),
-                        //},
+                        "block_message": schema.StringAttribute{
+                            MarkdownDescription: "TODO",
+                            Optional: true,
+                            Computed: true,
+                            Default: stringdefault.StaticString(""),
+                        },
                         "collections": r.GetCollectionsSchema(),
                         "condition": schema.SingleNestedAttribute{
                             MarkdownDescription: "TODO",
@@ -1126,328 +1126,23 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
     fmt.Println("starting loop over rules")
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     for index, rule := range *plan.Rules {
+        // TODO: add logic to populate collection.Modified for collections that already exist in the state
+        // so that terraform doesn't show the collection as being updated in place
+
         if rule.Effect.IsUnknown() {
-            resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
-
-            vulnerabilitiesData, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
-	        if err != nil {
-	        	diags.AddError(
-                    "Error modifying planned policy rules", 
-                    "Failed to retrieve compliance host vulnerabilities while modifying plan rules: " + err.Error(),
-                )
-                return
-	        }
-
-            complianceVulnerabilities := vulnerabilitiesData.ComplianceVulnerabilities
-
-            vulnerabilityObjectValues := []attr.Value{}
-            for _, vuln := range complianceVulnerabilities {
-                if vuln.Severity == "high" || vuln.Severity == "critical" {
-                    vulnerabilityObjectValue := types.ObjectValueMust(
-                        map[string]attr.Type{
-                            "id":        types.Int32Type,
-                            "block":       types.BoolType,
-                        },
-                        map[string]attr.Value{
-                            "id": types.Int32Value(int32(vuln.Id)),
-                            "block": types.BoolValue(false),
-                        },
-                    )
-                   
-                    vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-                }
-            }
-
-            vulnerabilityObject, diags := types.ListValueFrom(
-                ctx,
-                types.ObjectType{
-                    AttrTypes: map[string]attr.Type{
-                        "id": types.Int32Type,
-                        "block": types.BoolType,
-                    },
-                },
-                vulnerabilityObjectValues,
-            )
-
+            rule.Effect = types.StringValue("unknown")
+            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
             if diags.HasError() {
                 return
             }
-
-            conditionObject := types.ObjectValueMust(
-                map[string]attr.Type{
-                    //"device": types.StringType,
-                    //"read_only": types.BoolType,
-                    "vulnerabilities": types.ListType{
-                        ElemType: types.ObjectType{
-                            AttrTypes: map[string]attr.Type{
-                                "id": types.Int32Type,
-                                "block": types.BoolType,
-                            },
-                        },
-                    },
-                },
-                map[string]attr.Value{
-                    //"device": types.StringValue(rule.Condition.Device),
-                    //"read_only": types.BoolValue(rule.Condition.ReadOnly),
-                    "vulnerabilities": vulnerabilityObject,
-                },
-            )
-            
-            resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
-        } else if rule.Effect.ValueString() == "alert, block" {
-            var ruleConditionVulns []policyAPI.HostCompliancePolicyRuleVulnerability
-            if rule.Condition.IsUnknown() {
-                return
-            } else {
-                ruleCondition := policyAPI.HostCompliancePolicyRuleCondition{} 
-                diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
-                if diags.HasError() {
-                    return
-                }
-                ruleConditionVulns = ruleCondition.Vulnerabilities
-            }
-
-            vulnerabilityObjectValues := []attr.Value{}
-            for _, vuln := range ruleConditionVulns {
-                vulnerabilityObjectValue := types.ObjectValueMust(
-                    map[string]attr.Type{
-                        "id":        types.Int32Type,
-                        "block":       types.BoolType,
-                    },
-                    map[string]attr.Value{
-                        "id": types.Int32Value(int32(vuln.Id)),
-                        //"block": types.BoolValue(false),
-                        "block": types.BoolValue(vuln.Block),
-                    },
-                )
-                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-            }
-
-            vulnerabilityObject, diags := types.ListValueFrom(
-                ctx,
-                types.ObjectType{
-                    AttrTypes: map[string]attr.Type{
-                        "id": types.Int32Type,
-                        "block": types.BoolType,
-                    },
-                },
-                vulnerabilityObjectValues,
-            )
-
-            if diags.HasError() {
-                return
-            }
-
-            conditionObject := types.ObjectValueMust(
-                map[string]attr.Type{
-                    //"device": types.StringType,
-                    //"read_only": types.BoolType,
-                    "vulnerabilities": types.ListType{
-                        ElemType: types.ObjectType{
-                            AttrTypes: map[string]attr.Type{
-                                "id": types.Int32Type,
-                                "block": types.BoolType,
-                            },
-                        },
-                    },
-                },
-                map[string]attr.Value{
-                    //"device": types.StringValue(rule.Condition.Device),
-                    //"read_only": types.BoolValue(rule.Condition.ReadOnly),
-                    "vulnerabilities": vulnerabilityObject,
-                },
-            )
-            
-            resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
-
-        } else if rule.Effect.ValueString() == "alert" {
-            fmt.Println("@@@@@@@@@@@@@@")
-            fmt.Println("effect is alert")
-            fmt.Println("@@@@@@@@@@@@@@")
-            vulnerabilitiesData, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
-	        if err != nil {
-	        	//diags.AddError(
-	        	resp.Diagnostics.AddError(
-                    "Error modifying planned policy rules", 
-                    "Failed to retrieve compliance host vulnerabilities while modifying plan rules: " + err.Error(),
-                )
-                return
-	        }
-
-            complianceVulnerabilities := vulnerabilitiesData.ComplianceVulnerabilities
-
-            vulnerabilityObjectValues := []attr.Value{}
-            for _, vuln := range complianceVulnerabilities {
-                vulnerabilityObjectValue := types.ObjectValueMust(
-                    map[string]attr.Type{
-                        "id":        types.Int32Type,
-                        "block":       types.BoolType,
-                    },
-                    map[string]attr.Value{
-                        "id": types.Int32Value(int32(vuln.Id)),
-                        "block": types.BoolValue(false),
-                    },
-                )
-                
-                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-            }
-
-            vulnerabilityObject, diags := types.ListValueFrom(
-                ctx,
-                types.ObjectType{
-                    AttrTypes: map[string]attr.Type{
-                        "id": types.Int32Type,
-                        "block": types.BoolType,
-                    },
-                },
-                vulnerabilityObjectValues,
-            )
-
-            if diags.HasError() {
-                return
-            }
-
-            conditionObject := types.ObjectValueMust(
-                map[string]attr.Type{
-                    //"device": types.StringType,
-                    //"read_only": types.BoolType,
-                    "vulnerabilities": types.ListType{
-                        ElemType: types.ObjectType{
-                            AttrTypes: map[string]attr.Type{
-                                "id": types.Int32Type,
-                                "block": types.BoolType,
-                            },
-                        },
-                    },
-                },
-                map[string]attr.Value{
-                    //"device": types.StringValue(rule.Condition.Device),
-                    //"read_only": types.BoolValue(rule.Condition.ReadOnly),
-                    "vulnerabilities": vulnerabilityObject,
-                },
-            )
-            
-            resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
-        } else if rule.Effect.ValueString() == "ignore" {
-            fmt.Println("@@@@@@@@@@@@@@")
-            fmt.Println("effect is ignore")
-            fmt.Println("@@@@@@@@@@@@@@")
-            vulnerabilityObjectValues := []attr.Value{}
-
-            vulnerabilityObject, diags := types.ListValueFrom(
-                ctx,
-                types.ObjectType{
-                    AttrTypes: map[string]attr.Type{
-                        "id": types.Int32Type,
-                        "block": types.BoolType,
-                    },
-                },
-                vulnerabilityObjectValues,
-            )
-
-            if diags.HasError() {
-                return
-            }
-
-            conditionObject := types.ObjectValueMust(
-                map[string]attr.Type{
-                    //"device": types.StringType,
-                    //"read_only": types.BoolType,
-                    "vulnerabilities": types.ListType{
-                        ElemType: types.ObjectType{
-                            AttrTypes: map[string]attr.Type{
-                                "id": types.Int32Type,
-                                "block": types.BoolType,
-                            },
-                        },
-                    },
-                },
-                map[string]attr.Value{
-                    //"device": types.StringValue(rule.Condition.Device),
-                    //"read_only": types.BoolValue(rule.Condition.ReadOnly),
-                    "vulnerabilities": vulnerabilityObject,
-                },
-            )
-            
-            //rule.Condition = conditionObject
-            resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
-        } else if rule.Effect.ValueString() == "block" {
-            fmt.Println("@@@@@@@@@@@@@@")
-            fmt.Println("effect is block")
-            fmt.Println("@@@@@@@@@@@@@@")
-
-            vulnerabilitiesData, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
-	        if err != nil {
-	        	diags.AddError(
-                    "Error modifying planned policy rules", 
-                    "Failed to retrieve compliance host vulnerabilities while modifying plan rules: " + err.Error(),
-                )
-                return
-	        }
-            
-            complianceVulnerabilities := vulnerabilitiesData.ComplianceVulnerabilities
-
-            vulnerabilityObjectValues := []attr.Value{}
-            for _, vuln := range complianceVulnerabilities {
-                var block bool
-                if vuln.Type == "windows" {
-                    block = false
-                } else {
-                    block = true
-                }
-
-                vulnerabilityObjectValue := types.ObjectValueMust(
-                    map[string]attr.Type{
-                        "id":        types.Int32Type,
-                        "block":       types.BoolType,
-                    },
-                    map[string]attr.Value{
-                        "id": types.Int32Value(int32(vuln.Id)),
-                        "block": types.BoolValue(block),
-                    },
-                )
-                
-                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-            }
-
-            vulnerabilityObject, diags := types.ListValueFrom(
-                ctx,
-                types.ObjectType{
-                    AttrTypes: map[string]attr.Type{
-                        "id": types.Int32Type,
-                        "block": types.BoolType,
-                    },
-                },
-                vulnerabilityObjectValues,
-            )
-
-            if diags.HasError() {
-                return
-            }
-
-            conditionObject := types.ObjectValueMust(
-                map[string]attr.Type{
-                    //"device": types.StringType,
-                    //"read_only": types.BoolType,
-                    "vulnerabilities": types.ListType{
-                        ElemType: types.ObjectType{
-                            AttrTypes: map[string]attr.Type{
-                                "id": types.Int32Type,
-                                "block": types.BoolType,
-                            },
-                        },
-                    },
-                },
-                map[string]attr.Value{
-                    //"device": types.StringValue(rule.Condition.Device),
-                    //"read_only": types.BoolValue(rule.Condition.ReadOnly),
-                    "vulnerabilities": vulnerabilityObject,
-                },
-            )
-            
-            //rule.Condition = conditionObject
-            resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
         }
+
+        conditionObject, diags := createConditionFromEffect(ctx, *r.client, rule)
+        if diags.HasError() {
+            return 
+        }
+
+        resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
     }
     //resp.Plan.Set(ctx, &plan)
 
@@ -1464,17 +1159,146 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     fmt.Println("exiting ModifyPlan")
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+}
+
+func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComputeAPIClient, rule HostCompliancePolicyRuleResourceModel) (basetypes.ObjectValue, diag.Diagnostics) {
+    var diags diag.Diagnostics
+
+    effect := rule.Effect.ValueString()
+    vulnerabilityObjectValues := []attr.Value{}
+    vulnerabilitiesAttributeTypes := map[string]attr.Type{
+        "id": types.Int32Type,
+        "block": types.BoolType,
+    }
+    conditionObjectValueTypes := map[string]attr.Type{
+        //"device": types.StringType,
+        //"read_only": types.BoolType,
+        "vulnerabilities": types.ListType{
+            ElemType: types.ObjectType{
+                AttrTypes: vulnerabilitiesAttributeTypes,
+            },
+        },
+    }
+    conditionObject := types.ObjectNull(conditionObjectValueTypes)
     
-    var ru types.List 
-    dgs := resp.Plan.GetAttribute(ctx, path.Root("rules"), &ru)
-    if dgs.HasError() {
-        fmt.Print(dgs)
-        return
+
+    if effect == "alert, block" {
+        var ruleConditionVulns []policyAPI.HostCompliancePolicyRuleVulnerability
+
+        if rule.Condition.IsUnknown() {
+            diags.AddError(
+                "Missing condition from \"alert, block\" effect rule",
+                "Condition attribute must be defined for rules with effect \"alert, block\".",
+            )
+            return conditionObject, diags
+        } else {
+            ruleCondition := policyAPI.HostCompliancePolicyRuleCondition{} 
+            diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
+            if diags.HasError() {
+                return conditionObject, diags
+            }
+            ruleConditionVulns = ruleCondition.Vulnerabilities
+        }
+
+        for _, vuln := range ruleConditionVulns {
+            vulnerabilityObjectValue := types.ObjectValueMust(
+                vulnerabilitiesAttributeTypes,
+                map[string]attr.Value{
+                    "id": types.Int32Value(int32(vuln.Id)),
+                    "block": types.BoolValue(vuln.Block),
+                },
+            )
+            vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+        }
+    } else {
+        var vulnerabilitiesData systemAPI.Vulnerabilities
+        var onlyHighOrCritical bool
+
+        if effect == "unknown" {
+            onlyHighOrCritical = true
+        } else if effect == "alert" || effect == "block" {
+            onlyHighOrCritical = false
+        }
+
+        vulnerabilitiesData, err := systemAPI.GetComplianceHostVulnerabilities(client, onlyHighOrCritical)
+	    if err != nil {
+	    	diags.AddError(
+                "Error modifying planned policy rules", 
+                "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
+            )
+            return conditionObject, diags
+	    }
+    
+        complianceVulnerabilities := vulnerabilitiesData.ComplianceVulnerabilities
+  
+        if effect == "unknown" {
+            for _, vuln := range complianceVulnerabilities {
+                vulnerabilityObjectValue := types.ObjectValueMust(
+                    vulnerabilitiesAttributeTypes,
+                    map[string]attr.Value{
+                        "id": types.Int32Value(int32(vuln.Id)),
+                        "block": types.BoolValue(false),
+                    },
+                )
+                
+                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+            }
+        } else if effect == "alert" {
+            for _, vuln := range complianceVulnerabilities {
+                vulnerabilityObjectValue := types.ObjectValueMust(
+                    vulnerabilitiesAttributeTypes,
+                    map[string]attr.Value{
+                        "id": types.Int32Value(int32(vuln.Id)),
+                        "block": types.BoolValue(false),
+                    },
+                )
+                
+                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+            }
+        } else if effect == "block" {
+            for _, vuln := range complianceVulnerabilities {
+                var block bool
+                if vuln.Type == "windows" {
+                    block = false
+                } else {
+                    block = true
+                }
+
+                vulnerabilityObjectValue := types.ObjectValueMust(
+                    vulnerabilitiesAttributeTypes,
+                    map[string]attr.Value{
+                        "id": types.Int32Value(int32(vuln.Id)),
+                        "block": types.BoolValue(block),
+                    },
+                )
+                
+                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+            }
+        }
     }
-    for _, li := range ru.Elements() {
-        fmt.Println(li)
+
+    vulnerabilityObject, diags := types.ListValueFrom(
+        ctx,
+        types.ObjectType{
+            AttrTypes: vulnerabilitiesAttributeTypes,
+        },
+        vulnerabilityObjectValues,
+    )
+
+    if diags.HasError() {
+        return conditionObject, diags
     }
-    return
+
+    conditionObject = types.ObjectValueMust(
+        conditionObjectValueTypes,
+        map[string]attr.Value{
+            //"device": types.StringValue(rule.Condition.Device),
+            //"read_only": types.BoolValue(rule.Condition.ReadOnly),
+            "vulnerabilities": vulnerabilityObject,
+        },
+    )
+
+    return conditionObject, diags
 }
 
 func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -1511,11 +1335,11 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
     fmt.Println("creating policy resource with payload:")
     fmt.Printf("%+v\n", policy)
-    r1 := *policy.Rules
-    fmt.Printf("%+v\n", r1)
+    //r1 := *policy.Rules
+    //fmt.Printf("%+v\n", r1)
     //fmt.Printf("%+v\n", *r1[0].Condition)
-    fmt.Println("number of vulns:")
-    fmt.Println(len(r1[0].Condition.Vulnerabilities))
+    //fmt.Println("number of vulns:")
+    //fmt.Println(len(r1[0].Condition.Vulnerabilities))
     fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
     err := policyAPI.UpsertHostCompliancePolicy(*r.client, policy)
 	if err != nil {
@@ -1545,9 +1369,9 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     fmt.Println("createdPolicy in Create():")
     fmt.Println(reflect.TypeOf(createdPolicy))
     fmt.Printf("%+v\n", createdPolicy)
-    fmt.Printf("%+v\n", *createdPolicy.Rules)
-    fmt.Println("number of vulns:")
-    fmt.Println(len(r1[0].Condition.Vulnerabilities))
+    //fmt.Printf("%+v\n", *createdPolicy.Rules)
+    //fmt.Println("number of vulns:")
+    //fmt.Println(len(r1[0].Condition.Vulnerabilities))
     fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
     
     // Set state to collection data
@@ -1867,6 +1691,7 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
         rule := policyAPI.HostCompliancePolicyRule{
             Name: planRule.Name.ValueString(), 
             Collections: collections,
+            BlockMessage: planRule.BlockMessage.ValueString(),
             //Collections: col,
             Condition: &condition,
             Effect: planRule.Effect.ValueString(),
@@ -2124,13 +1949,15 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
         if rule.Notes != "" {
             schemaRule.Notes = types.StringValue(rule.Notes)
         }
+
+        schemaRule.BlockMessage = types.StringValue(rule.BlockMessage) 
             
         schemaRules = append(schemaRules, schemaRule)
     }
 
     fmt.Println("***********************")
     fmt.Println("exiting policyRulesToSchema")
-    fmt.Printf("%+v\n", schemaRules)
+    //fmt.Printf("%+v\n", schemaRules)
     fmt.Println("***********************")
 
     return schemaRules, diags

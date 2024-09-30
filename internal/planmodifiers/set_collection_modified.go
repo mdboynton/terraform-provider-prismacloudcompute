@@ -2,7 +2,6 @@ package planmodifiers
 
 import (
 	"context"
-	"fmt"
     //"time"
 
 	//"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -25,6 +24,10 @@ func (m *useCurrentTimeForDefaultCollectionModified) MarkdownDescription(_ conte
 }
 
 func (m *useCurrentTimeForDefaultCollectionModified) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+    //if req.PlanValue.IsUnknown() && (!req.StateValue.IsUnknown() && !req.StateValue.IsNull()) {
+    //    resp.PlanValue = req.StateValue
+    //}
+
     //if req.PlanValue.IsUnknown() {
     //    fmt.Println("setting resp.PlanValue to empty string")
     //    resp.PlanValue = types.StringValue("")

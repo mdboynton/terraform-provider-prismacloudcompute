@@ -28,7 +28,7 @@ type HostCompliancePolicyRule struct {
     //Action          []string        `json:"action"`
     //AlertThreshold  HostCompliancePolicyRuleAlertThreshold `json:"alertThreshold"`
 	//ReportAllCompliance bool                    `json:"allCompliance"`
-	//BlockMessage     string                  `json:"blockMsg"`
+	BlockMessage     string                  `json:"blockMsg"`
     //BlockThreshold  HostCompliancePolicyRuleBlockThreshold `json:"blockThreshold"`
 	//Collections      []collection.Collection `json:"collections"`
 	//Condition        HostCompliancePolicyRuleCondition    `json:"condition"`
@@ -129,7 +129,7 @@ func UpsertHostCompliancePolicy(c api.PrismaCloudComputeAPIClient, policy HostCo
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
     fmt.Println("UpsertHostCompliancePolicy request body:")
     fmt.Printf("%+v\n", policy)
-    fmt.Printf("%+v\n", *policy.Rules)
+    //fmt.Printf("%+v\n", *policy.Rules)
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
 	return c.Request(http.MethodPut, HostComplianceEndpoint, nil, policy, nil)
 }
@@ -143,7 +143,7 @@ func GetHostCompliancePolicy(c api.PrismaCloudComputeAPIClient) (*HostCompliance
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
     fmt.Println("GetHostCompliancePolicy response body:")
     fmt.Printf("%+v\n", ans)
-    fmt.Printf("%+v\n", *ans.Rules)
+    //fmt.Printf("%+v\n", *ans.Rules)
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
     return &ans, nil
 }
