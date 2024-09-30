@@ -68,7 +68,7 @@ type HostCompliancePolicyRuleResourceModel struct {
     Collections types.Set `tfsdk:"collections"`
     //Action types.Set `tfsdk:"action"`
     ////AlertThreshold *HostCompliancePolicyRuleAlertThresholdResourceModel `tfsdk:"alert_threshold"`
-    //ReportAllCompliance types.Bool `tfsdk:"report_all_compliance"`
+    ReportAllPassedAndFailedChecks types.Bool `tfsdk:"report_passed_and_failed_checks"`
     ////AuditAllowed types.Bool `tfsdk:"audit_allowed"`
     BlockMessage types.String `tfsdk:"block_message"`
     ////BlockThreshold  *HostCompliancePolicyRuleBlockThresholdResourceModel `tfsdk:"block_threshold"`
@@ -76,7 +76,7 @@ type HostCompliancePolicyRuleResourceModel struct {
     Condition types.Object `tfsdk:"condition"`
     //CreatePR types.Bool `tfsdk:"create_pr"
     //CVERules *[]HostCompliancePolicyRuleCVERuleResourceModel `tfsdk:"cve_rules"`
-    ////Disabled types.Bool `tfsdk:"disabled"`
+    Disabled types.Bool `tfsdk:"disabled"`
     Effect types.String `tfsdk:"effect"`
     ////ExcludeBaseImageVulns types.Bool `tfsdk:"exclude_base_image_vulns"`
     //GraceDays types.Int32 `tfsdk:"grace_days"`
@@ -89,7 +89,7 @@ type HostCompliancePolicyRuleResourceModel struct {
     //Name types.String `tfsdk:"name"`
     Notes types.String `tfsdk:"notes"`
     //OnlyFixed types.Bool `tfsdk:"only_fixed"`
-    //Owner types.String `tfsdk:"owner"`
+    Owner types.String `tfsdk:"owner"`
     //PkgTypesThresholds *[]HostCompliancePolicyRulePkgTypesThresholdsResourceModel `tfsdk:"package_types_thresholds"`
     ////PreviousName types.String `tfsdk:"previous_name"`
     //Principal types.Set `tfsdk:"principal"`
@@ -354,12 +354,12 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                         ////    //    ),
                         ////    //),
                         ////},
-                        //"report_all_compliance": schema.BoolAttribute{
-                        //    MarkdownDescription: "TODO",
-                        //    Optional: true,
-                        //    Computed: true,
-                        //    Default: booldefault.StaticBool(false), 
-                        //},
+                        "report_passed_and_failed_checks": schema.BoolAttribute{
+                            MarkdownDescription: "TODO",
+                            Optional: true,
+                            Computed: true,
+                            Default: booldefault.StaticBool(false), 
+                        },
                         "block_message": schema.StringAttribute{
                             MarkdownDescription: "TODO",
                             Optional: true,
@@ -457,12 +457,12 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                         //        },
                         //    },
                         //},
-                        ////"disabled": schema.BoolAttribute{
-                        ////    MarkdownDescription: "TODO",
-                        ////    Optional: true,
-                        ////    Computed: true,
-                        ////    //Default: booldefault.StaticBool(false), 
-                        ////},
+                        "disabled": schema.BoolAttribute{
+                            MarkdownDescription: "TODO",
+                            Optional: true,
+                            Computed: true,
+                            Default: booldefault.StaticBool(false), 
+                        },
                         "effect": schema.StringAttribute{
                             MarkdownDescription: "TODO",
                             Optional: true,
@@ -683,12 +683,13 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                         //    Computed: true,
                         //    Default: booldefault.StaticBool(false),
                         //},
-                        //"owner": schema.StringAttribute{
-                        //    MarkdownDescription: "TODO",
-                        //    Optional: true,
-                        //    Computed: true,
-                        //    //Default: stringdefault.StaticString(username),
-                        //},
+                        "owner": schema.StringAttribute{
+                            MarkdownDescription: "TODO",
+                            Optional: true,
+                            Computed: true,
+                            //Default: stringdefault.StaticString("admin"),
+                            //Default: stringdefault.StaticString(username),
+                        },
                         //"package_types_thresholds": schema.SetNestedAttribute{
                         //    MarkdownDescription: "TODO",
                         //    Optional: true,
@@ -1180,7 +1181,6 @@ func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComput
         },
     }
     conditionObject := types.ObjectNull(conditionObjectValueTypes)
-    
 
     if effect == "alert, block" {
         var ruleConditionVulns []policyAPI.HostCompliancePolicyRuleVulnerability
@@ -1191,14 +1191,14 @@ func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComput
                 "Condition attribute must be defined for rules with effect \"alert, block\".",
             )
             return conditionObject, diags
-        } else {
-            ruleCondition := policyAPI.HostCompliancePolicyRuleCondition{} 
-            diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
-            if diags.HasError() {
-                return conditionObject, diags
-            }
-            ruleConditionVulns = ruleCondition.Vulnerabilities
         }
+
+        ruleCondition := policyAPI.HostCompliancePolicyRuleCondition{} 
+        diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
+        if diags.HasError() {
+            return conditionObject, diags
+        }
+        ruleConditionVulns = ruleCondition.Vulnerabilities
 
         for _, vuln := range ruleConditionVulns {
             vulnerabilityObjectValue := types.ObjectValueMust(
@@ -1696,6 +1696,9 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
             Condition: &condition,
             Effect: planRule.Effect.ValueString(),
             Verbose: planRule.Verbose.ValueBool(),
+            ReportAllPassedAndFailedChecks: planRule.ReportAllPassedAndFailedChecks.ValueBool(),
+            //Owner: planRule.Owner.ValueString(),
+            Disabled: planRule.Disabled.ValueBool(),
         }
         
         if !planRule.Notes.IsUnknown() && !planRule.Notes.IsNull() {
@@ -1733,33 +1736,6 @@ func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy) 
 
     schema.Rules = &rules
 
-    //if policy.Action != nil {
-    //    action, diags := types.SetValueFrom(ctx, types.StringType, policy.Action)
-    //    if diags.HasError() {
-    //        return schema, diags
-    //    }
-
-    //    schema.Action = action
-    //}
-
-    //if policy.Groups != nil {
-    //    groups, diags := types.SetValueFrom(ctx, types.StringType, policy.Groups)
-    //    if diags.HasError() {
-    //        return schema, diags
-    //    }
-
-    //    schema.Groups = groups 
-    //}
-
-    //if policy.Principal != nil {
-    //    principal, diags := types.SetValueFrom(ctx, types.StringType, policy.Principal)
-    //    if diags.HasError() {
-    //        return schema, diags
-    //    }
-
-    //    schema.Principal = principal 
-    //}
-
     return schema, diags
 }
 
@@ -1777,27 +1753,13 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
     }
 
     for _, rule := range rules {
-        //ruleObject := HostCompliancePolicyRuleResourceModel {
-        //    //ReportAllCompliance: types.BoolValue(rule.ReportAllCompliance),
-        //    //BlockMessage: types.StringValue(rule.BlockMessage),
-        //    //CreatePR: types.BoolValue(rule.CreatePR),
-        //    ////Disabled: types.BoolValue(rule.Disabled),
-        //    //Effect: types.StringValue(rule.Effect),
-        //    ////ExcludeBaseImageVulns: types.BoolValue(rule.ExcludeBaseImageVulns),
-        //    //GraceDays: types.Int32Value(rule.GraceDays),
-        //    //Modified: types.StringValue(rule.Modified),
-        //    Name: types.StringValue(rule.Name),
-        //    //Notes: types.StringValue(rule.Notes),
-        //    //OnlyFixed: types.BoolValue(rule.OnlyFixed),
-        //    //Owner: types.StringValue(rule.Owner),
-        //    ////PreviousName: types.StringValue(rule.PreviousName),
-        //    //Verbose: types.BoolValue(rule.Verbose),
-        //}
-
         schemaRule := HostCompliancePolicyRuleResourceModel{
             Name: types.StringValue(rule.Name),
+            Disabled: types.BoolValue(rule.Disabled),
             Effect: types.StringValue(rule.Effect),
             Verbose: types.BoolValue(rule.Verbose),
+            Owner: types.StringValue(rule.Owner),
+            ReportAllPassedAndFailedChecks: types.BoolValue(rule.ReportAllPassedAndFailedChecks),
         }
 
         if rule.Collections != nil {

@@ -27,7 +27,7 @@ type HostCompliancePolicyRule struct {
 
     //Action          []string        `json:"action"`
     //AlertThreshold  HostCompliancePolicyRuleAlertThreshold `json:"alertThreshold"`
-	//ReportAllCompliance bool                    `json:"allCompliance"`
+	ReportAllPassedAndFailedChecks bool                    `json:"allCompliance"`
 	BlockMessage     string                  `json:"blockMsg"`
     //BlockThreshold  HostCompliancePolicyRuleBlockThreshold `json:"blockThreshold"`
 	//Collections      []collection.Collection `json:"collections"`
@@ -35,7 +35,7 @@ type HostCompliancePolicyRule struct {
     Condition        *HostCompliancePolicyRuleCondition    `json:"condition" tfsdk:"condition"`
     //CreatePR        bool            `json:"createPR"`
     //CVERules        []HostCompliancePolicyRuleCVERule      `json:"cveRules"`
-	//Disabled         bool                    `json:"disabled"`
+	Disabled         bool                    `json:"disabled"`
 	Effect           string                  `json:"effect"`
     //ExcludeBaseImageVulns       bool        `json:"excludeBaseImageVulns"`
     //GraceDays       int32             `json:"graceDays"`
@@ -46,7 +46,7 @@ type HostCompliancePolicyRule struct {
 	//Name             string                  `json:"name"`
 	Notes            string                  `json:"notes"`
     //OnlyFixed       bool            `json:"onlyFixed"`
-    //Owner           string          `json:"owner"`
+    Owner           string          `json:"owner"`
     //PkgTypesThresholds      []HostCompliancePolicyRulePkgTypesThresholds         `json:"pkgTypesThresholds"`
     //PreviousName        string      `json:"previousName"`
     //Principal           []string    `json:"principal"`
