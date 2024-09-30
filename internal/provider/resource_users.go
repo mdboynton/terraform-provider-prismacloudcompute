@@ -194,7 +194,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
         return
     }
   
-    // Overwrite state values with Prisma Cloud data
+    // Convert user value to schema
     state, diags = userToSchema(ctx, *user) 
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -221,7 +221,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
     // Generate API request body from plan
     user, diags := schemaToUser(ctx, &plan)
 
-    // Update exsting user
+    // Update existing user
 	err := auth.UpdateUser(*r.client, user)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -241,7 +241,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
         return
     }
 
-    // Update plan values from user data
+    // Convert updated user to schema
     plan, diags = userToSchema(ctx, *updatedUser)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {

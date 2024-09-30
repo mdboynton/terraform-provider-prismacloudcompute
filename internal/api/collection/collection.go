@@ -10,22 +10,22 @@ import (
 const CollectionsEndpoint = "api/v1/collections"
 
 type Collection struct {
-	AccountIDs  []string `json:"accountIDs,omitempty"`
-	AppIDs      []string `json:"appIDs,omitempty"`
-	Clusters    []string `json:"clusters,omitempty"`
-	Color       string   `json:"color,omitempty"`
-	Containers  []string `json:"containers,omitempty"`
-	Description string   `json:"description,omitempty"`
-	Functions   []string `json:"functions,omitempty"`
-	Hosts       []string `json:"hosts,omitempty"`
-	Images      []string `json:"images,omitempty"`
-	Labels      []string `json:"labels,omitempty"`
-    Modified    string   `json:"modified,omitempty"`
-	Name        string   `json:"name,omitempty"`
-	Namespaces  []string `json:"namespaces,omitempty"`
-    Owner       string   `json:"owner,omitempty"`
-    Prisma      bool     `json:"prisma,omitempty"`
-    System      bool     `json:"system,omitempty"`
+    AccountIDs  []string `json:"accountIDs,omitempty" tfsdk:"account_ids"`
+    AppIDs      []string `json:"appIDs,omitempty" tfsdk:"app_ids"`
+    Clusters    []string `json:"clusters,omitempty" tfsdk:"clusters"`
+    Color       string   `json:"color,omitempty" tfsdk:"color"`
+    Containers  []string `json:"containers,omitempty" tfsdk:"containers"`
+    Description string   `json:"description,omitempty" tfsdk:"description"`
+    Functions   []string `json:"functions,omitempty" tfsdk:"functions"`
+    Hosts       []string `json:"hosts,omitempty" tfsdk:"hosts"`
+    Images      []string `json:"images,omitempty" tfsdk:"images"`
+    Labels      []string `json:"labels,omitempty" tfsdk:"labels"`
+    Modified    string   `json:"modified,omitempty" tfsdk:"modified"`
+    Name        string   `json:"name,omitempty" tfsdk:"name"`
+    Namespaces  []string `json:"namespaces,omitempty" tfsdk:"namespaces"`
+    Owner       string   `json:"owner,omitempty" tfsdk:"owner"`
+    Prisma      bool     `json:"prisma,omitempty" tfsdk:"prisma"`
+    System      bool     `json:"system,omitempty" tfsdk:"system"`
 }
 
 // Get all collections.

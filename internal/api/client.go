@@ -83,10 +83,10 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		parsedURL.Scheme = "https"
 	}
 	parsedURL.Path = path.Join(parsedURL.Path, endpoint)
-    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-    fmt.Println("sending " + method + " request to")
-    fmt.Println(parsedURL)
-    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+    //fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+    //fmt.Println("sending " + method + " request to")
+    //fmt.Println(parsedURL)
+    //fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
 
 	var buf bytes.Buffer
 
@@ -168,10 +168,13 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		if err = json.Unmarshal(body, response); err != nil {
 			return err
 		}
-        fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-        fmt.Println("recieved response from endpoint: ")
-        fmt.Printf("%+v\n", response)
-        fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+        
+        if endpoint != "/api/v1/authenticate" && endpoint != "api/v1/static/vulnerabilities" {
+            fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+            fmt.Println("recieved response from endpoint: ")
+            fmt.Printf("%+v\n", response)
+            fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+        }
 	}
 	return nil
 }
@@ -187,7 +190,7 @@ func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
 	}
 
 	res := AuthResponse{}
-	if err := c.Request(http.MethodPost, "/api/v1/authenticate", nil, AuthRequest{c.Config.Username, c.Config.Password}, &res); err != nil {
+	if err := c.Request(http.MethodPost, "api/v1/authenticate", nil, AuthRequest{c.Config.Username, c.Config.Password}, &res); err != nil {
 		return fmt.Errorf("error POSTing to authenticate endpoint: %v", err)
 	}
 	c.JWT = res.Token

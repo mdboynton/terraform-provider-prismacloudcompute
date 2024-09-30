@@ -332,7 +332,7 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
     // Generate API request body from plan
     collection, diags := schemaToCollection(ctx, &plan)
 
-    // Update exsting collection 
+    // Update existing collection 
 	err := collectionAPI.UpdateCollection(*r.client, state.Name.ValueString(), collection)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -352,7 +352,7 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
         return
     }
 
-    // Update plan values from collection data
+    // Convert updated collection to schema
     plan, diags = collectionToSchema(ctx, *updatedCollection)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -393,15 +393,43 @@ func (r *CollectionResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+func collectionObjectType() types.ObjectType {
+    return types.ObjectType{
+        AttrTypes: collectionObjectAttrTypeMap(),
+    }
+}
+
+func collectionObjectAttrTypeMap() map[string]attr.Type {
+    return map[string]attr.Type{
+        "account_ids":  types.SetType{ElemType: types.StringType},
+        "app_ids":  types.SetType{ElemType: types.StringType},
+        "clusters":  types.SetType{ElemType: types.StringType},
+        "color":        types.StringType,
+        "containers":  types.SetType{ElemType: types.StringType},
+        "description":  types.StringType,
+        "functions":  types.SetType{ElemType: types.StringType},
+        "hosts":  types.SetType{ElemType: types.StringType},
+        "images":  types.SetType{ElemType: types.StringType},
+        "labels":  types.SetType{ElemType: types.StringType},
+        "modified": types.StringType,
+        "name":         types.StringType,
+        "namespaces":  types.SetType{ElemType: types.StringType},
+        "owner":        types.StringType,
+        "prisma":       types.BoolType,
+        "system":       types.BoolType,
+    }
+}
+
 func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     collection := collectionAPI.Collection{
-        Color: plan.Color.ValueString(),
-        Description: plan.Description.ValueString(),
-        Name: plan.Name.ValueString(),
-        Prisma: plan.Prisma.ValueBool(),
-        System: plan.System.ValueBool(),
+        //Color: plan.Color.ValueString(),
+        //Description: plan.Description.ValueString(),
+        //Name: plan.Name.ValueString(),
+        //Modified: plan.Modified.ValueString(),
+        //Prisma: plan.Prisma.ValueBool(),
+        //System: plan.System.ValueBool(),
     }
 
     accountIds := make([]string, 0, len(plan.AccountIDs.Elements()))
@@ -475,12 +503,12 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
     var diags diag.Diagnostics
 
     schema := CollectionResourceModel{
-        Color: types.StringValue(collection.Color),
-        Description: types.StringValue(collection.Description),
-        Modified: types.StringValue(collection.Modified),
-        Name: types.StringValue(collection.Name),
-        Prisma: types.BoolValue(collection.Prisma),
-        System: types.BoolValue(collection.System),
+        //Color: types.StringValue(collection.Color),
+        //Description: types.StringValue(collection.Description),
+        //Modified: types.StringValue(collection.Modified),
+        //Name: types.StringValue(collection.Name),
+        //Prisma: types.BoolValue(collection.Prisma),
+        //System: types.BoolValue(collection.System),
     }
 
     //if collection.Modified != nil {
