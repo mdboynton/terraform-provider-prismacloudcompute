@@ -184,38 +184,6 @@ type HostCompliancePolicyRuleExpirationResourceModel struct {
     Enabled types.Bool `tfsdk:"enabled"`
 }
 
-// string plan modifier
-func UseAlertBlockForBlockEffect() planmodifier.String {
-    return &useAlertBlockForBlockEffect{}
-}
-
-
-type useAlertBlockForBlockEffect struct {}
-
-func (m *useAlertBlockForBlockEffect) Description(_ context.Context) string {
-    return ""
-}
-
-func (m *useAlertBlockForBlockEffect) MarkdownDescription(_ context.Context) string {
-    return ""
-}
-
-func (m *useAlertBlockForBlockEffect) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-    //fmt.Println("***********************")
-    //fmt.Println("entering PlanModifyString")
-    //fmt.Println(req.PlanValue.ValueString())
-    //fmt.Println("***********************")
-
-    //resp.PlanValue = 
-
-    //if req.PlanValue.ValueString() == "block" {
-    //    req.PlanValue = types.StringValue("alert, block")
-    //    return
-    //}
-
-    //resp.PlanValue = req.StateValue
-}
-
 func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
     return schema.Schema{
         MarkdownDescription: "TODO",
@@ -431,9 +399,6 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            //PlanModifiers: []planmodifier.String{
-                            //    UseAlertBlockForBlockEffect(),
-                            //},
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),
                             },
@@ -1082,15 +1047,7 @@ func generateRulesOrderMap(rules []HostCompliancePolicyRuleResourceModel) map[st
     
     orderedRulesMap := make(map[int][]string)
 
-    //for index, rule := range *plan.Rules {
     for _, rule := range rules {
-        //if rule.Order.IsUnknown() || rule.Order.IsNull() {
-        //    rule.Order = types.Int32Value(int32(index + 1))
-        //    diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))...)
-        //    if diags.HasError() {
-        //        return
-        //    }
-        //}
         order := int(rule.Order.ValueInt32())
         if _, exists := orderedRulesMap[order]; exists {
             orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
@@ -1143,6 +1100,15 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
         return
     }
 
+    complianceVulnerabilities, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
+	if err != nil {
+		diags.AddError(
+            "Error modifying planned policy rules", 
+            "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
+        )
+        return
+	}
+
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     fmt.Println("starting loop over rules")
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
@@ -1167,14 +1133,15 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
         }
 
         if rule.Effect.IsUnknown() {
+            fmt.Printf("rule %s has unknown effect\n", rule.Name.ValueString())
             rule.Effect = types.StringValue("unknown")
             diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
             if diags.HasError() {
                 return
             }
-        }
+        } 
 
-        conditionObject, diags := createConditionFromEffect(ctx, *r.client, rule)
+        conditionObject, diags := createConditionFromEffect(ctx, *r.client, rule, complianceVulnerabilities)
         if diags.HasError() {
             return 
         }
@@ -1197,9 +1164,10 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
     //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 }
 
-func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComputeAPIClient, rule HostCompliancePolicyRuleResourceModel) (basetypes.ObjectValue, diag.Diagnostics) {
+func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComputeAPIClient, rule HostCompliancePolicyRuleResourceModel, complianceVulnerabilities []systemAPI.Vulnerability) (basetypes.ObjectValue, diag.Diagnostics) {
     var diags diag.Diagnostics
 
+    // Create static values
     effect := rule.Effect.ValueString()
     vulnerabilityObjectValues := []attr.Value{}
     vulnerabilitiesAttributeTypes := map[string]attr.Type{
@@ -1217,6 +1185,7 @@ func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComput
     }
     conditionObject := types.ObjectNull(conditionObjectValueTypes)
 
+    // If the effect is "alert, block", create condition vulnerabilities object from plan
     if effect == "alert, block" {
         var ruleConditionVulns []policyAPI.HostCompliancePolicyRuleVulnerability
 
@@ -1245,73 +1214,30 @@ func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComput
             )
             vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
         }
-    } else {
-        var vulnerabilitiesData systemAPI.Vulnerabilities
-        var onlyHighOrCritical bool
-
+    // Otherwise, if the rule effect is not "ignore", create condition vulnerabilities using Prisma Cloud vulnerability data
+    } else if effect != "ignore" {
         if effect == "unknown" {
-            onlyHighOrCritical = true
-        } else if effect == "alert" || effect == "block" {
-            onlyHighOrCritical = false
+           complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
         }
 
-        vulnerabilitiesData, err := systemAPI.GetComplianceHostVulnerabilities(client, onlyHighOrCritical)
-	    if err != nil {
-	    	diags.AddError(
-                "Error modifying planned policy rules", 
-                "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
-            )
-            return conditionObject, diags
-	    }
-    
-        complianceVulnerabilities := vulnerabilitiesData.ComplianceVulnerabilities
-  
-        if effect == "unknown" {
-            for _, vuln := range complianceVulnerabilities {
-                vulnerabilityObjectValue := types.ObjectValueMust(
-                    vulnerabilitiesAttributeTypes,
-                    map[string]attr.Value{
-                        "id": types.Int32Value(int32(vuln.Id)),
-                        "block": types.BoolValue(false),
-                    },
-                )
-                
-                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-            }
-        } else if effect == "alert" {
-            for _, vuln := range complianceVulnerabilities {
-                vulnerabilityObjectValue := types.ObjectValueMust(
-                    vulnerabilitiesAttributeTypes,
-                    map[string]attr.Value{
-                        "id": types.Int32Value(int32(vuln.Id)),
-                        "block": types.BoolValue(false),
-                    },
-                )
-                
-                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-            }
-        } else if effect == "block" {
-            for _, vuln := range complianceVulnerabilities {
-                var block bool
-                if vuln.Type == "windows" {
-                    block = false
-                } else {
-                    block = true
-                }
+        isBlockEffect := (effect == "block")
 
-                vulnerabilityObjectValue := types.ObjectValueMust(
-                    vulnerabilitiesAttributeTypes,
-                    map[string]attr.Value{
-                        "id": types.Int32Value(int32(vuln.Id)),
-                        "block": types.BoolValue(block),
-                    },
-                )
-                
-                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-            }
+        for _, vuln := range complianceVulnerabilities {
+            block := (isBlockEffect && !(vuln.Type == "windows"))
+
+            vulnerabilityObjectValue := types.ObjectValueMust(
+                vulnerabilitiesAttributeTypes,
+                map[string]attr.Value{
+                    "id": types.Int32Value(int32(vuln.Id)),
+                    "block": types.BoolValue(block),
+                },
+            )
+            
+            vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
         }
     }
 
+    // Create vulnerability list value
     vulnerabilityObject, diags := types.ListValueFrom(
         ctx,
         types.ObjectType{
@@ -1324,6 +1250,7 @@ func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComput
         return conditionObject, diags
     }
 
+    // Create condition object value
     conditionObject = types.ObjectValueMust(
         conditionObjectValueTypes,
         map[string]attr.Value{
@@ -1355,15 +1282,9 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     if resp.Diagnostics.HasError() {
         return
     }
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println(*plan.Rules)
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-
-    originalRuleOrder := make(map[string]int32)
-    for _, planRule := range *plan.Rules {
-        originalRuleOrder[planRule.Name.ValueString()] = planRule.Order.ValueInt32()
-    }
-    
+    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    //fmt.Println(*plan.Rules)
+    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     // Generate API request body from plan
     policy, diags := schemaToPolicy(ctx, &plan, r.client)
