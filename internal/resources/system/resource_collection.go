@@ -1,4 +1,4 @@
-package provider
+package system
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/convert"
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/attr"
@@ -15,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -42,8 +39,9 @@ type CollectionResourceModel struct {
     Hosts types.Set `tfsdk:"hosts"`
     Images types.Set `tfsdk:"images"`
     Labels types.Set `tfsdk:"labels"`
+    Modified types.String `tfsdk:"modified"`
     Name types.String `tfsdk:"name"`
-    Namespaces types.Set `tfsdk:"functions"`
+    Namespaces types.Set `tfsdk:"namespaces"`
     Owner types.String `tfsdk:"owner"`
     Prisma types.Bool `tfsdk:"prisma"`
     System types.Bool `tfsdk:"system"`
@@ -59,7 +57,9 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
         Attributes: map[string]schema.Attribute{
             "account_ids": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -71,7 +71,9 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "app_ids": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -83,7 +85,9 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "clusters": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -96,11 +100,14 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             "color": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
+                Computed: true,
                 Default: stringdefault.StaticString("#3FA2F7"),
             },
             "containers": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -113,11 +120,14 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             "description": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
+                Computed: true,
                 Default: stringdefault.StaticString(""),
             },
             "functions": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -129,7 +139,9 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "hosts": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -141,7 +153,9 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "images": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -153,7 +167,9 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "labels": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -163,13 +179,19 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
                     ),
                 ),
             },
+            "modified": schema.StringAttribute{
+                MarkdownDescription: "TODO",
+                Computed: true,
+            },
             "name": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Required: true,
             },
             "namespaces": schema.SetAttribute{
                 MarkdownDescription: "TODO",
+                ElementType: types.StringType,
                 Optional: true,
+                Computed: true,
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
@@ -186,10 +208,12 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             "prisma": schema.BoolAttribute{
                 MarkdownDescription: "TODO",
                 Computed: true,
+                Default: booldefault.StaticBool(false),
             },
             "system": schema.BoolAttribute{
                 MarkdownDescription: "TODO",
                 Computed: true,
+                Default: booldefault.StaticBool(false),
             },
         },
     }
@@ -242,11 +266,12 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
         return
 	}
 
-    // TODO: retrieve newly created resource and use that data to populate
-    //       state instead of using plan data (see below)
+    // Retrieve newly created collection
+    response, err := collectionAPI.GetCollection(*r.client, collection.Name)
+    updatedCollection, diags := collectionToSchema(ctx, *response)
 
-    // Set state to plan data
-    diags = resp.State.Set(ctx, collection)
+    // Set state to collection data
+    diags = resp.State.Set(ctx, updatedCollection)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -288,9 +313,17 @@ func (r *CollectionResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+    // Get current state
+    var state CollectionResourceModel 
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
     // Retrieve values from plan
     var plan CollectionResourceModel
-    diags := req.Plan.Get(ctx, &plan)
+    diags = req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -299,8 +332,8 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
     // Generate API request body from plan
     collection, diags := schemaToCollection(ctx, &plan)
 
-    // Update exsting collection 
-	err := collectionAPI.UpdateCollection(*r.client, collection)
+    // Update existing collection 
+	err := collectionAPI.UpdateCollection(*r.client, state.Name.ValueString(), collection)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Collection resource", 
@@ -319,7 +352,7 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
         return
     }
 
-    // Update plan values from collection data
+    // Convert updated collection to schema
     plan, diags = collectionToSchema(ctx, *updatedCollection)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -360,12 +393,43 @@ func (r *CollectionResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+func CollectionObjectType() types.ObjectType {
+    return types.ObjectType{
+        AttrTypes: CollectionObjectAttrTypeMap(),
+    }
+}
+
+func CollectionObjectAttrTypeMap() map[string]attr.Type {
+    return map[string]attr.Type{
+        "account_ids":  types.SetType{ElemType: types.StringType},
+        "app_ids":  types.SetType{ElemType: types.StringType},
+        "clusters":  types.SetType{ElemType: types.StringType},
+        "color":        types.StringType,
+        "containers":  types.SetType{ElemType: types.StringType},
+        "description":  types.StringType,
+        "functions":  types.SetType{ElemType: types.StringType},
+        "hosts":  types.SetType{ElemType: types.StringType},
+        "images":  types.SetType{ElemType: types.StringType},
+        "labels":  types.SetType{ElemType: types.StringType},
+        "modified": types.StringType,
+        "name":         types.StringType,
+        "namespaces":  types.SetType{ElemType: types.StringType},
+        "owner":        types.StringType,
+        "prisma":       types.BoolType,
+        "system":       types.BoolType,
+    }
+}
+
 func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     collection := collectionAPI.Collection{
-        Color: plan.Color.ValueString(),
-        Name: plan.Name.ValueString(),
+        //Color: plan.Color.ValueString(),
+        //Description: plan.Description.ValueString(),
+        //Name: plan.Name.ValueString(),
+        //Modified: plan.Modified.ValueString(),
+        //Prisma: plan.Prisma.ValueBool(),
+        //System: plan.System.ValueBool(),
     }
 
     accountIds := make([]string, 0, len(plan.AccountIDs.Elements()))
@@ -377,74 +441,60 @@ func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (col
 
 
     appIds := make([]string, 0, len(plan.AppIDs.Elements()))
-    diags = plan.AppIds.ElementsAs(ctx, &appIds, false)
+    diags = plan.AppIDs.ElementsAs(ctx, &appIds, false)
     if diags.HasError() {   
         return collection, diags
     }
     collection.AppIDs = appIds 
 
-    if plan.Clusters != nil {
-        clusters := make([]string, 0, len(plan.Clusters.Elements()))
-        diags = plan.Clusters.ElementsAs(ctx, &clusters, false)
-        if diags.HasError() {   
-            return collection, diags
-        }
-        collection.Clusters = clusters 
+    clusters := make([]string, 0, len(plan.Clusters.Elements()))
+    diags = plan.Clusters.ElementsAs(ctx, &clusters, false)
+    if diags.HasError() {   
+        return collection, diags
     }
+    collection.Clusters = clusters 
 
-    if plan.Containers != nil {
-        containers := make([]string, 0, len(plan.Containers.Elements()))
-        diags = plan.Containers.ElementsAs(ctx, &containers, false)
-        if diags.HasError() {   
-            return collection, diags
-        }
-        collection.Containers = containers 
+    containers := make([]string, 0, len(plan.Containers.Elements()))
+    diags = plan.Containers.ElementsAs(ctx, &containers, false)
+    if diags.HasError() {   
+        return collection, diags
     }
+    collection.Containers = containers 
 
-    if plan.Functions != nil {
-        functions := make([]string, 0, len(plan.Functions.Elements()))
-        diags = plan.Functions.ElementsAs(ctx, &functions, false)
-        if diags.HasError() {   
-            return collection, diags
-        }
-        collection.Functions = functions 
+    functions := make([]string, 0, len(plan.Functions.Elements()))
+    diags = plan.Functions.ElementsAs(ctx, &functions, false)
+    if diags.HasError() {   
+        return collection, diags
     }
+    collection.Functions = functions 
 
-    if plan.Hosts != nil {
-        hosts := make([]string, 0, len(plan.Hosts.Elements()))
-        diags = plan.Hosts.ElementsAs(ctx, &hosts, false)
-        if diags.HasError() {   
-            return collection, diags
-        }
-        collection.Hosts = hosts 
+    hosts := make([]string, 0, len(plan.Hosts.Elements()))
+    diags = plan.Hosts.ElementsAs(ctx, &hosts, false)
+    if diags.HasError() {   
+        return collection, diags
     }
+    collection.Hosts = hosts 
 
-    if plan.Images != nil {
-        images := make([]string, 0, len(plan.Images.Elements()))
-        diags = plan.Images.ElementsAs(ctx, &Images, false)
-        if diags.HasError() {   
-            return collection, diags
-        }
-        collection.Images = images 
+    images := make([]string, 0, len(plan.Images.Elements()))
+    diags = plan.Images.ElementsAs(ctx, &images, false)
+    if diags.HasError() {   
+        return collection, diags
     }
+    collection.Images = images 
 
-    if plan.Labels != nil {
-        labels := make([]string, 0, len(plan.Labels.Elements()))
-        diags = plan.Labels.ElementsAs(ctx, &labels, false)
-        if diags.HasError() {   
-            return collection, diags
-        }
-        collection.Labels = labels 
+    labels := make([]string, 0, len(plan.Labels.Elements()))
+    diags = plan.Labels.ElementsAs(ctx, &labels, false)
+    if diags.HasError() {   
+        return collection, diags
     }
+    collection.Labels = labels 
 
-    if plan.Namespaces != nil {
-        namespaces := make([]string, 0, len(plan.Namespaces.Elements()))
-        diags = plan.Namespaces.ElementsAs(ctx, &namespaces, false)
-        if diags.HasError() {   
-            return collection, diags
-        }
-        collection.Namespaces = Namespaces 
+    namespaces := make([]string, 0, len(plan.Namespaces.Elements()))
+    diags = plan.Namespaces.ElementsAs(ctx, &namespaces, false)
+    if diags.HasError() {   
+        return collection, diags
     }
+    collection.Namespaces = namespaces 
 
 	return collection, diags 
 }
@@ -453,10 +503,17 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
     var diags diag.Diagnostics
 
     schema := CollectionResourceModel{
-        Color: types.StringValue(collection.Color),
-        Name: types.StringValue(collection.Name),
-        Prisma: types.BoolValue(collection.Prisma),
+        //Color: types.StringValue(collection.Color),
+        //Description: types.StringValue(collection.Description),
+        //Modified: types.StringValue(collection.Modified),
+        //Name: types.StringValue(collection.Name),
+        //Prisma: types.BoolValue(collection.Prisma),
+        //System: types.BoolValue(collection.System),
     }
+
+    //if collection.Modified != nil {
+    //    schema.Modified = collection.Modified
+    //}
 
     if collection.AccountIDs != nil {
         accountIds, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)
@@ -464,7 +521,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.AccountIDs = &accountIds
+        schema.AccountIDs = accountIds
     }
 
     if collection.AppIDs != nil {
@@ -473,7 +530,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.AppIDs = &appIds
+        schema.AppIDs = appIds
     }
 
     if collection.Clusters != nil {
@@ -482,7 +539,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Clusters = &clusters
+        schema.Clusters = clusters
     }
 
     if collection.Containers != nil {
@@ -491,7 +548,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Containers = &containers
+        schema.Containers = containers
     }
 
     if collection.Functions != nil {
@@ -500,7 +557,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Functions = &functions
+        schema.Functions = functions
     }
 
     if collection.Hosts != nil {
@@ -509,7 +566,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Hosts = &hosts
+        schema.Hosts = hosts
     }
 
     if collection.Images != nil {
@@ -518,7 +575,7 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Images = &images
+        schema.Images = images
     }
 
     if collection.Labels != nil {
@@ -527,16 +584,16 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
             return schema, diags
         }
 
-        schema.Labels = &labels
+        schema.Labels = labels
     }
-
+    
     if collection.Namespaces != nil {
         namespaces, diags := types.SetValueFrom(ctx, types.StringType, collection.Namespaces)
         if diags.HasError() {
             return schema, diags
         }
 
-        schema.Namespaces = &namespaces
+        schema.Namespaces = namespaces
     }
 
     return schema, diags

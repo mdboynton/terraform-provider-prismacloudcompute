@@ -7,6 +7,9 @@ import (
 	//"io/ioutil"
 	//"os"
 
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/auth"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 
     "github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -83,9 +86,9 @@ func (p *PrismaCloudComputeProvider) Metadata(_ context.Context, _ provider.Meta
 
 func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() resource.Resource {
     return []func() resource.Resource{
-       NewUserResource,
-       NewCollectionResource,
-       NewHostCompliancePolicyResource,
+       auth.NewUserResource,
+       system.NewCollectionResource,
+       policy.NewHostCompliancePolicyResource,
     }
 }
 

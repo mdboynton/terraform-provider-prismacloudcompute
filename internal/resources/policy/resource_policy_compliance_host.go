@@ -1,4 +1,4 @@
-package provider
+package policy 
 
 import (
     "context"
@@ -9,20 +9,24 @@ import (
     "cmp"
     "sort"
 
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/provider"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/convert"
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/attr"
+    "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,9 +40,7 @@ import (
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	
 
-    "github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 
@@ -200,22 +202,19 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                 Computed: true,
                 Default: stringdefault.StaticString("hostCompliance"),
             },
-            //"rules": schema.SetNestedAttribute{
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 //Computed: true,
-                //PlanModifiers: []planmodifier.Set{
-                //    setplanmodifier.UseStateForUnknown(),
-                //},
+                Validators: []validator.List{
+                    validators.PolicyRuleNameIsUnique("host compliance"),
+                },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
                         "order": schema.Int32Attribute{
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            //Default: int32default.StaticInt32(1),
-                            // TODO: add validator to make sure this is a positive non-zero int
                         },
                         //"action": schema.SetAttribute{
                         //    MarkdownDescription: "TODO",
@@ -847,10 +846,10 @@ func (r *HostCompliancePolicyResource) GetCollectionsSchema() schema.SetNestedAt
         Computed: true,
         Default: setdefault.StaticValue(
             types.SetValueMust(
-                collectionObjectType(),
+                system.CollectionObjectType(),
                 []attr.Value{
                     types.ObjectValueMust(
-                        collectionObjectAttrTypeMap(),
+                        system.CollectionObjectAttrTypeMap(),
                         map[string]attr.Value{
                             "account_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
                             "app_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
@@ -1562,7 +1561,7 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
         }
 
         for _, planCollection := range planCollections {
-            collectionModel := CollectionResourceModel{}
+            collectionModel := system.CollectionResourceModel{}
             diags = planCollection.As(ctx, &collectionModel, basetypes.ObjectAsOptions{})
             if diags.HasError() {
                 return rules, diags
@@ -1793,7 +1792,7 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
                 }
 
                 collectionObjectValue := types.ObjectValueMust(
-                    collectionObjectAttrTypeMap(),
+                    system.CollectionObjectAttrTypeMap(),
                     map[string]attr.Value{
                         "account_ids": accountIDs,
                         "app_ids": appIDs,
@@ -1820,7 +1819,7 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
 
             collectionSet, diags := types.SetValueFrom(
                 ctx,
-                collectionObjectType(),
+                system.CollectionObjectType(),
                 collectionObjectValues,
             )
 
