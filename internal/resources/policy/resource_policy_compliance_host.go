@@ -194,7 +194,7 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                //Default: stringdefault.StaticString("hostCompliance"),
+                Default: stringdefault.StaticString("hostCompliance"),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
@@ -1902,54 +1902,22 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
     for index, planRule := range planRules {
         ruleOrderMap[planRule.Name.ValueString()] = int32(index)
     }
-    fmt.Println("***********************")
-    fmt.Println("ruleOrderMap:")
-    fmt.Println(ruleOrderMap)
-    fmt.Println("***********************")
-    
-    fmt.Println("***********************")
-    fmt.Println("pre-sort:")
-    for _, x := range schemaRules {
-        fmt.Printf("%s %d\n", x.Name, int(x.Order.ValueInt32()))
-    }
-    fmt.Println("***********************")
 
     slices.SortFunc(schemaRules, func(a, b HostCompliancePolicyRuleResourceModel) int {
-        orderI, okI := ruleOrderMap[a.Name.ValueString()]
-        if !okI {
-            fmt.Println("not okI")
-            orderI = int32(len(ruleOrderMap) + 1)
+        orderA, okA := ruleOrderMap[a.Name.ValueString()]
+        if !okA {
+            orderA = int32(len(ruleOrderMap) + 1)
         }
-        orderJ, okJ := ruleOrderMap[b.Name.ValueString()]
-        if !okJ {
-            fmt.Println("not okJ")
-            orderJ = int32(len(ruleOrderMap) + 1)
+        orderB, okB := ruleOrderMap[b.Name.ValueString()]
+        if !okB {
+            orderB = int32(len(ruleOrderMap) + 1)
         }
-        return cmp.Compare(orderI, orderJ)
+        return cmp.Compare(orderA, orderB)
     })
-
-    fmt.Println("***********************")
-    fmt.Println("post-sort:")
-    for _, x := range schemaRules {
-        fmt.Printf("%s %d\n", x.Name, int(x.Order.ValueInt32()))
-    }
-    fmt.Println("***********************")
 
     for i := 0; i < len(schemaRules); i++ {
         schemaRules[i].Order = planRules[i].Order
     }
-
-    fmt.Println("***********************")
-    fmt.Println("after re-assignment:")
-    for _, x := range schemaRules {
-        fmt.Printf("%s %d\n", x.Name, int(x.Order.ValueInt32()))
-    }
-    fmt.Println("***********************")
-
-    fmt.Println("***********************")
-    fmt.Println("exiting policyRulesToSchema")
-    fmt.Printf("%+v\n", schemaRules)
-    fmt.Println("***********************")
 
     return schemaRules, diags
 }
