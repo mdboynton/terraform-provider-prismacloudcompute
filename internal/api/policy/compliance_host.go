@@ -13,7 +13,7 @@ const (
 )
 
 type HostCompliancePolicy struct {
-    Id    string            `json:"id"`
+    Id    string            `json:"_id"`
 	Rules *[]HostCompliancePolicyRule `json:"rules"`
 	PolicyType  string           `json:"policyType"`
 }
@@ -43,7 +43,7 @@ type HostCompliancePolicyRule struct {
     //GraceDaysPolicy HostCompliancePolicyRuleGraceDaysPolicy  `json:"graceDaysPolicy"`
     //Groups          []string            `json:"groups"`
     //License         HostCompliancePolicyRuleLicense     `json:"license"`
-    //Modified        string              `json:"modified"`
+    Modified        string              `json:"modified"`
 	//Name             string                  `json:"name"`
 	Notes            string                  `json:"notes"`
     //OnlyFixed       bool            `json:"onlyFixed"`

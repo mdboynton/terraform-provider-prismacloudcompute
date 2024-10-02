@@ -2,26 +2,21 @@ package policy
 
 import (
     "context"
-    //"time"
 	"fmt"
     "reflect"
     "slices"
     "cmp"
     "sort"
-
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+    "time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/provider"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/convert"
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/attr"
@@ -32,11 +27,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -91,7 +86,7 @@ type HostCompliancePolicyRuleResourceModel struct {
     //Groups types.Set `tfsdk:"groups"`
     //License *HostCompliancePolicyRuleLicenseResourceModel `tfsdk:"license"`
     //License types.Object `tfsdk:"license"`
-    //Modified types.String `tfsdk:"modified"`
+    Modified types.String `tfsdk:"modified"`
     //Name types.String `tfsdk:"name"`
     Notes types.String `tfsdk:"notes"`
     //OnlyFixed types.Bool `tfsdk:"only_fixed"`
@@ -584,16 +579,16 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                         //    //    UseStateForUnknown(),
                         //    //},
                         //},
-                        //"modified": schema.StringAttribute{
-                        //   MarkdownDescription: "TODO",
-                        //    Optional: true,
-                        //    Computed: true,
-                        //    //Default: stringdefault.StaticString(time.Now().Format("2006-01-02T15:04:05.000Z")),
-                        //    //PlanModifiers: []planmodifier.String{
-                        //    //    //UseStateForUnknown(),
-                        //    //    UsePlanForUnknownString(),
-                        //    //},
-                        //},
+                        "modified": schema.StringAttribute{
+                           MarkdownDescription: "TODO",
+                            Optional: true,
+                            Computed: true,
+                            //Default: stringdefault.StaticString(time.Now().Format("2006-01-02T15:04:05.000Z")),
+                            //PlanModifiers: []planmodifier.String{
+                            //    //UseStateForUnknown(),
+                            //    UsePlanForUnknownString(),
+                            //},
+                        },
                         "name": schema.StringAttribute{
                             MarkdownDescription: "TODO",
                             Required: true,
@@ -604,6 +599,9 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
+                            PlanModifiers: []planmodifier.String{
+                                stringplanmodifier.UseStateForUnknown(),
+                            },
                         },
                         //"only_fixed": schema.BoolAttribute{
                         //    MarkdownDescription: "TODO",
@@ -615,8 +613,9 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            //Default: stringdefault.StaticString("admin"),
-                            //Default: stringdefault.StaticString(username),
+                            PlanModifiers: []planmodifier.String{
+                                stringplanmodifier.UseStateForUnknown(),
+                            },
                         },
                         //"package_types_thresholds": schema.SetNestedAttribute{
                         //    MarkdownDescription: "TODO",
@@ -1674,6 +1673,7 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
             ReportAllPassedAndFailedChecks: planRule.ReportAllPassedAndFailedChecks.ValueBool(),
             //Owner: planRule.Owner.ValueString(),
             Disabled: planRule.Disabled.ValueBool(),
+            Modified: time.Now().Format("2006-01-02T15:04:05.000Z"),
         }
         
         if !planRule.Notes.IsUnknown() && !planRule.Notes.IsNull() {
@@ -1740,6 +1740,7 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
             Effect: types.StringValue(rule.Effect),
             Verbose: types.BoolValue(rule.Verbose),
             Owner: types.StringValue(rule.Owner),
+            Modified: types.StringValue(rule.Modified),
             ReportAllPassedAndFailedChecks: types.BoolValue(rule.ReportAllPassedAndFailedChecks),
         }
 
@@ -1889,10 +1890,7 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
             schemaRule.Condition = conditionObject
         }
 
-        if rule.Notes != "" {
-            schemaRule.Notes = types.StringValue(rule.Notes)
-        }
-
+        schemaRule.Notes = types.StringValue(rule.Notes)
         schemaRule.BlockMessage = types.StringValue(rule.BlockMessage) 
             
         schemaRules = append(schemaRules, schemaRule)

@@ -18,6 +18,7 @@ type HostCompliancePolicyRuleResourceModel struct {
     Condition types.Object `tfsdk:"condition"`
     Disabled types.Bool `tfsdk:"disabled"`
     Effect types.String `tfsdk:"effect"`
+    Modified types.String `tfsdk:"modified"`
     Notes types.String `tfsdk:"notes"`
     Owner types.String `tfsdk:"owner"`
     Verbose types.Bool `tfsdk:"verbose"`
