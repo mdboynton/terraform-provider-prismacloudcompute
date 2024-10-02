@@ -19,6 +19,7 @@ type HostCompliancePolicy struct {
 }
 
 type HostCompliancePolicyRule struct {
+    Order            int                    `json:"order"`
 	Name             string                  `json:"name"`
     //Action          []string        `json:"action"`
     Collections      []collection.Collection `json:"collections" tfsdk:"collections"`

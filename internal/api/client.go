@@ -162,7 +162,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 	}
 
     fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-    fmt.Println("unmarshalling response body")
+    fmt.Printf("unmarshalling response body (endpoint: %s)\n", endpoint)
     fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
 	if len(body) > 0 && response != nil {
 		if err = json.Unmarshal(body, response); err != nil {

@@ -5,6 +5,9 @@ import (
     //"time"
 	"fmt"
     "reflect"
+    "slices"
+    "cmp"
+    "sort"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
@@ -62,6 +65,7 @@ type HostCompliancePolicyResourceModel struct {
 }
 
 type HostCompliancePolicyRuleResourceModel struct {
+    Order types.Int32 `tfsdk:"order"`
     //Action types.Set `tfsdk:"action"`
     //Modified types.String `tfsdk:"modified"`
     Name types.String `tfsdk:"name"`
@@ -180,50 +184,6 @@ type HostCompliancePolicyRuleExpirationResourceModel struct {
     Enabled types.Bool `tfsdk:"enabled"`
 }
 
-// condition set modifier 
-type useStateForUnknownCondition struct {}
-
-func (m useStateForUnknownCondition) Description(_ context.Context) string {
-    return ""
-}
-
-func (m useStateForUnknownCondition) MarkdownDescription(_ context.Context) string {
-    return ""
-}
-
-func (m useStateForUnknownCondition) PlanModifyObject(_ context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
-    fmt.Println("***********************")
-    fmt.Println("entering PlanModifySet for UseStateForUnknownCondition")
-    fmt.Println("***********************")
-    
-    if resp.PlanValue.IsUnknown() {
-        return
-        //vulnerabilityListType := types.ListType{
-        //    ElemType: types.ObjectType{
-        //        AttrTypes: map[string]attr.Type{
-        //            "id": types.Int32Type,
-        //            "block": types.BoolType,
-        //        },
-        //    },
-        //}
-
-        //conditionObjectValue := types.ObjectValueMust(
-        //    map[string]attr.Type{
-        //        "device":  types.StringType,
-        //        "read_only":  types.BoolType,
-        //        "vulnerabilities": vulnerabilityListType,
-        //    },
-        //    map[string]attr.Value{},
-        //)
-
-        //req.PlanValue = conditionObjectValue
-    }
-}
-
-func UseStateForUnknownCondition() planmodifier.Object {
-    return useStateForUnknownCondition{} 
-}
-
 // string plan modifier
 func UseAlertBlockForBlockEffect() planmodifier.String {
     return &useAlertBlockForBlockEffect{}
@@ -241,10 +201,10 @@ func (m *useAlertBlockForBlockEffect) MarkdownDescription(_ context.Context) str
 }
 
 func (m *useAlertBlockForBlockEffect) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-    fmt.Println("***********************")
-    fmt.Println("entering PlanModifyString")
-    fmt.Println(req.PlanValue.ValueString())
-    fmt.Println("***********************")
+    //fmt.Println("***********************")
+    //fmt.Println("entering PlanModifyString")
+    //fmt.Println(req.PlanValue.ValueString())
+    //fmt.Println("***********************")
 
     //resp.PlanValue = 
 
@@ -282,6 +242,13 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                 //},
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
+                        "order": schema.Int32Attribute{
+                            MarkdownDescription: "TODO",
+                            Optional: true,
+                            Computed: true,
+                            //Default: int32default.StaticInt32(1),
+                            // TODO: add validator to make sure this is a positive non-zero int
+                        },
                         //"action": schema.SetAttribute{
                         //    MarkdownDescription: "TODO",
                         //    ElementType: types.StringType,
@@ -371,9 +338,6 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            //PlanModifiers: []planmodifier.Object{
-                            //    UseStateForUnknownCondition(),
-                            //},
                             Attributes: map[string]schema.Attribute{
                                 //"device": schema.StringAttribute{
                                 //    MarkdownDescription: "TODO",
@@ -467,9 +431,9 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            PlanModifiers: []planmodifier.String{
-                                UseAlertBlockForBlockEffect(),
-                            },
+                            //PlanModifiers: []planmodifier.String{
+                            //    UseAlertBlockForBlockEffect(),
+                            //},
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),
                             },
@@ -1111,6 +1075,62 @@ func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resour
     r.client = client
 }
 
+func generateRulesOrderMap(rules []HostCompliancePolicyRuleResourceModel) map[string]int {
+    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    fmt.Println("starting rule ordering")
+    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    
+    orderedRulesMap := make(map[int][]string)
+
+    //for index, rule := range *plan.Rules {
+    for _, rule := range rules {
+        //if rule.Order.IsUnknown() || rule.Order.IsNull() {
+        //    rule.Order = types.Int32Value(int32(index + 1))
+        //    diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))...)
+        //    if diags.HasError() {
+        //        return
+        //    }
+        //}
+        order := int(rule.Order.ValueInt32())
+        if _, exists := orderedRulesMap[order]; exists {
+            orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
+        } else {
+            orderedRulesMap[order] = []string{rule.Name.ValueString()}
+        }
+    }
+        
+    sortedKeys := make([]int, 0, len(orderedRulesMap))
+    for key, _ := range orderedRulesMap {
+        sortedKeys = append(sortedKeys, key)
+    }
+    sort.Ints(sortedKeys)
+
+    /*
+        9999.1 -> 9999
+        9999.2 -> 10000 
+        9999.3 -> 10001
+        10000.1 -> 10002
+    */
+    ruleOrders := make(map[string]int)
+    lastOrderValue := -1
+    for i, key := range sortedKeys {
+        fmt.Printf("loop %d: lastOrderValue = %d\n", i, lastOrderValue)
+        offset := 0
+        if lastOrderValue != -1 && lastOrderValue >= key {
+            offset = lastOrderValue - key + 1
+            fmt.Printf("offset set to %d\n", offset)
+        }
+
+        for sliceIndex, ruleName := range orderedRulesMap[key] {
+            orderValue := key + sliceIndex + offset
+            ruleOrders[ruleName] = orderValue
+            lastOrderValue = orderValue
+        }
+    }
+
+    return ruleOrders
+}
+
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     fmt.Println("entering ModifyPlan")
@@ -1130,6 +1150,22 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
         // TODO: add logic to populate collection.Modified for collections that already exist in the state
         // so that terraform doesn't show the collection as being updated in place
 
+        // TODO: add check for duplicate rule names and throw error if any exist
+        
+        if rule.Order.IsUnknown() || rule.Order.IsNull() {
+            rule.Order = types.Int32Value(int32(index + 1))
+            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))...)
+            if diags.HasError() {
+                return
+            }
+        } else if int(rule.Order.ValueInt32()) < 1 {
+            resp.Diagnostics.AddError(
+		    	"Invalid Resource Configuration",
+		    	fmt.Sprintf("Host Compliance Policy Rule specified an invalid order (%d). Order values must be positive non-zero integers.", int(rule.Order.ValueInt32())),
+		    )
+            return
+        }
+
         if rule.Effect.IsUnknown() {
             rule.Effect = types.StringValue("unknown")
             diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
@@ -1145,21 +1181,20 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
 
         resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
     }
-    //resp.Plan.Set(ctx, &plan)
 
-    var respPlan HostCompliancePolicyResourceModel
-    diags = resp.Plan.Get(ctx, &respPlan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+    //var respPlan HostCompliancePolicyResourceModel
+    //diags = resp.Plan.Get(ctx, &respPlan)
+    //resp.Diagnostics.Append(diags...)
+    //if resp.Diagnostics.HasError() {
+    //    return
+    //}
 
-    fmt.Printf("%+v\n", respPlan)
-    fmt.Printf("%+v\n", *respPlan.Rules)
-    //fmt.Printf("%+v\n", &respPlan.Rules.Elements()[0].Condition)
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("exiting ModifyPlan")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    //fmt.Printf("%+v\n", respPlan)
+    //fmt.Printf("%+v\n", *respPlan.Rules)
+    ////fmt.Printf("%+v\n", &respPlan.Rules.Elements()[0].Condition)
+    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    //fmt.Println("exiting ModifyPlan")
+    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 }
 
 func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComputeAPIClient, rule HostCompliancePolicyRuleResourceModel) (basetypes.ObjectValue, diag.Diagnostics) {
@@ -1324,6 +1359,12 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     fmt.Println(*plan.Rules)
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
+    originalRuleOrder := make(map[string]int32)
+    for _, planRule := range *plan.Rules {
+        originalRuleOrder[planRule.Name.ValueString()] = planRule.Order.ValueInt32()
+    }
+    
+
     // Generate API request body from plan
     policy, diags := schemaToPolicy(ctx, &plan, r.client)
     resp.Diagnostics.Append(diags...)
@@ -1360,7 +1401,18 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
         return
     }
 
-    createdPolicy, diags := policyToSchema(ctx, *response)
+
+    // TODO: explore passing in the CreateRequest to policyToSchema in order to be
+    // able to reference configured order values that arent returned from the API
+
+    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    //fmt.Println(req.Plan)
+    fmt.Println(req.Plan.Raw)
+    //fmt.Println(reflect.TypeOf(req.Plan))
+    fmt.Println(reflect.TypeOf(req.Plan.Raw))
+    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    //createdPolicy, diags := policyToSchema(ctx, *response)
+    createdPolicy, diags := policyToSchema(ctx, *response, plan)
     if diags.HasError() {
         return
     }
@@ -1418,7 +1470,8 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
   
     // Overwrite state values with Prisma Cloud data
-    policySchema, diags := policyToSchema(ctx, *policy)
+    //createdPolicy, diags := policyToSchema(ctx, *response)
+    policySchema, diags := policyToSchema(ctx, *policy, state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -1488,14 +1541,15 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
   
     // Convert updated policy into schema
-    plan, diags = policyToSchema(ctx, *policy)
+    //createdPolicy, diags := policyToSchema(ctx, *response)
+    policySchema, diags := policyToSchema(ctx, *policy, plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
 
     // Set updated state
-    diags = resp.State.Set(ctx, plan)
+    diags = resp.State.Set(ctx, policySchema)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -1689,6 +1743,7 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
         }
 
         rule := policyAPI.HostCompliancePolicyRule{
+            Order: int(planRule.Order.ValueInt32()),
             Name: planRule.Name.ValueString(), 
             Collections: collections,
             BlockMessage: planRule.BlockMessage.ValueString(),
@@ -1708,16 +1763,21 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
         rules = append(rules, rule)
     }
 
+    rulesOrderMap := generateRulesOrderMap(planRules) 
+    sort.Slice(rules, func(i, j int) bool {
+        return rulesOrderMap[rules[i].Name] < rulesOrderMap[rules[j].Name]
+    })
+
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     fmt.Println("exiting ruleSchemaToPolicy")
-    //fmt.Printf("%+v\n", rules)
-    fmt.Printf("%+v\n", *rules[0].Condition)
+    fmt.Printf("%+v\n", rules)
+    //fmt.Printf("%+v\n", *rules[0].Condition)
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     
     return rules, diags
 }
 
-func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy) (HostCompliancePolicyResourceModel, diag.Diagnostics) {
+func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy, plan HostCompliancePolicyResourceModel) (HostCompliancePolicyResourceModel, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     schema := HostCompliancePolicyResourceModel{
@@ -1725,8 +1785,9 @@ func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy) 
         PolicyType: types.StringValue(policy.PolicyType),
     }
 
-    rules, diags := policyRulesToSchema(ctx, *policy.Rules)
+    rules, diags := policyRulesToSchema(ctx, *policy.Rules, *plan.Rules)
     fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    //fmt.Println(plan)
     fmt.Println("!!! returned from policyRulesToSchema: ") 
     //fmt.Printf("%+v\n", rules)
     fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
@@ -1739,7 +1800,7 @@ func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy) 
     return schema, diags
 }
 
-func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePolicyRule) ([]HostCompliancePolicyRuleResourceModel, diag.Diagnostics) {
+func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePolicyRule, planRules []HostCompliancePolicyRuleResourceModel) ([]HostCompliancePolicyRuleResourceModel, diag.Diagnostics) {
     fmt.Println("***********************")
     fmt.Println("entering policyRulesToSchema")
     fmt.Println("***********************")
@@ -1917,9 +1978,57 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
         schemaRules = append(schemaRules, schemaRule)
     }
 
+    ruleOrderMap := make(map[string]int32)
+    for index, planRule := range planRules {
+        ruleOrderMap[planRule.Name.ValueString()] = int32(index)
+    }
+    fmt.Println("***********************")
+    fmt.Println("ruleOrderMap:")
+    fmt.Println(ruleOrderMap)
+    fmt.Println("***********************")
+    
+    fmt.Println("***********************")
+    fmt.Println("pre-sort:")
+    for _, x := range schemaRules {
+        fmt.Printf("%s %d\n", x.Name, int(x.Order.ValueInt32()))
+    }
+    fmt.Println("***********************")
+
+    slices.SortFunc(schemaRules, func(a, b HostCompliancePolicyRuleResourceModel) int {
+        orderI, okI := ruleOrderMap[a.Name.ValueString()]
+        if !okI {
+            fmt.Println("not okI")
+            orderI = int32(len(ruleOrderMap) + 1)
+        }
+        orderJ, okJ := ruleOrderMap[b.Name.ValueString()]
+        if !okJ {
+            fmt.Println("not okJ")
+            orderJ = int32(len(ruleOrderMap) + 1)
+        }
+        return cmp.Compare(orderI, orderJ)
+    })
+
+    fmt.Println("***********************")
+    fmt.Println("post-sort:")
+    for _, x := range schemaRules {
+        fmt.Printf("%s %d\n", x.Name, int(x.Order.ValueInt32()))
+    }
+    fmt.Println("***********************")
+
+    for i := 0; i < len(schemaRules); i++ {
+        schemaRules[i].Order = planRules[i].Order
+    }
+
+    fmt.Println("***********************")
+    fmt.Println("after re-assignment:")
+    for _, x := range schemaRules {
+        fmt.Printf("%s %d\n", x.Name, int(x.Order.ValueInt32()))
+    }
+    fmt.Println("***********************")
+
     fmt.Println("***********************")
     fmt.Println("exiting policyRulesToSchema")
-    //fmt.Printf("%+v\n", schemaRules)
+    fmt.Printf("%+v\n", schemaRules)
     fmt.Println("***********************")
 
     return schemaRules, diags
