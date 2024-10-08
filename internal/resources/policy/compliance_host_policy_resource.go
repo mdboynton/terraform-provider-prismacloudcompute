@@ -327,12 +327,6 @@ func generateRulesOrderMap(rules []HostCompliancePolicyRuleResourceModel) map[st
     }
     sort.Ints(sortedKeys)
 
-    /*
-        9999.1 -> 9999
-        9999.2 -> 10000 
-        9999.3 -> 10001
-        10000.1 -> 10002
-    */
     ruleOrders := make(map[string]int)
     lastOrderValue := -1
     for _, key := range sortedKeys {
@@ -351,7 +345,107 @@ func generateRulesOrderMap(rules []HostCompliancePolicyRuleResourceModel) map[st
     return ruleOrders
 }
 
+func sortPolicyRules(rules *[]policyAPI.HostCompliancePolicyRule, planRules *[]HostCompliancePolicyRuleResourceModel) {
+    rulesOrderMap := generateRulesOrderMap(*planRules) 
+    r := *rules
+    sort.Slice(r, func(i, j int) bool {
+        return rulesOrderMap[r[i].Name] < rulesOrderMap[r[j].Name]
+    })
+    rules = &r 
+}
+
+func sortSchemaRules(schemaRules *[]HostCompliancePolicyRuleResourceModel, planRules *[]HostCompliancePolicyRuleResourceModel) {
+    ruleOrderMap := make(map[string]int32)
+    pr := *planRules
+    sr := *schemaRules
+
+    for index, planRule := range pr {
+        ruleOrderMap[planRule.Name.ValueString()] = int32(index)
+    }
+
+    slices.SortFunc(sr, func(a, b HostCompliancePolicyRuleResourceModel) int {
+        orderA, okA := ruleOrderMap[a.Name.ValueString()]
+        if !okA {
+            orderA = int32(len(ruleOrderMap) + 1)
+        }
+        orderB, okB := ruleOrderMap[b.Name.ValueString()]
+        if !okB {
+            orderB = int32(len(ruleOrderMap) + 1)
+        }
+        return cmp.Compare(orderA, orderB)
+    })
+
+    for i := 0; i < len(sr); i++ {
+        sr[i].Order = pr[i].Order
+    }
+
+    schemaRules = &sr
+}
+
 func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComputeAPIClient, rule HostCompliancePolicyRuleResourceModel, complianceVulnerabilities []systemAPI.Vulnerability) (basetypes.ObjectValue, diag.Diagnostics) {
+    // TODO: finish implementing this more compact implementation of this function
+    //      currently, the issue is that we're dealing with two different types of
+    //      vulnerability objects depending on whether we're taking the vulnerability
+    //      data from the TF resource configuration or from Prisma Cloud
+    //if effect != "ignore" {
+    //    if effect == "alert, block" {
+    //        //var ruleConditionVulns []policyAPI.HostCompliancePolicyRuleVulnerability
+
+    //        if rule.Condition.IsUnknown() {
+    //            diags.AddError(
+    //                "Missing condition from \"alert, block\" effect rule",
+    //                "Condition attribute must be defined for rules with effect \"alert, block\".",
+    //            )
+    //            return conditionObject, diags
+    //        }
+
+    //        ruleCondition := policyAPI.HostCompliancePolicyRuleCondition{} 
+    //        diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
+    //        if diags.HasError() {
+    //            return conditionObject, diags
+    //        }
+
+    //        //ruleConditionVulns = ruleCondition.Vulnerabilities
+    //        //complianceVulnerabilities = ruleCondition.Vulnerabilities
+    //        vulnerabilities := ruleCondition.Vulnerabilities
+    //    } else if effect == "unknown" {
+    //        complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
+    //        vulnerabilities := complianceVulnerabilities
+    //    } else {
+    //        vulnerabilities := complianceVulnerabilities
+    //    }
+    //   
+    //    //var block func(string, HostCompliancePolicyRuleVulnerabilityResourceModel) bool
+    //    var block func(string, interface{}) bool
+    //    //block = func(effect string, vuln HostCompliancePolicyRuleVulnerability) bool {
+    //    block = func(effect string, vuln interface{}) bool {
+    //        if effect == "alert, block" {
+    //            return vuln.Block
+    //        } else {
+    //            return (effect == "block") && !(vuln.Type == "windows")
+    //        }
+    //    }
+
+    //    //isBlockEffect := (effect == "block")
+    //    for _, vuln := range complianceVulnerabilities {
+    //        //if effect == "alert, block" {
+    //        //    block := vuln.Block
+    //        //} else {
+    //        //    block := (isBlockEffect && !(vuln.Type == "windows"))
+    //        //}
+
+    //        vulnerabilityObjectValue := types.ObjectValueMust(
+    //            vulnerabilitiesAttributeTypes,
+    //            map[string]attr.Value{
+    //                "id": types.Int32Value(int32(vuln.Id)),
+    //                //"block": types.BoolValue(block),
+    //                "block": types.BoolValue(block(effect, vuln)),
+    //            },
+    //        )
+    //        
+    //        vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+    //    }
+    //}
     var diags diag.Diagnostics
 
     // Create static values
@@ -535,10 +629,7 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
         rules = append(rules, rule)
     }
 
-    rulesOrderMap := generateRulesOrderMap(planRules) 
-    sort.Slice(rules, func(i, j int) bool {
-        return rulesOrderMap[rules[i].Name] < rulesOrderMap[rules[j].Name]
-    })
+    sortPolicyRules(&rules, &planRules)
 
     fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     fmt.Println("exiting ruleSchemaToPolicy")
@@ -673,26 +764,7 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
         schemaRules = append(schemaRules, schemaRule)
     }
 
-    ruleOrderMap := make(map[string]int32)
-    for index, planRule := range planRules {
-        ruleOrderMap[planRule.Name.ValueString()] = int32(index)
-    }
-
-    slices.SortFunc(schemaRules, func(a, b HostCompliancePolicyRuleResourceModel) int {
-        orderA, okA := ruleOrderMap[a.Name.ValueString()]
-        if !okA {
-            orderA = int32(len(ruleOrderMap) + 1)
-        }
-        orderB, okB := ruleOrderMap[b.Name.ValueString()]
-        if !okB {
-            orderB = int32(len(ruleOrderMap) + 1)
-        }
-        return cmp.Compare(orderA, orderB)
-    })
-
-    for i := 0; i < len(schemaRules); i++ {
-        schemaRules[i].Order = planRules[i].Order
-    }
+    sortSchemaRules(&schemaRules, &planRules)
 
     return schemaRules, diags
 }
