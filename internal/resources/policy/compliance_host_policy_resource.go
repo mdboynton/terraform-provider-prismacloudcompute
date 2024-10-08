@@ -691,12 +691,12 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
             fmt.Println("***********************")
             fmt.Printf("entering collectionsToSchema (rule name: %s)\n", rule.Name)
             fmt.Println("***********************")
-            collectionSet, diags := collectionsToSchema(ctx, rule.Collections)
+            collections, diags := collectionsToSchema(ctx, rule.Collections)
             if diags.HasError() {
                 return schemaRules, diags
             }
 
-            schemaRule.Collections = collectionSet
+            schemaRule.Collections = collections
         }
 
         if rule.Effect == "alert, block" {
@@ -769,58 +769,55 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
     return schemaRules, diags
 }
 
-//func collectionsToSchema(ctx context.Context, collections []collectionAPI.Collection) (types.Set, diag.Diagnostics) {
 func collectionsToSchema(ctx context.Context, collections []collectionAPI.Collection) (types.List, diag.Diagnostics) {
     var diags diag.Diagnostics
 
-    //collectionSet := types.SetNull(system.CollectionObjectType())
-    collectionSet := types.ListNull(system.CollectionObjectType())
+    collectionList := types.ListNull(system.CollectionObjectType())
     collectionObjectValues := []attr.Value{}
-    //for _, collection := range(rule.Collections) {
     for _, collection := range(collections) {
         accountIDs, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         appIDs, diags := types.SetValueFrom(ctx, types.StringType, collection.AppIDs)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         clusters, diags := types.SetValueFrom(ctx, types.StringType, collection.Clusters)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         containers, diags := types.SetValueFrom(ctx, types.StringType, collection.Containers)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         functions, diags := types.SetValueFrom(ctx, types.StringType, collection.Functions)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         hosts, diags := types.SetValueFrom(ctx, types.StringType, collection.Hosts)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         images, diags := types.SetValueFrom(ctx, types.StringType, collection.Images)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         labels, diags := types.SetValueFrom(ctx, types.StringType, collection.Labels)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
         
         namespaces, diags := types.SetValueFrom(ctx, types.StringType, collection.Namespaces)
         if diags.HasError() {
-            return collectionSet, diags
+            return collectionList, diags
         }
 
         collectionObjectValue := types.ObjectValueMust(
@@ -848,22 +845,13 @@ func collectionsToSchema(ctx context.Context, collections []collectionAPI.Collec
         collectionObjectValues = append(collectionObjectValues, collectionObjectValue)
     }
 
-    //collectionSet, diags = types.SetValueFrom(
-    //    ctx,
-    //    system.CollectionObjectType(),
-    //    collectionObjectValues,
-    //)
-    collectionSet, diags = types.ListValueFrom(
-        ctx,
-        system.CollectionObjectType(),
-        collectionObjectValues,
-    )
+    collectionList, diags = types.ListValueFrom(ctx, system.CollectionObjectType(), collectionObjectValues)
 
     fmt.Println("***********************")
     fmt.Println("exiting collectionsToSchema")
     fmt.Println("***********************")
 
-    return collectionSet, diags
+    return collectionList, diags
 }
 
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
