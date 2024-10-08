@@ -181,7 +181,7 @@ func (r *CollectionResource) Schema(ctx context.Context, req resource.SchemaRequ
             },
             "modified": schema.StringAttribute{
                 MarkdownDescription: "TODO",
-                Computed: true,
+                Optional: true,
             },
             "name": schema.StringAttribute{
                 MarkdownDescription: "TODO",

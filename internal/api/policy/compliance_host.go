@@ -129,8 +129,8 @@ type HostCompliancePolicyRuleTag struct {
 func UpsertHostCompliancePolicy(c api.PrismaCloudComputeAPIClient, policy HostCompliancePolicy) error {
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
     fmt.Println("UpsertHostCompliancePolicy request body:")
-    fmt.Printf("%+v\n", policy)
-    //fmt.Printf("%+v\n", *policy.Rules)
+    //fmt.Printf("%+v\n", policy)
+    fmt.Printf("%+v\n", *policy.Rules)
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
 	return c.Request(http.MethodPut, HostComplianceEndpoint, nil, policy, nil)
 }
@@ -144,7 +144,7 @@ func GetHostCompliancePolicy(c api.PrismaCloudComputeAPIClient) (*HostCompliance
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
     fmt.Println("GetHostCompliancePolicy response body:")
     fmt.Printf("%+v\n", ans)
-    //fmt.Printf("%+v\n", *ans.Rules)
+    fmt.Printf("%+v\n", *ans.Rules)
     fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
     return &ans, nil
 }

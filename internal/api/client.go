@@ -90,6 +90,8 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 
 	var buf bytes.Buffer
 
+    fmt.Print(data)
+
 	if data != nil {
 		data_json, err := json.Marshal(data)
 		if err != nil {

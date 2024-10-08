@@ -23,6 +23,12 @@ func (m *useTrueForDefaultCollectionBools) MarkdownDescription(_ context.Context
 }
 
 func (m *useTrueForDefaultCollectionBools) PlanModifyBool(_ context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
+    //if req.PlanValue.IsNull() {
+    //    resp.PlanValue = nil
+    //    return
+    //}
+
+
     if req.PlanValue.IsUnknown() {
         resp.PlanValue = types.BoolValue(true)
         return

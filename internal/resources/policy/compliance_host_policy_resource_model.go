@@ -1,27 +1,22 @@
-package policy 
+package policy
 
 import (
     "context"
-	"fmt"
-    "reflect"
-    "slices"
-    "cmp"
-    "sort"
-    "time"
+	//"fmt"
+    //"reflect"
+    //"slices"
+    //"cmp"
+    //"sort"
+    //"time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
-	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
-	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
-	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
-    "github.com/hashicorp/terraform-plugin-framework/diag"
-    "github.com/hashicorp/terraform-plugin-framework/path"
-    "github.com/hashicorp/terraform-plugin-framework/attr"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
+    //"github.com/hashicorp/terraform-plugin-framework/attr"
     "github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,14 +25,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-
 )
-
 
 var _ resource.Resource = &HostCompliancePolicyResource{}
 var _ resource.ResourceWithImportState = &HostCompliancePolicyResource{}
@@ -66,7 +59,8 @@ type HostCompliancePolicyRuleResourceModel struct {
     //Action types.Set `tfsdk:"action"`
     //Modified types.String `tfsdk:"modified"`
     Name types.String `tfsdk:"name"`
-    Collections types.Set `tfsdk:"collections"`
+    //Collections types.Set `tfsdk:"collections"`
+    Collections types.List `tfsdk:"collections"`
     //Action types.Set `tfsdk:"action"`
     ////AlertThreshold *HostCompliancePolicyRuleAlertThresholdResourceModel `tfsdk:"alert_threshold"`
     ReportAllPassedAndFailedChecks types.Bool `tfsdk:"report_passed_and_failed_checks"`
@@ -584,10 +578,11 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             Optional: true,
                             Computed: true,
                             //Default: stringdefault.StaticString(time.Now().Format("2006-01-02T15:04:05.000Z")),
-                            //PlanModifiers: []planmodifier.String{
-                            //    //UseStateForUnknown(),
-                            //    UsePlanForUnknownString(),
-                            //},
+                            PlanModifiers: []planmodifier.String{
+                                //UseStateForUnknown(),
+                                //UsePlanForUnknownString(),
+                                planmodifiers.UseEmptyStringForNull(),
+                            },
                         },
                         "name": schema.StringAttribute{
                             MarkdownDescription: "TODO",
@@ -838,40 +833,47 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
     }
 }
 
-func (r *HostCompliancePolicyResource) GetCollectionsSchema() schema.SetNestedAttribute {
-    return schema.SetNestedAttribute{
+//func (r *HostCompliancePolicyResource) GetCollectionsSchema() schema.SetNestedAttribute {
+func (r *HostCompliancePolicyResource) GetCollectionsSchema() schema.ListNestedAttribute {
+    //return schema.SetNestedAttribute{
+    return schema.ListNestedAttribute{
         MarkdownDescription: "TODO",
         Optional: true,
         Computed: true,
-        Default: setdefault.StaticValue(
-            types.SetValueMust(
-                system.CollectionObjectType(),
-                []attr.Value{
-                    types.ObjectValueMust(
-                        system.CollectionObjectAttrTypeMap(),
-                        map[string]attr.Value{
-                            "account_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "app_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "clusters": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "color": types.StringValue("#3FA2F7"),
-                            "containers": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "description": types.StringValue("System - all resources collection"),
-                            "functions": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "hosts": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "images": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "labels": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "modified": basetypes.NewStringUnknown(),
-                            //"modified": types.StringValue(""),
-                            "name": types.StringValue("All"),
-                            "namespaces": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "owner": types.StringValue("admin"),
-                            "prisma": types.BoolValue(false),
-                            "system": types.BoolValue(true),
-                        },
-                    ),
-                },
-            ),
-        ),
+        // TODO: see if we can omit all but the name field and get away with it
+        //Default: setdefault.StaticValue(
+        //    types.SetValueMust(
+        //        system.CollectionObjectType(),
+        //        []attr.Value{
+        //            types.ObjectValueMust(
+        //                system.CollectionObjectAttrTypeMap(),
+        //                map[string]attr.Value{
+        //                    "account_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "app_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "clusters": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "color": types.StringValue("#3FA2F7"),
+        //                    "containers": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "description": types.StringValue("System - all resources collection"),
+        //                    "functions": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "hosts": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "images": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "labels": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "modified": basetypes.NewStringUnknown(),
+        //                    //"modified": types.StringValue(""),
+        //                    "name": types.StringValue("All"),
+        //                    "namespaces": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        //                    "owner": types.StringValue("admin"),
+        //                    "prisma": types.BoolValue(false),
+        //                    "system": types.BoolValue(true),
+        //                },
+        //            ),
+        //        },
+        //    ),
+        //),
+        //PlanModifiers: []planmodifier.Set{
+        PlanModifiers: []planmodifier.List{
+            planmodifiers.RemoveNullObjects(),
+        },
         NestedObject: schema.NestedAttributeObject{
             Attributes: map[string]schema.Attribute{
                 "account_ids": schema.SetAttribute{
@@ -879,1043 +881,141 @@ func (r *HostCompliancePolicyResource) GetCollectionsSchema() schema.SetNestedAt
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "app_ids": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "clusters": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "color": schema.StringAttribute{
                     MarkdownDescription: "TODO",
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.String{
-                        planmodifiers.UseDefaultColorForDefaultCollectionColor(), 
-                    },
+                    //PlanModifiers: []planmodifier.String{
+                    //    planmodifiers.UseDefaultColorForDefaultCollectionColor(), 
+                    //},
                 },
                 "containers": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "description": schema.StringAttribute{
                     MarkdownDescription: "TODO",
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.String{
-                        planmodifiers.UseDefaultForDefaultCollectionDescription(),
-                    },
+                    //PlanModifiers: []planmodifier.String{
+                    //    planmodifiers.UseDefaultForDefaultCollectionDescription(),
+                    //},
                 },
                 "functions": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "hosts": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "images": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "labels": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "modified": schema.StringAttribute{
                     MarkdownDescription: "TODO",
+                    Optional: true,
                     Computed: true,
                     PlanModifiers: []planmodifier.String{
-                        planmodifiers.UseCurrentTimeForDefaultCollectionModified(),
+                        //UseStateForUnknown(),
+                        //UsePlanForUnknownString(),
+                        planmodifiers.UseEmptyStringForNull(),
                     },
                 },
                 "name": schema.StringAttribute{
                     MarkdownDescription: "TODO",
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.String{
-                        planmodifiers.UseAllForDefaultCollectionName(),
-                    },
+                    //PlanModifiers: []planmodifier.String{
+                    //    planmodifiers.UseAllForDefaultCollectionName(),
+                    //},
                 },
                 "namespaces": schema.SetAttribute{
                     MarkdownDescription: "TODO",
                     ElementType: types.StringType,
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Set{
-                        planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    },
+                    //PlanModifiers: []planmodifier.Set{
+                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
+                    //},
                 },
                 "owner": schema.StringAttribute{
                     MarkdownDescription: "TODO",
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.String{
-                        planmodifiers.UseSystemForDefaultCollectionOwner(), 
-                    },
+                    //PlanModifiers: []planmodifier.String{
+                    //    planmodifiers.UseSystemForDefaultCollectionOwner(), 
+                    //},
                 },
                 "prisma": schema.BoolAttribute{
                     MarkdownDescription: "TODO",
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Bool{
-                        planmodifiers.UseFalseForDefaultCollectionBools(), 
-                    },
+                    //PlanModifiers: []planmodifier.Bool{
+                    //    planmodifiers.UseFalseForDefaultCollectionBools(), 
+                    //},
                 },
                 "system": schema.BoolAttribute{
                     MarkdownDescription: "TODO",
                     Optional: true,
                     Computed: true,
-                    PlanModifiers: []planmodifier.Bool{
-                        planmodifiers.UseTrueForDefaultCollectionBools(), 
-                    },
+                    //PlanModifiers: []planmodifier.Bool{
+                    //    planmodifiers.UseTrueForDefaultCollectionBools(), 
+                    //},
                 },
             },
         },
     }
-}
-
-func (r *HostCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-    resp.Schema = r.GetSchema()
-}
-
-func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-    if req.ProviderData == nil {
-        return
-    }
-
-    client, ok := req.ProviderData.(*api.PrismaCloudComputeAPIClient)
-
-    if !ok {
-        resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-        return
-    }
-
-    r.client = client
-}
-
-func generateRulesOrderMap(rules []HostCompliancePolicyRuleResourceModel) map[string]int {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("starting rule ordering")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    
-    orderedRulesMap := make(map[int][]string)
-
-    for _, rule := range rules {
-        order := int(rule.Order.ValueInt32())
-        if _, exists := orderedRulesMap[order]; exists {
-            orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
-        } else {
-            orderedRulesMap[order] = []string{rule.Name.ValueString()}
-        }
-    }
-        
-    sortedKeys := make([]int, 0, len(orderedRulesMap))
-    for key, _ := range orderedRulesMap {
-        sortedKeys = append(sortedKeys, key)
-    }
-    sort.Ints(sortedKeys)
-
-    /*
-        9999.1 -> 9999
-        9999.2 -> 10000 
-        9999.3 -> 10001
-        10000.1 -> 10002
-    */
-    ruleOrders := make(map[string]int)
-    lastOrderValue := -1
-    for i, key := range sortedKeys {
-        fmt.Printf("loop %d: lastOrderValue = %d\n", i, lastOrderValue)
-        offset := 0
-        if lastOrderValue != -1 && lastOrderValue >= key {
-            offset = lastOrderValue - key + 1
-            fmt.Printf("offset set to %d\n", offset)
-        }
-
-        for sliceIndex, ruleName := range orderedRulesMap[key] {
-            orderValue := key + sliceIndex + offset
-            ruleOrders[ruleName] = orderValue
-            lastOrderValue = orderValue
-        }
-    }
-
-    return ruleOrders
-}
-
-func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("entering ModifyPlan")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-
-    var plan HostCompliancePolicyResourceModel
-    diags := req.Plan.Get(ctx, &plan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    complianceVulnerabilities, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
-	if err != nil {
-		diags.AddError(
-            "Error modifying planned policy rules", 
-            "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
-        )
-        return
-	}
-
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("starting loop over rules")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    for index, rule := range *plan.Rules {
-        // TODO: add logic to populate collection.Modified for collections that already exist in the state
-        // so that terraform doesn't show the collection as being updated in place
-
-        // TODO: add check for duplicate rule names and throw error if any exist
-        
-        if rule.Order.IsUnknown() || rule.Order.IsNull() {
-            rule.Order = types.Int32Value(int32(index + 1))
-            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))...)
-            if diags.HasError() {
-                return
-            }
-        } else if int(rule.Order.ValueInt32()) < 1 {
-            resp.Diagnostics.AddError(
-		    	"Invalid Resource Configuration",
-		    	fmt.Sprintf("Host Compliance Policy Rule specified an invalid order (%d). Order values must be positive non-zero integers.", int(rule.Order.ValueInt32())),
-		    )
-            return
-        }
-
-        if rule.Effect.IsUnknown() {
-            fmt.Printf("rule %s has unknown effect\n", rule.Name.ValueString())
-            rule.Effect = types.StringValue("unknown")
-            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
-            if diags.HasError() {
-                return
-            }
-        } 
-
-        conditionObject, diags := createConditionFromEffect(ctx, *r.client, rule, complianceVulnerabilities)
-        if diags.HasError() {
-            return 
-        }
-
-        resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
-    }
-
-    //var respPlan HostCompliancePolicyResourceModel
-    //diags = resp.Plan.Get(ctx, &respPlan)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
-
-    //fmt.Printf("%+v\n", respPlan)
-    //fmt.Printf("%+v\n", *respPlan.Rules)
-    ////fmt.Printf("%+v\n", &respPlan.Rules.Elements()[0].Condition)
-    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    //fmt.Println("exiting ModifyPlan")
-    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-}
-
-func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComputeAPIClient, rule HostCompliancePolicyRuleResourceModel, complianceVulnerabilities []systemAPI.Vulnerability) (basetypes.ObjectValue, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    // Create static values
-    effect := rule.Effect.ValueString()
-    vulnerabilityObjectValues := []attr.Value{}
-    vulnerabilitiesAttributeTypes := map[string]attr.Type{
-        "id": types.Int32Type,
-        "block": types.BoolType,
-    }
-    conditionObjectValueTypes := map[string]attr.Type{
-        //"device": types.StringType,
-        //"read_only": types.BoolType,
-        "vulnerabilities": types.ListType{
-            ElemType: types.ObjectType{
-                AttrTypes: vulnerabilitiesAttributeTypes,
-            },
-        },
-    }
-    conditionObject := types.ObjectNull(conditionObjectValueTypes)
-
-    // If the effect is "alert, block", create condition vulnerabilities object from plan
-    if effect == "alert, block" {
-        var ruleConditionVulns []policyAPI.HostCompliancePolicyRuleVulnerability
-
-        if rule.Condition.IsUnknown() {
-            diags.AddError(
-                "Missing condition from \"alert, block\" effect rule",
-                "Condition attribute must be defined for rules with effect \"alert, block\".",
-            )
-            return conditionObject, diags
-        }
-
-        ruleCondition := policyAPI.HostCompliancePolicyRuleCondition{} 
-        diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
-        if diags.HasError() {
-            return conditionObject, diags
-        }
-        ruleConditionVulns = ruleCondition.Vulnerabilities
-
-        for _, vuln := range ruleConditionVulns {
-            vulnerabilityObjectValue := types.ObjectValueMust(
-                vulnerabilitiesAttributeTypes,
-                map[string]attr.Value{
-                    "id": types.Int32Value(int32(vuln.Id)),
-                    "block": types.BoolValue(vuln.Block),
-                },
-            )
-            vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-        }
-    // Otherwise, if the rule effect is not "ignore", create condition vulnerabilities using Prisma Cloud vulnerability data
-    } else if effect != "ignore" {
-        if effect == "unknown" {
-           complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
-        }
-
-        isBlockEffect := (effect == "block")
-
-        for _, vuln := range complianceVulnerabilities {
-            block := (isBlockEffect && !(vuln.Type == "windows"))
-
-            vulnerabilityObjectValue := types.ObjectValueMust(
-                vulnerabilitiesAttributeTypes,
-                map[string]attr.Value{
-                    "id": types.Int32Value(int32(vuln.Id)),
-                    "block": types.BoolValue(block),
-                },
-            )
-            
-            vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-        }
-    }
-
-    // Create vulnerability list value
-    vulnerabilityObject, diags := types.ListValueFrom(
-        ctx,
-        types.ObjectType{
-            AttrTypes: vulnerabilitiesAttributeTypes,
-        },
-        vulnerabilityObjectValues,
-    )
-
-    if diags.HasError() {
-        return conditionObject, diags
-    }
-
-    // Create condition object value
-    conditionObject = types.ObjectValueMust(
-        conditionObjectValueTypes,
-        map[string]attr.Value{
-            //"device": types.StringValue(rule.Condition.Device),
-            //"read_only": types.BoolValue(rule.Condition.ReadOnly),
-            "vulnerabilities": vulnerabilityObject,
-        },
-    )
-
-    return conditionObject, diags
-}
-
-func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    // TODO: refine this logic to populate Owner with the value in config, if it exists
-    //var username types.String
-    //diags := req.Config.GetAttribute(ctx, path.Root("username"), &username)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
-
-    // Retrieve values from plan
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("retrieving plan and serializing into HostCompliancePolicyResourceModel")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    var plan HostCompliancePolicyResourceModel
-    diags := req.Plan.Get(ctx, &plan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    //fmt.Println(*plan.Rules)
-    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-
-    // Generate API request body from plan
-    policy, diags := schemaToPolicy(ctx, &plan, r.client)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Create new host compliance policy 
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("creating policy resource with payload:")
-    fmt.Printf("%+v\n", policy)
-    //r1 := *policy.Rules
-    //fmt.Printf("%+v\n", r1)
-    //fmt.Printf("%+v\n", *r1[0].Condition)
-    //fmt.Println("number of vulns:")
-    //fmt.Println(len(r1[0].Condition.Vulnerabilities))
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, policy)
-	if err != nil {
-		resp.Diagnostics.AddError(
-            "Error creating Host Compliance Policy resource", 
-            "Failed to create host compliance policy: " + err.Error(),
-        )
-        return
-	}
-
-    // Retrieve newly created host compliance policy 
-    response, err := policyAPI.GetHostCompliancePolicy(*r.client)
-    if err != nil {
-		resp.Diagnostics.AddError(
-            "Error retrieving created Host Compliance Policy resource", 
-            "Failed to retrieve created host compliance policy: " + err.Error(),
-        )
-        return
-    }
-
-
-    // TODO: explore passing in the CreateRequest to policyToSchema in order to be
-    // able to reference configured order values that arent returned from the API
-
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    //fmt.Println(req.Plan)
-    fmt.Println(req.Plan.Raw)
-    //fmt.Println(reflect.TypeOf(req.Plan))
-    fmt.Println(reflect.TypeOf(req.Plan.Raw))
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    //createdPolicy, diags := policyToSchema(ctx, *response)
-    createdPolicy, diags := policyToSchema(ctx, *response, plan)
-    if diags.HasError() {
-        return
-    }
-
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("createdPolicy in Create():")
-    fmt.Println(reflect.TypeOf(createdPolicy))
-    fmt.Printf("%+v\n", createdPolicy)
-    //fmt.Printf("%+v\n", *createdPolicy.Rules)
-    //fmt.Println("number of vulns:")
-    //fmt.Println(len(r1[0].Condition.Vulnerabilities))
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    
-    // Set state to collection data
-    diags = resp.State.Set(ctx, createdPolicy)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%%")
-        fmt.Println("error in resp.State.Set")
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%%")
-        return
-    }
-
-}
-
-func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("we're in Read")
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-
-    // Get current state
-    var state HostCompliancePolicyResourceModel 
-    diags := req.State.Get(ctx, &state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetHostCompliancePolicy(*r.client)
-    if err != nil {
-        resp.Diagnostics.AddError(
-            "Error reading Host Compliance Policy resource", 
-            "Failed to read Host Compliance Policy: " + err.Error(),
-        )
-        return
-    }
-
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("retrieved host compliance policy: ") 
-    fmt.Printf("%+v\n", policy)
-    fmt.Printf("%+v\n", *policy.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-  
-    // Overwrite state values with Prisma Cloud data
-    //createdPolicy, diags := policyToSchema(ctx, *response)
-    policySchema, diags := policyToSchema(ctx, *policy, state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("policySchema: ") 
-    fmt.Printf("%+v\n", policySchema)
-    fmt.Printf("%+v\n", policySchema.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-
-    // Set refreshed state
-    diags = resp.State.Set(ctx, &policySchema)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-}
-
-func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-    // Get current state
-    var state HostCompliancePolicyResourceModel 
-    diags := req.State.Get(ctx, &state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Retrieve values from plan
-    var plan HostCompliancePolicyResourceModel 
-    diags = req.Plan.Get(ctx, &plan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Generate API request body from plan
-    planPolicy, diags := schemaToPolicy(ctx, &plan, r.client)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Update existing policy
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, planPolicy)
-	if err != nil {
-		resp.Diagnostics.AddError(
-            "Error updating Host Compliance Policy resource", 
-            "Failed to update host compliance policy: " + err.Error(),
-        )
-        return
-	}
-
-    // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetHostCompliancePolicy(*r.client)
-    if err != nil {
-        resp.Diagnostics.AddError(
-            "Error reading Host Compliance Policy resource", 
-            "Failed to read Host Compliance Policy: " + err.Error(),
-        )
-        return
-    }
-
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("retrieved host compliance policy during Update() execution: ") 
-    fmt.Printf("%+v\n", policy)
-    fmt.Printf("%+v\n", *policy.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-  
-    // Convert updated policy into schema
-    //createdPolicy, diags := policyToSchema(ctx, *response)
-    policySchema, diags := policyToSchema(ctx, *policy, plan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Set updated state
-    diags = resp.State.Set(ctx, policySchema)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-}
-
-func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-    // Retrieve values from state
-	var state HostCompliancePolicyResourceModel 
-    diags := req.State.Get(ctx, &state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Clear policy rules
-    emptyRules := []HostCompliancePolicyRuleResourceModel{}
-    state.Rules = &emptyRules
-
-    // Generate API request body from plan
-    updatedPlan, diags := schemaToPolicy(ctx, &state, r.client)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-    
-    // Delete existing policy 
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, updatedPlan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-            "Error deleting Host Compliance Policy resource", 
-            "Failed to delete host compliance policy: " + err.Error(),
-        )
-        return
-	}
-}
-
-// TODO: Define ImportState to work properly with this resource
-func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("executing ImportState")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func schemaToPolicy(ctx context.Context, plan *HostCompliancePolicyResourceModel, client *api.PrismaCloudComputeAPIClient,/*, username types.String*/) (policyAPI.HostCompliancePolicy, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("entering schemaToPolicy")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    policy := policyAPI.HostCompliancePolicy{
-        Id: plan.Id.ValueString(),
-        PolicyType: plan.PolicyType.ValueString(),
-    }
-
-    if plan.Rules == nil {
-        rules := []policyAPI.HostCompliancePolicyRule{}
-        policy.Rules = &rules
-        return policy, diags
-    } else {
-        rules, diags := ruleSchemaToPolicy(ctx, *plan.Rules, client)
-        if diags.HasError() {
-            return policy, diags
-        }
-
-        policy.Rules = &rules
-    }
-
-    return policy, diags
-}
-
-func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, /*, username types.String*/) ([]policyAPI.HostCompliancePolicyRule, diag.Diagnostics) {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("entering ruleSchemaToPolicy")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    _ = reflect.TypeOf(ctx)
-
-    var diags diag.Diagnostics
-
-    rules := []policyAPI.HostCompliancePolicyRule{}
-
-    for _, planRule := range planRules {
-        collections := []collectionAPI.Collection{}
-        planCollections := make([]types.Object, 0, len(planRule.Collections.Elements()))
-        diags = planRule.Collections.ElementsAs(ctx, &planCollections, false)
-        if diags.HasError() {
-            return rules, diags
-        }
-
-        for _, planCollection := range planCollections {
-            collectionModel := system.CollectionResourceModel{}
-            diags = planCollection.As(ctx, &collectionModel, basetypes.ObjectAsOptions{})
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            accountIds := make([]string, 0, len(collectionModel.AccountIDs.Elements()))
-            diags = collectionModel.AccountIDs.ElementsAs(ctx, &accountIds, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            appIds := make([]string, 0, len(collectionModel.AppIDs.Elements()))
-            diags = collectionModel.AccountIDs.ElementsAs(ctx, &appIds, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            clusters := make([]string, 0, len(collectionModel.Clusters.Elements()))
-            diags = collectionModel.Clusters.ElementsAs(ctx, &clusters, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            containers := make([]string, 0, len(collectionModel.Containers.Elements()))
-            diags = collectionModel.Containers.ElementsAs(ctx, &containers, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            functions := make([]string, 0, len(collectionModel.Functions.Elements()))
-            diags = collectionModel.Functions.ElementsAs(ctx, &functions, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            hosts := make([]string, 0, len(collectionModel.Hosts.Elements()))
-            diags = collectionModel.Hosts.ElementsAs(ctx, &hosts, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            images := make([]string, 0, len(collectionModel.Images.Elements()))
-            diags = collectionModel.Images.ElementsAs(ctx, &images, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            labels := make([]string, 0, len(collectionModel.Labels.Elements()))
-            diags = collectionModel.Labels.ElementsAs(ctx, &labels, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            namespaces := make([]string, 0, len(collectionModel.Namespaces.Elements()))
-            diags = collectionModel.Namespaces.ElementsAs(ctx, &namespaces, false)
-            if diags.HasError() {
-                return rules, diags
-            }
-
-            collections = append(collections, collectionAPI.Collection{
-                AccountIDs: accountIds,
-                AppIDs: appIds,
-                Clusters: clusters,
-                Color: collectionModel.Color.ValueString(),
-                Containers: containers,
-                Description: collectionModel.Description.ValueString(),
-                Functions: functions,
-                Hosts: hosts,
-                Images: images,
-                Labels: labels,
-                Name: collectionModel.Name.ValueString(),
-                Namespaces: namespaces,
-                Owner: collectionModel.Owner.ValueString(),
-                Prisma: collectionModel.Prisma.ValueBool(),
-                System: collectionModel.System.ValueBool(),
-            })
-        }
-
-        // This fails due to the value of "modified" being unknown
-        //collections := []collectionAPI.Collection{}
-        //diags = planRule.Collections.ElementsAs(ctx, &col, false)
-        //if diags.HasError() {
-        //    fmt.Println(diags)
-        //    return rules, diags
-        //}
-
-        if planRule.Effect.ValueString() == "alert, block" && planRule.Condition.IsUnknown() {
-            diags.AddError(
-                "Missing condition from \"alert, block\" effect rule",
-                "Condition attribute must be defined for rules with effect \"alert, block\".",
-            )
-            return rules, diags
-        }
-
-        condition := policyAPI.HostCompliancePolicyRuleCondition{} 
-        diags = planRule.Condition.As(ctx, &condition, basetypes.ObjectAsOptions{})
-        if diags.HasError() {
-            return rules, diags
-        }
-
-        rule := policyAPI.HostCompliancePolicyRule{
-            Order: int(planRule.Order.ValueInt32()),
-            Name: planRule.Name.ValueString(), 
-            Collections: collections,
-            BlockMessage: planRule.BlockMessage.ValueString(),
-            //Collections: col,
-            Condition: &condition,
-            Effect: planRule.Effect.ValueString(),
-            Verbose: planRule.Verbose.ValueBool(),
-            ReportAllPassedAndFailedChecks: planRule.ReportAllPassedAndFailedChecks.ValueBool(),
-            //Owner: planRule.Owner.ValueString(),
-            Disabled: planRule.Disabled.ValueBool(),
-            Modified: time.Now().Format("2006-01-02T15:04:05.000Z"),
-        }
-        
-        if !planRule.Notes.IsUnknown() && !planRule.Notes.IsNull() {
-            rule.Notes = planRule.Notes.ValueString()
-        }
-
-        rules = append(rules, rule)
-    }
-
-    rulesOrderMap := generateRulesOrderMap(planRules) 
-    sort.Slice(rules, func(i, j int) bool {
-        return rulesOrderMap[rules[i].Name] < rulesOrderMap[rules[j].Name]
-    })
-
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("exiting ruleSchemaToPolicy")
-    fmt.Printf("%+v\n", rules)
-    //fmt.Printf("%+v\n", *rules[0].Condition)
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    
-    return rules, diags
-}
-
-func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy, plan HostCompliancePolicyResourceModel) (HostCompliancePolicyResourceModel, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    schema := HostCompliancePolicyResourceModel{
-        Id: types.StringValue(policy.Id),
-        PolicyType: types.StringValue(policy.PolicyType),
-    }
-
-    rules, diags := policyRulesToSchema(ctx, *policy.Rules, *plan.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    //fmt.Println(plan)
-    fmt.Println("!!! returned from policyRulesToSchema: ") 
-    //fmt.Printf("%+v\n", rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    if diags.HasError() {
-        return schema, diags
-    }
-
-    schema.Rules = &rules
-
-    return schema, diags
-}
-
-func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePolicyRule, planRules []HostCompliancePolicyRuleResourceModel) ([]HostCompliancePolicyRuleResourceModel, diag.Diagnostics) {
-    fmt.Println("***********************")
-    fmt.Println("entering policyRulesToSchema")
-    fmt.Println("***********************")
-
-    var diags diag.Diagnostics
-
-    schemaRules := []HostCompliancePolicyRuleResourceModel{}
-
-    if len(rules) == 0 {
-        return nil, diags
-    }
-
-    for _, rule := range rules {
-        schemaRule := HostCompliancePolicyRuleResourceModel{
-            Name: types.StringValue(rule.Name),
-            Disabled: types.BoolValue(rule.Disabled),
-            Effect: types.StringValue(rule.Effect),
-            Verbose: types.BoolValue(rule.Verbose),
-            Owner: types.StringValue(rule.Owner),
-            Modified: types.StringValue(rule.Modified),
-            ReportAllPassedAndFailedChecks: types.BoolValue(rule.ReportAllPassedAndFailedChecks),
-        }
-
-        if rule.Collections != nil {
-            collectionObjectValues := []attr.Value{}
-            for _, collection := range(rule.Collections) {
-                accountIDs, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                appIDs, diags := types.SetValueFrom(ctx, types.StringType, collection.AppIDs)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                clusters, diags := types.SetValueFrom(ctx, types.StringType, collection.Clusters)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                containers, diags := types.SetValueFrom(ctx, types.StringType, collection.Containers)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                functions, diags := types.SetValueFrom(ctx, types.StringType, collection.Functions)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                hosts, diags := types.SetValueFrom(ctx, types.StringType, collection.Hosts)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                images, diags := types.SetValueFrom(ctx, types.StringType, collection.Images)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                labels, diags := types.SetValueFrom(ctx, types.StringType, collection.Labels)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-                
-                namespaces, diags := types.SetValueFrom(ctx, types.StringType, collection.Namespaces)
-                if diags.HasError() {
-                    return schemaRules, diags
-                }
-
-                collectionObjectValue := types.ObjectValueMust(
-                    system.CollectionObjectAttrTypeMap(),
-                    map[string]attr.Value{
-                        "account_ids": accountIDs,
-                        "app_ids": appIDs,
-                        "clusters": clusters,
-                        "color": types.StringValue(collection.Color),
-                        "containers": containers,
-                        "description": types.StringValue(collection.Description),
-                        "functions": functions,
-                        "hosts": hosts,
-                        "images": images,
-                        "labels": labels,
-                        "modified": types.StringValue(collection.Modified),
-                        //"modified": types.StringValue(""),
-                        "name": types.StringValue(collection.Name),
-                        "namespaces": namespaces,
-                        "owner": types.StringValue(collection.Owner),
-                        "prisma": types.BoolValue(collection.Prisma),
-                        "system": types.BoolValue(collection.System),
-                    },
-                )
-
-                collectionObjectValues = append(collectionObjectValues, collectionObjectValue)
-            }
-
-            collectionSet, diags := types.SetValueFrom(
-                ctx,
-                system.CollectionObjectType(),
-                collectionObjectValues,
-            )
-
-            if diags.HasError() {
-                return schemaRules, diags
-            }
-
-            schemaRule.Collections = collectionSet
-        }
-
-        if rule.Effect == "alert, block" {
-            rule.Effect = "block" 
-        }
-
-        if rule.Condition != nil {
-            vulnerabilityObjectValues := []attr.Value{}
-            for _, vulnerability := range(rule.Condition.Vulnerabilities) {
-                vulnerabilityObjectValue := types.ObjectValueMust(
-                    map[string]attr.Type{
-                        "id":        types.Int32Type,
-                        "block":       types.BoolType,
-                    },
-                    map[string]attr.Value{
-                        "id": types.Int32Value(int32(vulnerability.Id)),
-                        "block": types.BoolValue(vulnerability.Block),
-                    },
-                )
-               
-                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-            }
-
-            vulnerabilityObject, diags := types.ListValueFrom(
-                ctx,
-                types.ObjectType{
-                    AttrTypes: map[string]attr.Type{
-                        "id": types.Int32Type,
-                        "block": types.BoolType,
-                    },
-                },
-                vulnerabilityObjectValues,
-            )
-
-            if diags.HasError() {
-                return schemaRules, diags
-            }
-
-            conditionObject := types.ObjectValueMust(
-                map[string]attr.Type{
-                    //"device": types.StringType,
-                    //"read_only": types.BoolType,
-                    "vulnerabilities": types.ListType{
-                        ElemType: types.ObjectType{
-                            AttrTypes: map[string]attr.Type{
-                                "id": types.Int32Type,
-                                "block": types.BoolType,
-                            },
-                        },
-                    },
-                },
-                map[string]attr.Value{
-                    //"device": types.StringValue(rule.Condition.Device),
-                    //"read_only": types.BoolValue(rule.Condition.ReadOnly),
-                    "vulnerabilities": vulnerabilityObject,
-                },
-            )
-            
-            schemaRule.Condition = conditionObject
-        }
-
-        schemaRule.Notes = types.StringValue(rule.Notes)
-        schemaRule.BlockMessage = types.StringValue(rule.BlockMessage) 
-            
-        schemaRules = append(schemaRules, schemaRule)
-    }
-
-    ruleOrderMap := make(map[string]int32)
-    for index, planRule := range planRules {
-        ruleOrderMap[planRule.Name.ValueString()] = int32(index)
-    }
-
-    slices.SortFunc(schemaRules, func(a, b HostCompliancePolicyRuleResourceModel) int {
-        orderA, okA := ruleOrderMap[a.Name.ValueString()]
-        if !okA {
-            orderA = int32(len(ruleOrderMap) + 1)
-        }
-        orderB, okB := ruleOrderMap[b.Name.ValueString()]
-        if !okB {
-            orderB = int32(len(ruleOrderMap) + 1)
-        }
-        return cmp.Compare(orderA, orderB)
-    })
-
-    for i := 0; i < len(schemaRules); i++ {
-        schemaRules[i].Order = planRules[i].Order
-    }
-
-    return schemaRules, diags
 }
