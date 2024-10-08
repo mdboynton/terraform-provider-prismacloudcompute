@@ -501,14 +501,14 @@ func schemaToPolicy(ctx context.Context, plan *HostCompliancePolicyResourceModel
         rules := []policyAPI.HostCompliancePolicyRule{}
         policy.Rules = &rules
         return policy, diags
-    } else {
-        rules, diags := ruleSchemaToPolicy(ctx, *plan.Rules, client)
-        if diags.HasError() {
-            return policy, diags
-        }
-
-        policy.Rules = &rules
     }
+
+    rules, diags := ruleSchemaToPolicy(ctx, *plan.Rules, client)
+    if diags.HasError() {
+        return policy, diags
+    }
+
+    policy.Rules = &rules
 
     return policy, diags
 }
@@ -547,18 +547,16 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
         }
 
         rule := policyAPI.HostCompliancePolicyRule{
-            Order: int(planRule.Order.ValueInt32()),
-            Name: planRule.Name.ValueString(), 
-            Collections: collections,
             BlockMessage: planRule.BlockMessage.ValueString(),
-            //Collections: col,
+            Collections: collections,
             Condition: &condition,
-            Effect: planRule.Effect.ValueString(),
-            Verbose: planRule.Verbose.ValueBool(),
-            ReportAllPassedAndFailedChecks: planRule.ReportAllPassedAndFailedChecks.ValueBool(),
-            //Owner: planRule.Owner.ValueString(),
             Disabled: planRule.Disabled.ValueBool(),
+            Effect: planRule.Effect.ValueString(),
             Modified: time.Now().Format("2006-01-02T15:04:05.000Z"),
+            Name: planRule.Name.ValueString(), 
+            Order: int(planRule.Order.ValueInt32()),
+            ReportAllPassedAndFailedChecks: planRule.ReportAllPassedAndFailedChecks.ValueBool(),
+            Verbose: planRule.Verbose.ValueBool(),
         }
         
         if !planRule.Notes.IsUnknown() && !planRule.Notes.IsNull() {
@@ -606,13 +604,13 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
 
     for _, rule := range rules {
         schemaRule := HostCompliancePolicyRuleResourceModel{
-            Name: types.StringValue(rule.Name),
             Disabled: types.BoolValue(rule.Disabled),
             Effect: types.StringValue(rule.Effect),
-            Verbose: types.BoolValue(rule.Verbose),
+            Modified: types.StringValue(""),
+            Name: types.StringValue(rule.Name),
             Owner: types.StringValue(rule.Owner),
             ReportAllPassedAndFailedChecks: types.BoolValue(rule.ReportAllPassedAndFailedChecks),
-            Modified: types.StringValue(""),
+            Verbose: types.BoolValue(rule.Verbose),
         }
 
         if rule.Collections != nil {
@@ -807,24 +805,7 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
                 []attr.Value{
                     types.ObjectValueMust(
                         system.CollectionObjectAttrTypeMap(),
-                        map[string]attr.Value{
-                            "account_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "app_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "clusters": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "color": types.StringValue("#3FA2F7"),
-                            "containers": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "description": types.StringValue("System - all resources collection"),
-                            "functions": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "hosts": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "images": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "labels": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "modified": types.StringValue(""),
-                            "name": types.StringValue("All"),
-                            "namespaces": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-                            "owner": types.StringValue("system"),
-                            "prisma": types.BoolValue(false),
-                            "system": types.BoolValue(true),
-                        },
+                        system.CollectionObjectDefaultAttrValueMap(),
                     ),
                 },
             )
@@ -872,5 +853,6 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
     //fmt.Printf("%+v\n", respPlan)
     //fmt.Printf("%+v\n", *respPlan.Rules)
     ////fmt.Printf("%+v\n", &respPlan.Rules.Elements()[0].Condition)
+
     util.DLog(ctx, "exiting ModifyPlan")
 }

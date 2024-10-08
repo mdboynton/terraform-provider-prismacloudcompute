@@ -420,6 +420,27 @@ func CollectionObjectAttrTypeMap() map[string]attr.Type {
     }
 }
 
+func CollectionObjectDefaultAttrValueMap() map[string]attr.Value {
+    return map[string]attr.Value{
+        "account_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "app_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "clusters": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "color": types.StringValue("#3FA2F7"),
+        "containers": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "description": types.StringValue("System - all resources collection"),
+        "functions": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "hosts": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "images": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "labels": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "modified": types.StringValue(""),
+        "name": types.StringValue("All"),
+        "namespaces": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
+        "owner": types.StringValue("system"),
+        "prisma": types.BoolValue(false),
+        "system": types.BoolValue(true),
+    }
+}
+
 func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {
     var diags diag.Diagnostics
 
