@@ -3,18 +3,19 @@ package policy
 import (
     "context"
 	"fmt"
-    "reflect"
     "slices"
     "cmp"
     "sort"
     "time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-    //"github.com/hashicorp/terraform-plugin-log/tflog"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+
+    //"github.com/hashicorp/terraform-plugin-log/tflog"
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/attr"
@@ -56,18 +57,13 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     //}
 
     // Retrieve values from plan
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("retrieving plan and serializing into HostCompliancePolicyResourceModel")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    util.DLog(ctx, "retrieving plan and serializing into HostCompliancePolicyResourceModel")
     var plan HostCompliancePolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    //fmt.Println(*plan.Rules)
-    //fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     // Generate API request body from plan
     policy, diags := schemaToPolicy(ctx, &plan, r.client)
@@ -77,16 +73,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     }
 
     // Create new host compliance policy 
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("creating policy resource with payload:")
-    //fmt.Printf("%+v\n", policy)
-    fmt.Printf("%+v\n", *policy.Rules)
-    //r1 := *policy.Rules
-    //fmt.Printf("%+v\n", r1)
-    //fmt.Printf("%+v\n", *r1[0].Condition)
-    //fmt.Println("number of vulns:")
-    //fmt.Println(len(r1[0].Condition.Vulnerabilities))
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
     err := policyAPI.UpsertHostCompliancePolicy(*r.client, policy)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -110,46 +97,23 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     // TODO: explore passing in the CreateRequest to policyToSchema in order to be
     // able to reference configured order values that arent returned from the API
 
-    //fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    ////fmt.Println(req.Plan)
-    //fmt.Println(req.Plan.Raw)
-    ////fmt.Println(reflect.TypeOf(req.Plan))
-    //fmt.Println(reflect.TypeOf(req.Plan.Raw))
-    //fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    //createdPolicy, diags := policyToSchema(ctx, *response)
     createdPolicy, diags := policyToSchema(ctx, *response, plan)
     if diags.HasError() {
         return
     }
 
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("createdPolicy in Create():")
-    fmt.Println(reflect.TypeOf(createdPolicy))
-    fmt.Printf("%+v\n", createdPolicy)
-    //fmt.Printf("%+v\n", *createdPolicy.Rules)
-    fmt.Printf("%+v\n", *createdPolicy.Rules)
-    //fmt.Println("number of vulns:")
-    //fmt.Println(len(r1[0].Condition.Vulnerabilities))
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    util.DLog(ctx, fmt.Sprintf("created policy with rules:\n\n %+v", *createdPolicy.Rules))
     
     // Set state to collection data
     diags = resp.State.Set(ctx, createdPolicy)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%%")
-        fmt.Println("error in resp.State.Set")
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%%")
         return
     }
-
 }
 
 func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("we're in Read")
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    util.DLog(ctx, "starting Read() execution")
 
     // Get current state
     var state HostCompliancePolicyResourceModel 
@@ -169,24 +133,16 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
         return
     }
 
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("retrieved host compliance policy: ") 
-    fmt.Printf("%+v\n", policy)
-    fmt.Printf("%+v\n", *policy.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    util.DLog(ctx, fmt.Sprintf("retrieved host compliance policy with rules:\n\n %+v", *policy.Rules))
   
     // Overwrite state values with Prisma Cloud data
-    //createdPolicy, diags := policyToSchema(ctx, *response)
     policySchema, diags := policyToSchema(ctx, *policy, state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("policySchema: ") 
-    fmt.Printf("%+v\n", policySchema)
-    fmt.Printf("%+v\n", policySchema.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+
+    util.DLog(ctx, fmt.Sprintf("policy schema rules:\n\n %+v", policySchema.Rules))
 
     // Set refreshed state
     diags = resp.State.Set(ctx, &policySchema)
@@ -240,24 +196,17 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
         return
     }
 
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("retrieved host compliance policy during Update() execution: ") 
-    fmt.Printf("%+v\n", policy)
-    fmt.Printf("%+v\n", *policy.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    util.DLog(ctx, fmt.Sprintf("retrieved host compliance policy during Update() execution with rules:\n\n %+v", *policy.Rules))
   
     // Convert updated policy into schema
-    //createdPolicy, diags := policyToSchema(ctx, *response)
     policySchema, diags := policyToSchema(ctx, *policy, plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
 
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    fmt.Println("(Update) setting state") 
-    fmt.Printf("%+v\n", policySchema.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
+    util.DLog(ctx, fmt.Sprintf("setting state from Update() with rules:\n\n %+v", policySchema.Rules))
+
     // Set updated state
     diags = resp.State.Set(ctx, policySchema)
     resp.Diagnostics.Append(diags...)
@@ -299,17 +248,11 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
 
 // TODO: Define ImportState to work properly with this resource
 func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("executing ImportState")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    util.DLog(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func generateRulesOrderMap(rules []HostCompliancePolicyRuleResourceModel) map[string]int {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("starting rule ordering")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    
     orderedRulesMap := make(map[int][]string)
 
     for _, rule := range rules {
@@ -547,9 +490,8 @@ func createConditionFromEffect(ctx context.Context, client api.PrismaCloudComput
 func schemaToPolicy(ctx context.Context, plan *HostCompliancePolicyResourceModel, client *api.PrismaCloudComputeAPIClient,/*, username types.String*/) (policyAPI.HostCompliancePolicy, diag.Diagnostics) {
     var diags diag.Diagnostics
 
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("entering schemaToPolicy")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    util.DLog(ctx, "entering schemaToPolicy")
+
     policy := policyAPI.HostCompliancePolicy{
         Id: plan.Id.ValueString(),
         PolicyType: plan.PolicyType.ValueString(),
@@ -572,10 +514,7 @@ func schemaToPolicy(ctx context.Context, plan *HostCompliancePolicyResourceModel
 }
 
 func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, /*, username types.String*/) ([]policyAPI.HostCompliancePolicyRule, diag.Diagnostics) {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("entering ruleSchemaToPolicy")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    _ = reflect.TypeOf(ctx)
+    util.DLog(ctx, "entering ruleSchemaToPolicy")
 
     var diags diag.Diagnostics
 
@@ -631,11 +570,7 @@ func ruleSchemaToPolicy(ctx context.Context, planRules []HostCompliancePolicyRul
 
     sortPolicyRules(&rules, &planRules)
 
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("exiting ruleSchemaToPolicy")
-    fmt.Printf("%+v\n", rules)
-    //fmt.Printf("%+v\n", *rules[0].Condition)
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    util.DLog(ctx, fmt.Sprintf("exiting ruleSchemaToPolicy with return value rules:\n\n %+v", rules))
     
     return rules, diags
 }
@@ -649,11 +584,6 @@ func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy, 
     }
 
     rules, diags := policyRulesToSchema(ctx, *policy.Rules, *plan.Rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
-    //fmt.Println(plan)
-    fmt.Println("!!! returned from policyRulesToSchema: ") 
-    //fmt.Printf("%+v\n", rules)
-    fmt.Println("#$%#$%#$%#$%#$%#$%#$%")
     if diags.HasError() {
         return schema, diags
     }
@@ -664,9 +594,7 @@ func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy, 
 }
 
 func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePolicyRule, planRules []HostCompliancePolicyRuleResourceModel) ([]HostCompliancePolicyRuleResourceModel, diag.Diagnostics) {
-    fmt.Println("***********************")
-    fmt.Println("entering policyRulesToSchema")
-    fmt.Println("***********************")
+    util.DLog(ctx, "entering policyRulesToSchema")
 
     var diags diag.Diagnostics
 
@@ -688,9 +616,7 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
         }
 
         if rule.Collections != nil {
-            fmt.Println("***********************")
-            fmt.Printf("entering collectionsToSchema (rule name: %s)\n", rule.Name)
-            fmt.Println("***********************")
+            util.DLog(ctx, fmt.Sprintf("entering collectionsToSchema (rule name: %s)", rule.Name))
             collections, diags := collectionsToSchema(ctx, rule.Collections)
             if diags.HasError() {
                 return schemaRules, diags
@@ -847,18 +773,13 @@ func collectionsToSchema(ctx context.Context, collections []collectionAPI.Collec
 
     collectionList, diags = types.ListValueFrom(ctx, system.CollectionObjectType(), collectionObjectValues)
 
-    fmt.Println("***********************")
-    fmt.Println("exiting collectionsToSchema")
-    fmt.Println("***********************")
+    util.DLog(ctx, "exiting collectionsToSchema")
 
     return collectionList, diags
 }
 
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("entering ModifyPlan")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    //fmt.Printf("%v\n", req.State.Raw)
+    util.DLog(ctx, "entering ModifyPlan")
 
     var plan HostCompliancePolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
@@ -877,29 +798,10 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
         return
 	}
 
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("starting loop over rules")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    for index, rule := range *plan.Rules {
-        if rule.Name.ValueString() == "r1" {
-            sv := []system.CollectionResourceModel{}
-            dgs := req.State.GetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), &sv)
-            if dgs.HasError() {
-                fmt.Println(dgs)
-                return
-            }
-            fmt.Println("planValue:")
-            fmt.Println(rule.Collections)
-            fmt.Println("stateValue:") 
-            fmt.Println(sv)
-        }
+    util.DLog(ctx, "starting loop over rules")
 
-        //if rule.Collections.IsUnknown() {
+    for index, rule := range *plan.Rules {
         if len(rule.Collections.Elements()) == 0 {
-            fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            fmt.Println("collections is unknown")
-            fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            //collections := types.SetValueMust(
             collections := types.ListValueMust(
                 system.CollectionObjectType(),
                 []attr.Value{
@@ -928,17 +830,6 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
             )
             diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), collections)...)
         }
-
-        //for _, c := range rule.Collections.Elements() {
-        //    //fmt.Println("!!!!!!!!!!!!!!!!!!!!")
-        //    //fmt.Println(c)
-        //    //fmt.Println("!!!!!!!!!!!!!!!!!!!!")
-        //    if c.IsNull() {
-        //        fmt.Println("!!!!!!!!!!!!!!!!!!!!")
-        //        fmt.Println("we got a null here")
-        //        fmt.Println("!!!!!!!!!!!!!!!!!!!!")
-        //    }
-        //}
 
         if rule.Order.IsUnknown() || rule.Order.IsNull() {
             rule.Order = types.Int32Value(int32(index + 1))
@@ -981,7 +872,5 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
     //fmt.Printf("%+v\n", respPlan)
     //fmt.Printf("%+v\n", *respPlan.Rules)
     ////fmt.Printf("%+v\n", &respPlan.Rules.Elements()[0].Condition)
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    fmt.Println("exiting ModifyPlan")
-    fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    util.DLog(ctx, "exiting ModifyPlan")
 }
