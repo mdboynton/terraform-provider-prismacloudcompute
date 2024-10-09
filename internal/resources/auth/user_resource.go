@@ -6,99 +6,21 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/auth"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
 )
-
-var _ resource.Resource = &UserResource{}
-var _ resource.ResourceWithImportState = &UserResource{}
-
-func NewUserResource() resource.Resource {
-    return &UserResource{}
-}
-
-type UserResource struct {
-    client *api.PrismaCloudComputeAPIClient
-}
-
-type UserResourceModel struct {
-    AuthenticationType types.String                    `tfsdk:"authentication_type"`
-    Username           types.String                    `tfsdk:"username"`
-    Password           types.String                    `tfsdk:"password"`
-    Role               types.String                    `tfsdk:"role"`
-    Permissions        *[]UserPermissionsResourceModel `tfsdk:"permissions"`
-}
-
-type UserPermissionsResourceModel struct {
-    Project     types.String `tfsdk:"project"`
-    Collections types.List   `tfsdk:"collections"`
-}
 
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
     resp.TypeName = req.ProviderTypeName + "_user"
 }
 
 func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-    resp.Schema = schema.Schema{
-        MarkdownDescription: "TODO",
-        Attributes: map[string]schema.Attribute{
-            "authentication_type": schema.StringAttribute{
-                MarkdownDescription: "TODO",
-                Required: true,
-            },
-            "username": schema.StringAttribute{
-                MarkdownDescription: "TODO",
-                Required: true,
-                PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplace(),
-                },
-            },
-            "password": schema.StringAttribute{
-                MarkdownDescription: "TODO",
-                Required: true,
-                Sensitive: true,
-            },
-            "role": schema.StringAttribute{
-                MarkdownDescription: "TODO",
-                Required: true,
-                PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplaceIf(
-                        func(
-                            ctx context.Context,
-                            sr planmodifier.StringRequest,
-                            rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse,
-                        ) {
-                            rrifr.RequiresReplace = (sr.PlanValue.ValueString() != sr.StateValue.ValueString()) && (sr.PlanValue.ValueString() == "admin" || sr.PlanValue.ValueString() == "operator")
-                        },
-                        "TODO",
-                        "TODO",
-                    ),
-                },
-            },
-            "permissions": schema.SetNestedAttribute{
-                NestedObject: schema.NestedAttributeObject {
-                    Attributes: map[string]schema.Attribute{
-                        "project": schema.StringAttribute{
-                            MarkdownDescription: "TODO",
-                            Required: true,
-                        },
-                        "collections": schema.ListAttribute{
-                            ElementType: types.StringType,
-                            MarkdownDescription: "TODO",
-                            Required: true,
-                        },
-                    },
-                },
-                Optional: true,
-            },
-        },
-    }
+    resp.Schema = r.GetSchema()
 }
 
 func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -195,7 +117,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
     }
   
     // Convert user value to schema
-    state, diags = userToSchema(ctx, *user) 
+    state, diags = userToSchema(ctx, *user, state) 
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -220,6 +142,12 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
     // Generate API request body from plan
     user, diags := schemaToUser(ctx, &plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    util.DLog(ctx, fmt.Sprintf("schemaToUser in Update() returned with value:\n\n %+v", plan))
 
     // Update existing user
 	err := auth.UpdateUser(*r.client, user)
@@ -241,13 +169,18 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
         return
     }
 
+    util.DLog(ctx, fmt.Sprintf("updatedUser: \n\n %+v", updatedUser))
+
     // Convert updated user to schema
-    plan, diags = userToSchema(ctx, *updatedUser)
+    plan, diags = userToSchema(ctx, *updatedUser, plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
     
+    util.DLog(ctx, fmt.Sprintf("setting state from Update() with value:\n\n %+v", plan))
+    util.DLog(ctx, fmt.Sprintf("%+v", plan.Permissions))
+
     // Set updated state
     diags = resp.State.Set(ctx, plan)
     resp.Diagnostics.Append(diags...)
@@ -311,15 +244,17 @@ func schemaToUser(ctx context.Context, plan *UserResourceModel) (auth.User, diag
 	return user, diags 
 }
 
-func userToSchema(ctx context.Context, user auth.User) (UserResourceModel, diag.Diagnostics) {
+func userToSchema(ctx context.Context, user auth.User, plan UserResourceModel) (UserResourceModel, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     schema := UserResourceModel{
         AuthenticationType: types.StringValue(user.AuthType),
         Username: types.StringValue(user.Username),
-        Password: types.StringValue(user.Password),
+        //Password: types.StringValue(user.Password),
         Role: types.StringValue(user.Role),
     }
+    
+    util.DLog(ctx, fmt.Sprintf("userToSchema() user value:\n\n %+v", user))
 
     if user.Permissions != nil {
         permissions := []UserPermissionsResourceModel{}
@@ -336,6 +271,8 @@ func userToSchema(ctx context.Context, user auth.User) (UserResourceModel, diag.
         }
         schema.Permissions = &permissions
     }
+
+    schema.Password = plan.Password
 
     return schema, diags
 }

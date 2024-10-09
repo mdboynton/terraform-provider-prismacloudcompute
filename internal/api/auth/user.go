@@ -27,6 +27,7 @@ func ListUsers(c api.PrismaCloudComputeAPIClient) ([]User, error) {
 	if err := c.Request(http.MethodGet, UsersEndpoint, nil, nil, &ans); err != nil {
 		return nil, fmt.Errorf("error listing users: %s", err)
 	}
+
 	return ans, nil
 }
 
@@ -35,11 +36,13 @@ func GetUser(c api.PrismaCloudComputeAPIClient, name string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+    
 	for _, val := range users {
 		if val.Username == name {
 			return &val, nil
 		}
 	}
+
 	return nil, fmt.Errorf("user '%s' not found", name)
 }
 
