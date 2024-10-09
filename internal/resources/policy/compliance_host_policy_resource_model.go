@@ -87,6 +87,7 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
+                Computed: true,
                 Validators: []validator.List{
                     validators.PolicyRuleNameIsUnique("host compliance"),
                 },

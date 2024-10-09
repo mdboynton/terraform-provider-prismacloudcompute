@@ -150,6 +150,8 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     if resp.Diagnostics.HasError() {
         return
     }
+
+    util.DLog(ctx, "ending Read() execution")
 }
 
 func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -225,8 +227,9 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
     }
 
     // Clear policy rules
-    emptyRules := []HostCompliancePolicyRuleResourceModel{}
-    state.Rules = &emptyRules
+    //emptyRules := []HostCompliancePolicyRuleResourceModel{}
+    //state.Rules = &emptyRules
+    state.Rules = &[]HostCompliancePolicyRuleResourceModel{}
 
     // Generate API request body from plan
     updatedPlan, diags := schemaToPolicy(ctx, &state, r.client)
@@ -581,9 +584,15 @@ func policyToSchema(ctx context.Context, policy policyAPI.HostCompliancePolicy, 
         PolicyType: types.StringValue(policy.PolicyType),
     }
 
-    rules, diags := policyRulesToSchema(ctx, *policy.Rules, *plan.Rules)
-    if diags.HasError() {
-        return schema, diags
+    var rules []HostCompliancePolicyRuleResourceModel
+
+    if plan.Rules != nil {
+        rules, diags = policyRulesToSchema(ctx, *policy.Rules, *plan.Rules)
+        if diags.HasError() {
+            return schema, diags
+        }
+    } else {
+        rules = []HostCompliancePolicyRuleResourceModel{}
     }
 
     schema.Rules = &rules
@@ -599,7 +608,7 @@ func policyRulesToSchema(ctx context.Context, rules []policyAPI.HostCompliancePo
     schemaRules := []HostCompliancePolicyRuleResourceModel{}
 
     if len(rules) == 0 {
-        return nil, diags
+        return schemaRules, diags
     }
 
     for _, rule := range rules {
@@ -778,15 +787,29 @@ func collectionsToSchema(ctx context.Context, collections []collectionAPI.Collec
 
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
+    //util.DLog(ctx, fmt.Sprintf("%v+", resp))
+    //util.DLog(ctx, fmt.Sprintf("%v+", req))
 
-    var plan HostCompliancePolicyResourceModel
+    var plan *HostCompliancePolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-    fmt.Printf("%v\n", *plan.Rules)
 
+    if plan == nil {
+        return
+    }
+
+    if plan.Rules == nil {
+        emptyRules := []HostCompliancePolicyRuleResourceModel{}
+        diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules"), &emptyRules)...)
+        return
+    }
+
+    //fmt.Printf("%v\n", *plan.Rules)
+
+    util.DLog(ctx, "getting vulns")
     complianceVulnerabilities, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
 	if err != nil {
 		diags.AddError(
