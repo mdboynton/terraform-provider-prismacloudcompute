@@ -1,8 +1,6 @@
 package policy
 
 import (
-    "context"
-
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
@@ -32,10 +30,6 @@ var _ resource.ResourceWithModifyPlan = &HostCompliancePolicyResource{}
 
 func NewHostCompliancePolicyResource() resource.Resource {
     return &HostCompliancePolicyResource{}
-}
-
-func (r *HostCompliancePolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-    resp.TypeName = req.ProviderTypeName + "_host_compliance_policy"
 }
 
 type HostCompliancePolicyResource struct {

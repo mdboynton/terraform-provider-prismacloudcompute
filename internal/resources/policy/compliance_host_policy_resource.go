@@ -24,6 +24,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
+func (r *HostCompliancePolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+    resp.TypeName = req.ProviderTypeName + "_host_compliance_policy"
+}
+
 func (r *HostCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
     resp.Schema = r.GetSchema()
 }
