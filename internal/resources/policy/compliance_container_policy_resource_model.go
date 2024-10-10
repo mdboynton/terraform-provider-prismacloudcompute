@@ -24,19 +24,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 )
 
-var _ resource.Resource = &HostCompliancePolicyResource{}
-var _ resource.ResourceWithImportState = &HostCompliancePolicyResource{}
-var _ resource.ResourceWithModifyPlan = &HostCompliancePolicyResource{}
+var _ resource.Resource = &ContainerCompliancePolicyResource{}
+var _ resource.ResourceWithImportState = &ContainerCompliancePolicyResource{}
+var _ resource.ResourceWithModifyPlan = &ContainerCompliancePolicyResource{}
 
-func NewHostCompliancePolicyResource() resource.Resource {
-    return &HostCompliancePolicyResource{}
+func NewContainerCompliancePolicyResource() resource.Resource {
+    return &ContainerCompliancePolicyResource{}
 }
 
-type HostCompliancePolicyResource struct {
+type ContainerCompliancePolicyResource struct {
     client *api.PrismaCloudComputeAPIClient
 }
 
-func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
+func (r *ContainerCompliancePolicyResource) GetSchema() schema.Schema {
     return schema.Schema{
         MarkdownDescription: "TODO",
         Attributes: map[string]schema.Attribute{
@@ -44,20 +44,20 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("hostCompliance"),
+                Default: stringdefault.StaticString("containerCompliance"),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("hostCompliance"),
+                Default: stringdefault.StaticString("containerCompliance"),
             },
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
                 Validators: []validator.List{
-                    validators.PolicyRuleNameIsUnique("host compliance"),
+                    validators.PolicyRuleNameIsUnique("container compliance"),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
@@ -165,7 +165,7 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
     }
 }
 
-func (r *HostCompliancePolicyResource) GetCollectionsSchema() schema.ListNestedAttribute {
+func (r *ContainerCompliancePolicyResource) GetCollectionsSchema() schema.ListNestedAttribute {
     return schema.ListNestedAttribute{
         MarkdownDescription: "TODO",
         Optional: true,
