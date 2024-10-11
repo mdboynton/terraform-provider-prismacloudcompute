@@ -89,6 +89,7 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
        auth.NewUserResource,
        system.NewCollectionResource,
        policy.NewHostCompliancePolicyResource,
+       policy.NewContainerCompliancePolicyResource,
     }
 }
 
@@ -97,6 +98,7 @@ func (p *PrismaCloudComputeProvider) DataSources(ctx context.Context) []func() d
 }
 
 func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+    tflog.Debug(ctx, "starting provider configuration")
     var config api.PrismaCloudComputeAPIClientConfig
     diags := req.Config.Get(ctx, &config)
     resp.Diagnostics.Append(diags...)

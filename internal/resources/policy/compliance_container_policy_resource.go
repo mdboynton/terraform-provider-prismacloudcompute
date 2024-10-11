@@ -6,6 +6,7 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	//collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
@@ -18,15 +19,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-func (r *HostCompliancePolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-    resp.TypeName = req.ProviderTypeName + "_host_compliance_policy"
+func (r *ContainerCompliancePolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+    resp.TypeName = req.ProviderTypeName + "_container_compliance_policy"
 }
 
-func (r *HostCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ContainerCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
     resp.Schema = r.GetSchema()
 }
 
-func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ContainerCompliancePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
     if req.ProviderData == nil {
         return
     }
@@ -45,7 +46,7 @@ func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resour
     r.client = client
 }
 
-func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *ContainerCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // TODO: refine this logic to populate Owner with the value in config, if it exists
     //var username types.String
     //diags := req.Config.GetAttribute(ctx, path.Root("username"), &username)
@@ -70,29 +71,29 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
         return
     }
 
-    // Create new host compliance policy 
+    // Create new container compliance policy 
     util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, policy)
+    err := policyAPI.UpsertContainerCompliancePolicy(*r.client, policy)
 	if err != nil {
 		resp.Diagnostics.AddError(
-            "Error creating Host Compliance Policy resource", 
-            "Failed to create host compliance policy: " + err.Error(),
+            "Error creating Container Compliance Policy resource", 
+            "Failed to create container compliance policy: " + err.Error(),
         )
         return
 	}
 
-    // Retrieve newly created host compliance policy 
-    response, err := policyAPI.GetHostCompliancePolicy(*r.client)
+    // Retrieve newly created container compliance policy 
+    response, err := policyAPI.GetContainerCompliancePolicy(*r.client)
     if err != nil {
 		resp.Diagnostics.AddError(
-            "Error retrieving created Host Compliance Policy resource", 
-            "Failed to retrieve created host compliance policy: " + err.Error(),
+            "Error retrieving created Container Compliance Policy resource", 
+            "Failed to retrieve created container compliance policy: " + err.Error(),
         )
         return
     }
 
 
-    // TODO: explore passing in the CreateRequest to hostCompliancePolicyToSchema in order to be
+    // TODO: explore passing in the CreateRequest to containerCompliancePolicyToSchema in order to be
     // able to reference configured order values that arent returned from the API
 
     createdPolicy, diags := CompliancePolicyToSchema(ctx, *response, plan)
@@ -110,7 +111,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     }
 }
 
-func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *ContainerCompliancePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
     util.DLog(ctx, "starting Read() execution")
 
     // Get current state
@@ -122,16 +123,16 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     }
 
     // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetHostCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetContainerCompliancePolicy(*r.client)
     if err != nil {
         resp.Diagnostics.AddError(
-            "Error reading Host Compliance Policy resource", 
-            "Failed to read host compliance Policy: " + err.Error(),
+            "Error reading Container Compliance Policy resource", 
+            "Failed to read container compliance policy: " + err.Error(),
         )
         return
     }
 
-    util.DLog(ctx, fmt.Sprintf("retrieved host compliance policy with rules:\n\n %+v", *policy.Rules))
+    util.DLog(ctx, fmt.Sprintf("retrieved container compliance policy with rules:\n\n %+v", *policy.Rules))
   
     // Overwrite state values with Prisma Cloud data
     policySchema, diags := CompliancePolicyToSchema(ctx, *policy, state)
@@ -152,7 +153,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     util.DLog(ctx, "ending Read() execution")
 }
 
-func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *ContainerCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Get current state
     var state CompliancePolicyResourceModel 
     diags := req.State.Get(ctx, &state)
@@ -177,26 +178,26 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     }
 
     // Update existing policy
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, planPolicy)
+    err := policyAPI.UpsertContainerCompliancePolicy(*r.client, planPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
-            "Error updating Host Compliance Policy resource", 
-            "Failed to update host compliance policy: " + err.Error(),
+            "Error updating Container Compliance Policy resource", 
+            "Failed to update container compliance policy: " + err.Error(),
         )
         return
 	}
 
     // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetHostCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetContainerCompliancePolicy(*r.client)
     if err != nil {
         resp.Diagnostics.AddError(
-            "Error reading Host Compliance Policy resource", 
-            "Failed to read Host Compliance Policy: " + err.Error(),
+            "Error reading Container Compliance Policy resource", 
+            "Failed to read container compliance policy: " + err.Error(),
         )
         return
     }
 
-    util.DLog(ctx, fmt.Sprintf("retrieved host compliance policy during Update() execution with rules:\n\n %+v", *policy.Rules))
+    util.DLog(ctx, fmt.Sprintf("retrieved container compliance policy during Update() execution with rules:\n\n %+v", *policy.Rules))
   
     // Convert updated policy into schema
     policySchema, diags := CompliancePolicyToSchema(ctx, *policy, plan)
@@ -215,7 +216,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     }
 }
 
-func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *ContainerCompliancePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
 	var state CompliancePolicyResourceModel 
     diags := req.State.Get(ctx, &state)
@@ -237,23 +238,23 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, updatedPlan)
+    err := policyAPI.UpsertContainerCompliancePolicy(*r.client, updatedPlan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-            "Error deleting Host Compliance Policy resource", 
-            "Failed to delete host compliance policy: " + err.Error(),
+            "Error deleting Container Compliance Policy resource", 
+            "Failed to delete container compliance policy: " + err.Error(),
         )
         return
 	}
 }
 
 // TODO: Define ImportState to work properly with this resource
-func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *ContainerCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
     util.DLog(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *ContainerCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
     //util.DLog(ctx, fmt.Sprintf("%v+", resp))
     //util.DLog(ctx, fmt.Sprintf("%v+", req))
@@ -278,11 +279,12 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
     //fmt.Printf("%v\n", *plan.Rules)
 
     util.DLog(ctx, "getting vulns")
-    complianceVulnerabilities, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
+    //complianceVulnerabilities, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
+    complianceVulnerabilities, err := systemAPI.GetComplianceContainerVulnerabilities(*r.client)
 	if err != nil {
 		diags.AddError(
             "Error modifying planned policy rules", 
-            "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
+            "Failed to retrieve compliance vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
         )
         return
 	}
@@ -312,7 +314,7 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
         } else if int(rule.Order.ValueInt32()) < 1 {
             resp.Diagnostics.AddError(
 		    	"Invalid Resource Configuration",
-		    	fmt.Sprintf("Host Compliance Policy Rule specified an invalid order (%d). Order values must be positive non-zero integers.", int(rule.Order.ValueInt32())),
+		    	fmt.Sprintf("Container Compliance Policy Rule specified an invalid order (%d). Order values must be positive non-zero integers.", int(rule.Order.ValueInt32())),
 		    )
             return
         }
@@ -326,6 +328,8 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
             }
         } 
 
+        // TODO: add check to see if a vuln id specified in the resource is applicable to the type of rule
+        //      (e.g. rule id 11 is relevant for host compliance policies, but not for container compliance)
         conditionObject, diags := GenerateConditionFromEffect(ctx, *r.client, plan.PolicyType.ValueString(), rule, complianceVulnerabilities)
         if diags.HasError() {
             return 

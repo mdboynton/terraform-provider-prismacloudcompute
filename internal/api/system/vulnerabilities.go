@@ -55,6 +55,32 @@ func GetVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulnerabilities, err
 	return ans, nil
 }
 
+func GetComplianceContainerVulnerabilities(c api.PrismaCloudComputeAPIClient) ([]Vulnerability, error) {
+    // TODO: include custom compliance checks
+    var complianceContainerVulns []Vulnerability
+    
+    vulnerabilities, err := GetVulnerabilities(c)
+    if err != nil {
+		return complianceContainerVulns, fmt.Errorf("error getting host compliance vulnerabilities: %s", err)
+    }
+
+    for _, vuln := range vulnerabilities.ComplianceVulnerabilities {
+        if vuln.Type == "container" ||
+            vuln.Type == "istio" ||
+            vuln.Type == "image" {
+                complianceContainerVulns = append(complianceContainerVulns, vuln)
+            }
+    }
+    
+    sort.Slice(complianceContainerVulns, func(i, j int) bool {
+        val1 := strconv.Itoa(complianceContainerVulns[i].Id)
+        val2 := strconv.Itoa(complianceContainerVulns[j].Id)
+        return val1 < val2
+    })
+
+    return complianceContainerVulns, nil
+}
+
 func GetComplianceHostVulnerabilities(c api.PrismaCloudComputeAPIClient) ([]Vulnerability, error) {
     // TODO: include custom compliance checks
     var complianceHostVulns []Vulnerability
