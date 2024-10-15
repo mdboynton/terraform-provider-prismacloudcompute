@@ -91,10 +91,6 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
         return
     }
 
-
-    // TODO: explore passing in the CreateRequest to hostCompliancePolicyToSchema in order to be
-    // able to reference configured order values that arent returned from the API
-
     createdPolicy, diags := CompliancePolicyToSchema(ctx, *response, plan)
     if diags.HasError() {
         return

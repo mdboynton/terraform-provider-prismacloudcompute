@@ -90,9 +90,6 @@ func (r *CiImageCompliancePolicyResource) Create(ctx context.Context, req resour
     }
 
 
-    // TODO: explore passing in the CreateRequest to containerCompliancePolicyToSchema in order to be
-    // able to reference configured order values that arent returned from the API
-
     createdPolicy, diags := CompliancePolicyToSchema(ctx, *response, plan)
     if diags.HasError() {
         return
