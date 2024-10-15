@@ -245,7 +245,6 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
 	}
 }
 
-// TODO: Define ImportState to work properly with this resource
 func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
     util.DLog(ctx, "executing ImportState")
     resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)

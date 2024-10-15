@@ -246,7 +246,6 @@ func (r *ContainerCompliancePolicyResource) Delete(ctx context.Context, req reso
 	}
 }
 
-// TODO: Define ImportState to work properly with this resource
 func (r *ContainerCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
     util.DLog(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
