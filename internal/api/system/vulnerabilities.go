@@ -2,7 +2,6 @@ package system
 
 import (
 	"fmt"
-    "strings"
 	"net/http"
     "sort"
     "strconv"
@@ -48,69 +47,64 @@ type Vulnerability struct {
 }
 
 func GetVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulnerabilities, error) {
-	var ans Vulnerabilities 
-	if err := c.Request(http.MethodGet, VulnerabilitiesEndpoint, nil, nil, &ans); err != nil {
-		return ans, fmt.Errorf("error getting vulnerabilities: %s", err)
+	var vulns Vulnerabilities 
+	if err := c.Request(http.MethodGet, VulnerabilitiesEndpoint, nil, nil, &vulns); err != nil {
+		return vulns, fmt.Errorf("error getting vulnerabilities: %s", err)
 	}
-	return ans, nil
+
+	return vulns, nil
 }
 
-func GetComplianceContainerVulnerabilities(c api.PrismaCloudComputeAPIClient) ([]Vulnerability, error) {
-    // TODO: include custom compliance checks
-    var complianceContainerVulns []Vulnerability
-    
-    vulnerabilities, err := GetVulnerabilities(c)
+func GetComplianceVulnerabilitiesMap(c api.PrismaCloudComputeAPIClient) (map[string][]Vulnerability, error) {
+    vulnsMap := make(map[string][]Vulnerability)
+
+    vulns, err := GetVulnerabilities(c)
     if err != nil {
-		return complianceContainerVulns, fmt.Errorf("error getting host compliance vulnerabilities: %s", err)
+        return vulnsMap, err
     }
 
-    for _, vuln := range vulnerabilities.ComplianceVulnerabilities {
-        if vuln.Type == "container" ||
-            vuln.Type == "istio" ||
-            vuln.Type == "image" {
-                complianceContainerVulns = append(complianceContainerVulns, vuln)
-            }
+    for _, vuln := range vulns.ComplianceVulnerabilities {
+        if _, ok := vulnsMap[vuln.Type]; ok {
+            vulnsMap[vuln.Type] = append(vulnsMap[vuln.Type], vuln)
+        } else {
+            vulnsMap[vuln.Type] = []Vulnerability{vuln}
+        }
     }
     
-    sort.Slice(complianceContainerVulns, func(i, j int) bool {
-        val1 := strconv.Itoa(complianceContainerVulns[i].Id)
-        val2 := strconv.Itoa(complianceContainerVulns[j].Id)
+    return vulnsMap, nil
+}
+
+func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType string) ([]Vulnerability, error) {
+    var complianceVulns []Vulnerability
+    var vulnTypes []string
+
+    vulnsMap, err := GetComplianceVulnerabilitiesMap(c)
+    if err != nil {
+		return complianceVulns, fmt.Errorf("error getting vm image compliance vulnerabilities: %s", err)
+    }
+
+    switch policyType {
+        case "hostCompliance":
+            vulnTypes = getHostComplianceVulnTypes()
+        case "containerCompliance":
+            vulnTypes = getContainerComplianceVulnTypes()
+        case "vmCompliance":
+            vulnTypes = getVmImageComplianceVulnTypes()
+        default:
+            return complianceVulns, fmt.Errorf("invalid compliance policy type supplied: \"%s\"", policyType)
+    }
+
+    for _, vulnType := range vulnTypes {
+        complianceVulns = append(complianceVulns, vulnsMap[vulnType]...)
+    }
+
+    sort.Slice(complianceVulns, func(i, j int) bool {
+        val1 := strconv.Itoa(complianceVulns[i].Id)
+        val2 := strconv.Itoa(complianceVulns[j].Id)
         return val1 < val2
     })
 
-    return complianceContainerVulns, nil
-}
-
-func GetComplianceHostVulnerabilities(c api.PrismaCloudComputeAPIClient) ([]Vulnerability, error) {
-    // TODO: include custom compliance checks
-    var complianceHostVulns []Vulnerability
-    
-    vulnerabilities, err := GetVulnerabilities(c)
-    if err != nil {
-		return complianceHostVulns, fmt.Errorf("error getting host compliance vulnerabilities: %s", err)
-    }
-
-    for _, vuln := range vulnerabilities.ComplianceVulnerabilities {
-        if vuln.Type == "host_config" ||
-            vuln.Type == "windows" ||
-            vuln.Type == "linux" ||
-            vuln.Type == "security_operations" ||
-            vuln.Type == "daemon_config" ||
-            vuln.Type == "daemon_config_files" ||
-            strings.HasSuffix(vuln.Type, "_worker") ||
-            strings.HasSuffix(vuln.Type, "_master") ||
-            strings.HasSuffix(vuln.Type, "_federation") {
-                complianceHostVulns = append(complianceHostVulns, vuln)
-            }
-    }
-    
-    sort.Slice(complianceHostVulns, func(i, j int) bool {
-        val1 := strconv.Itoa(complianceHostVulns[i].Id)
-        val2 := strconv.Itoa(complianceHostVulns[j].Id)
-        return val1 < val2
-    })
-
-    return complianceHostVulns, nil
+    return complianceVulns, nil
 }
 
 func GetHighOrCriticalVulnerabilities(complianceVulnerabilities []Vulnerability) []Vulnerability {
@@ -121,4 +115,41 @@ func GetHighOrCriticalVulnerabilities(complianceVulnerabilities []Vulnerability)
         }
     }
     return highOrCriticalVulns
+}
+
+func getHostComplianceVulnTypes() []string {
+    return []string{
+        "host_config", 
+        "daemon_config", 
+        "daemon_config_files", 
+        "security_operations", 
+        "linux", 
+        "windows", 
+        "k8s_worker",
+        "eks_worker",
+        "aks_worker",
+        "openshift_worker",
+        "k8s_master",
+        "openshift_master",
+        "k8s_federation",
+    }
+}
+
+func getContainerComplianceVulnTypes() []string {
+    return []string{
+        "container", 
+        "istio", 
+        "image",
+    }
+}
+
+func getVmImageComplianceVulnTypes() []string {
+    return []string{
+        "host", 
+        "host_config", 
+        "daemon_config", 
+        "daemon_config_files", 
+        "security_operations", 
+        "linux",
+    }
 }

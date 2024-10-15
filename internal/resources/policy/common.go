@@ -87,7 +87,9 @@ func SortCompliancePolicyRules(rules *[]policyAPI.CompliancePolicyRule, planRule
     rules = &r 
 }
 
-func SortComplianceSchemaRules(schemaRules *[]CompliancePolicyRuleResourceModel, planRules *[]CompliancePolicyRuleResourceModel) {
+func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePolicyRuleResourceModel, planRules *[]CompliancePolicyRuleResourceModel) {
+    util.DLog(ctx, "entering SortComplianceSchemaRules")
+
     ruleOrderMap := make(map[string]int32)
     pr := *planRules
     sr := *schemaRules
@@ -121,6 +123,9 @@ func GenerateConditionFromEffect(
     policyType string,
     rule CompliancePolicyRuleResourceModel, 
     complianceVulnerabilities []systemAPI.Vulnerability) (basetypes.ObjectValue, diag.Diagnostics) {
+    // TODO: fix modification from "effect = alert" to no effect not creating the right values (doesnt think any
+    // changes are needed since effect gets set to "alert" when initially creating a rule with no effect value)
+
     // TODO: finish implementing this more compact implementation of this function
     //      currently, the issue is that we're dealing with two different types of
     //      vulnerability objects depending on whether we're taking the vulnerability
@@ -246,6 +251,8 @@ func GenerateConditionFromEffect(
             if policyType == "hostCompliance" {
                 block = (isBlockEffect && !(vuln.Type == "windows"))
             } else if policyType == "containerCompliance" {
+                block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
+            } else if policyType == "vmCompliance" {
                 block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
             } else {
                 // TODO: append error here
@@ -580,7 +587,7 @@ func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.Compli
         schemaRules = append(schemaRules, schemaRule)
     }
 
-    SortComplianceSchemaRules(&schemaRules, &planRules)
+    SortComplianceSchemaRules(ctx, &schemaRules, &planRules)
 
     return schemaRules, diags
 }
