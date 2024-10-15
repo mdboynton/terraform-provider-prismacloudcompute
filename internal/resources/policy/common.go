@@ -15,9 +15,11 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
+    "github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/types"
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -598,4 +600,82 @@ func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.Compli
     SortComplianceSchemaRules(ctx, &schemaRules, planRules)
 
     return schemaRules, diags
+}
+
+
+func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComputeAPIClient, plan *CompliancePolicyResourceModel, resp *resource.ModifyPlanResponse) {
+    util.DLog(ctx, "entering ModifyCompliancePolicyResourcePlan")
+    
+    var diags diag.Diagnostics
+
+    if plan == nil {
+        return
+    }
+
+    if plan.Rules == nil {
+        emptyRules := []CompliancePolicyRuleResourceModel{}
+        diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules"), &emptyRules)...)
+        return
+    }
+
+    //fmt.Printf("%v\n", *plan.Rules)
+
+    util.DLog(ctx, "getting vulns")
+    complianceVulnerabilities, err := systemAPI.GetComplianceVulnerabilities(*client, plan.PolicyType.ValueString())
+	if err != nil {
+		diags.AddError(
+            "Error modifying planned policy rules", 
+            "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
+        )
+        return
+	}
+
+    util.DLog(ctx, "starting loop over rules")
+
+    for index, rule := range *plan.Rules {
+        if len(rule.Collections.Elements()) == 0 {
+            collections := types.ListValueMust(
+                system.CollectionObjectType(),
+                []attr.Value{
+                    types.ObjectValueMust(
+                        system.CollectionObjectAttrTypeMap(),
+                        system.CollectionObjectDefaultAttrValueMap(),
+                    ),
+                },
+            )
+            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), collections)...)
+        }
+
+        if rule.Order.IsUnknown() || rule.Order.IsNull() {
+            rule.Order = types.Int32Value(int32(index + 1))
+            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))...)
+            if diags.HasError() {
+                return
+            }
+        } else if int(rule.Order.ValueInt32()) < 1 {
+            resp.Diagnostics.AddError(
+		    	"Invalid Resource Configuration",
+		    	fmt.Sprintf("Host Compliance Policy Rule specified an invalid order (%d). Order values must be positive non-zero integers.", int(rule.Order.ValueInt32())),
+		    )
+            return
+        }
+
+        if rule.Effect.IsUnknown() {
+            fmt.Printf("rule %s has unknown effect\n", rule.Name.ValueString())
+            rule.Effect = types.StringValue("unknown")
+            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
+            if diags.HasError() {
+                return
+            }
+        } 
+
+        conditionObject, diags := GenerateConditionFromEffect(ctx, *client, plan.PolicyType.ValueString(), rule, complianceVulnerabilities)
+        if diags.HasError() {
+            return 
+        }
+
+        resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
+    }
+
+    util.DLog(ctx, "exiting ModifyCompliancePolicyResourcePlan")
 }
