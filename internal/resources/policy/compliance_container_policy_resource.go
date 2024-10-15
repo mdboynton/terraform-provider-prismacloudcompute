@@ -279,8 +279,7 @@ func (r *ContainerCompliancePolicyResource) ModifyPlan(ctx context.Context, req 
     //fmt.Printf("%v\n", *plan.Rules)
 
     util.DLog(ctx, "getting vulns")
-    //complianceVulnerabilities, err := systemAPI.GetComplianceHostVulnerabilities(*r.client)
-    complianceVulnerabilities, err := systemAPI.GetComplianceContainerVulnerabilities(*r.client)
+    complianceVulnerabilities, err := systemAPI.GetComplianceVulnerabilities(*r.client, plan.PolicyType.ValueString())
 	if err != nil {
 		diags.AddError(
             "Error modifying planned policy rules", 

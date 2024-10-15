@@ -18,15 +18,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-func (r *HostCompliancePolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-    resp.TypeName = req.ProviderTypeName + "_host_compliance_policy"
+func (r *VmImageCompliancePolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+    resp.TypeName = req.ProviderTypeName + "_vm_image_compliance_policy"
 }
 
-func (r *HostCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *VmImageCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
     resp.Schema = r.GetSchema()
 }
 
-func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *VmImageCompliancePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
     if req.ProviderData == nil {
         return
     }
@@ -45,7 +45,7 @@ func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resour
     r.client = client
 }
 
-func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *VmImageCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // TODO: refine this logic to populate Owner with the value in config, if it exists
     //var username types.String
     //diags := req.Config.GetAttribute(ctx, path.Root("username"), &username)
@@ -72,7 +72,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
 
     // Create new host compliance policy 
     util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, policy)
+    err := policyAPI.UpsertVmImageCompliancePolicy(*r.client, policy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating Host Compliance Policy resource", 
@@ -82,7 +82,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
 	}
 
     // Retrieve newly created host compliance policy 
-    response, err := policyAPI.GetHostCompliancePolicy(*r.client)
+    response, err := policyAPI.GetVmImageCompliancePolicy(*r.client)
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created Host Compliance Policy resource", 
@@ -110,7 +110,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     }
 }
 
-func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *VmImageCompliancePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
     util.DLog(ctx, "starting Read() execution")
 
     // Get current state
@@ -122,7 +122,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     }
 
     // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetHostCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetVmImageCompliancePolicy(*r.client)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Host Compliance Policy resource", 
@@ -152,7 +152,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     util.DLog(ctx, "ending Read() execution")
 }
 
-func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *VmImageCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Get current state
     var state CompliancePolicyResourceModel 
     diags := req.State.Get(ctx, &state)
@@ -177,7 +177,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     }
 
     // Update existing policy
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, planPolicy)
+    err := policyAPI.UpsertVmImageCompliancePolicy(*r.client, planPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Host Compliance Policy resource", 
@@ -187,7 +187,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
 	}
 
     // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetHostCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetVmImageCompliancePolicy(*r.client)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Host Compliance Policy resource", 
@@ -215,7 +215,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     }
 }
 
-func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *VmImageCompliancePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
 	var state CompliancePolicyResourceModel 
     diags := req.State.Get(ctx, &state)
@@ -237,7 +237,7 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertHostCompliancePolicy(*r.client, updatedPlan)
+    err := policyAPI.UpsertVmImageCompliancePolicy(*r.client, updatedPlan)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting Host Compliance Policy resource", 
@@ -248,12 +248,12 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
 }
 
 // TODO: Define ImportState to work properly with this resource
-func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *VmImageCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
     util.DLog(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *VmImageCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
     //util.DLog(ctx, fmt.Sprintf("%v+", resp))
     //util.DLog(ctx, fmt.Sprintf("%v+", req))

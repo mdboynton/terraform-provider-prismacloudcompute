@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 )
 
 const (
