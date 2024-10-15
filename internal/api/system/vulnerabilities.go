@@ -88,14 +88,27 @@ func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType 
             vulnTypes = getHostComplianceVulnTypes()
         case "containerCompliance":
             vulnTypes = getContainerComplianceVulnTypes()
+        case "ciImagesCompliance":
+            //vulnTypes = []string{"image"}
+            break
         case "vmCompliance":
             vulnTypes = getVmImageComplianceVulnTypes()
         default:
             return complianceVulns, fmt.Errorf("invalid compliance policy type supplied: \"%s\"", policyType)
     }
 
-    for _, vulnType := range vulnTypes {
-        complianceVulns = append(complianceVulns, vulnsMap[vulnType]...)
+
+    if policyType == "ciImagesCompliance" {
+        for _, vuln := range vulnsMap["image"] {
+            if vuln.Id == 406 || vuln.Id == 408 || vuln.Id == 41 || vuln.Id == 422 || vuln.Id == 424 ||
+                vuln.Id == 425 || vuln.Id == 426 || vuln.Id == 448 || vuln.Id == 5041 || vuln.Id == 5048 {
+                complianceVulns = append(complianceVulns, vuln)    
+            }
+        }
+    } else {
+        for _, vulnType := range vulnTypes {
+            complianceVulns = append(complianceVulns, vulnsMap[vulnType]...)
+        }
     }
 
     sort.Slice(complianceVulns, func(i, j int) bool {

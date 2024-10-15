@@ -254,6 +254,9 @@ func GenerateConditionFromEffect(
                 block = (isBlockEffect && !(vuln.Type == "windows"))
             } else if policyType == "containerCompliance" {
                 block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
+            } else if policyType == "ciImagesCompliance" {
+                //block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
+                block = isBlockEffect
             } else if policyType == "vmCompliance" {
                 block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
             } else {
