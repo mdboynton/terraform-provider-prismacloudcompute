@@ -91,14 +91,11 @@ func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePol
     util.DLog(ctx, "entering SortComplianceSchemaRules")
 
     ruleOrderMap := make(map[string]int32)
-    pr := *planRules
-    sr := *schemaRules
-
-    for index, planRule := range pr {
+    for index, planRule := range *planRules {
         ruleOrderMap[planRule.Name.ValueString()] = int32(index)
     }
 
-    slices.SortFunc(sr, func(a, b CompliancePolicyRuleResourceModel) int {
+    slices.SortFunc(*schemaRules, func(a, b CompliancePolicyRuleResourceModel) int {
         orderA, okA := ruleOrderMap[a.Name.ValueString()]
         if !okA {
             orderA = int32(len(ruleOrderMap) + 1)
@@ -110,11 +107,9 @@ func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePol
         return cmp.Compare(orderA, orderB)
     })
 
-    for i := 0; i < len(sr); i++ {
-        sr[i].Order = pr[i].Order
+    for i := 0; i < len(*schemaRules); i++ {
+        (*schemaRules)[i].Order = (*planRules)[i].Order
     }
-
-    schemaRules = &sr
 }
 
 func GenerateConditionFromEffect(
