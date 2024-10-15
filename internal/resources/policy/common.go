@@ -90,6 +90,13 @@ func SortCompliancePolicyRules(rules *[]policyAPI.CompliancePolicyRule, planRule
 func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePolicyRuleResourceModel, planRules *[]CompliancePolicyRuleResourceModel) {
     util.DLog(ctx, "entering SortComplianceSchemaRules")
 
+    if planRules == nil {
+        for i := 0; i < len(*schemaRules); i++ {
+            (*schemaRules)[i].Order = types.Int32Value(int32(i + 1))
+        }
+        return
+    }
+
     ruleOrderMap := make(map[string]int32)
     for index, planRule := range *planRules {
         ruleOrderMap[planRule.Name.ValueString()] = int32(index)
@@ -472,9 +479,10 @@ func CompliancePolicyToSchema(ctx context.Context, policy policyAPI.CompliancePo
 
     var rules []CompliancePolicyRuleResourceModel
 
-    if plan.Rules != nil {
-        rules, diags = CompliancePolicyRulesToSchema(ctx, *policy.Rules, *plan.Rules)
+    if policy.Rules != nil {
+        rules, diags = CompliancePolicyRulesToSchema(ctx, *policy.Rules, plan.Rules)
         if diags.HasError() {
+            util.DLog(ctx, "CompliancePolicyRulesToSchema error")
             return schema, diags
         }
     } else {
@@ -486,8 +494,8 @@ func CompliancePolicyToSchema(ctx context.Context, policy policyAPI.CompliancePo
     return schema, diags
 }
 
-func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.CompliancePolicyRule, planRules []CompliancePolicyRuleResourceModel) ([]CompliancePolicyRuleResourceModel, diag.Diagnostics) {
-    util.DLog(ctx, "entering containerCompliancePolicyRulesToSchema")
+func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.CompliancePolicyRule, planRules *[]CompliancePolicyRuleResourceModel) ([]CompliancePolicyRuleResourceModel, diag.Diagnostics) {
+    util.DLog(ctx, "entering CompliancePolicyRulesToSchema")
 
     var diags diag.Diagnostics
 
@@ -582,7 +590,7 @@ func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.Compli
         schemaRules = append(schemaRules, schemaRule)
     }
 
-    SortComplianceSchemaRules(ctx, &schemaRules, &planRules)
+    SortComplianceSchemaRules(ctx, &schemaRules, planRules)
 
     return schemaRules, diags
 }
