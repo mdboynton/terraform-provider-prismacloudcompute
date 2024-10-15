@@ -89,6 +89,8 @@ func SortCompliancePolicyRules(rules *[]policyAPI.CompliancePolicyRule, planRule
 
 func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePolicyRuleResourceModel, planRules *[]CompliancePolicyRuleResourceModel) {
     util.DLog(ctx, "entering SortComplianceSchemaRules")
+    util.DLog(ctx, fmt.Sprintf("%v", *schemaRules))
+    util.DLog(ctx, fmt.Sprintf("%v", *planRules))
 
     if planRules == nil {
         for i := 0; i < len(*schemaRules); i++ {
@@ -328,7 +330,7 @@ func CompliancePolicySchemaToPolicy(ctx context.Context, plan *CompliancePolicyR
 }
 
 func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []CompliancePolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, /*, username types.String*/) ([]policyAPI.CompliancePolicyRule, diag.Diagnostics) {
-    util.DLog(ctx, "entering containerComplianceRuleSchemaToPolicy")
+    util.DLog(ctx, "entering ComplianceRuleSchemaToPolicy")
 
     var diags diag.Diagnostics
 
@@ -383,7 +385,7 @@ func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []Complia
     //sortContainerCompliancePolicyRules(&rules, &planRules)
     SortCompliancePolicyRules(&rules, &planRules)
 
-    util.DLog(ctx, fmt.Sprintf("exiting containerComplianceRuleSchemaToPolicy with return value rules:\n\n %+v", rules))
+    util.DLog(ctx, fmt.Sprintf("exiting ComplianceRuleSchemaToPolicy with return value rules:\n\n %+v", rules))
     
     return rules, diags
 }

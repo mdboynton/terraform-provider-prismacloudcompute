@@ -72,7 +72,7 @@ func (r *VmImageCompliancePolicyResource) Create(ctx context.Context, req resour
 
     // Create new host compliance policy 
     util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
-    err := policyAPI.UpsertVmImageCompliancePolicy(*r.client, policy)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, policy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating Host Compliance Policy resource", 
@@ -82,7 +82,7 @@ func (r *VmImageCompliancePolicyResource) Create(ctx context.Context, req resour
 	}
 
     // Retrieve newly created host compliance policy 
-    response, err := policyAPI.GetVmImageCompliancePolicy(*r.client)
+    response, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceVmImage)
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created Host Compliance Policy resource", 
@@ -122,7 +122,7 @@ func (r *VmImageCompliancePolicyResource) Read(ctx context.Context, req resource
     }
 
     // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetVmImageCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceVmImage)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Host Compliance Policy resource", 
@@ -177,7 +177,7 @@ func (r *VmImageCompliancePolicyResource) Update(ctx context.Context, req resour
     }
 
     // Update existing policy
-    err := policyAPI.UpsertVmImageCompliancePolicy(*r.client, planPolicy)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, planPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Host Compliance Policy resource", 
@@ -187,7 +187,7 @@ func (r *VmImageCompliancePolicyResource) Update(ctx context.Context, req resour
 	}
 
     // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetVmImageCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceVmImage)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Host Compliance Policy resource", 
@@ -235,7 +235,7 @@ func (r *VmImageCompliancePolicyResource) Delete(ctx context.Context, req resour
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertVmImageCompliancePolicy(*r.client, updatedPlan)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, updatedPlan)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting Host Compliance Policy resource", 

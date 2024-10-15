@@ -70,7 +70,7 @@ func (r *CiImageCompliancePolicyResource) Create(ctx context.Context, req resour
 
     // Create new CI image compliance policy 
     util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
-    err := policyAPI.UpsertCiImageCompliancePolicy(*r.client, policy)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, policy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating CI Image Compliance Policy resource", 
@@ -80,7 +80,7 @@ func (r *CiImageCompliancePolicyResource) Create(ctx context.Context, req resour
 	}
 
     // Retrieve newly created container compliance policy 
-    response, err := policyAPI.GetCiImageCompliancePolicy(*r.client)
+    response, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceCiImage)
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created CI Image Compliance Policy resource", 
@@ -120,7 +120,7 @@ func (r *CiImageCompliancePolicyResource) Read(ctx context.Context, req resource
     }
 
     // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetCiImageCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceCiImage)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading CI Image Compliance Policy resource", 
@@ -175,7 +175,7 @@ func (r *CiImageCompliancePolicyResource) Update(ctx context.Context, req resour
     }
 
     // Update existing policy
-    err := policyAPI.UpsertCiImageCompliancePolicy(*r.client, planPolicy)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, planPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating CI Image Compliance Policy resource", 
@@ -185,7 +185,7 @@ func (r *CiImageCompliancePolicyResource) Update(ctx context.Context, req resour
 	}
 
     // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetCiImageCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceCiImage)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading CI Image Compliance Policy resource", 
@@ -233,7 +233,7 @@ func (r *CiImageCompliancePolicyResource) Delete(ctx context.Context, req resour
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertCiImageCompliancePolicy(*r.client, updatedPlan)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, updatedPlan)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting CI Image Compliance Policy resource", 

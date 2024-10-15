@@ -73,7 +73,7 @@ func (r *ContainerCompliancePolicyResource) Create(ctx context.Context, req reso
 
     // Create new container compliance policy 
     util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
-    err := policyAPI.UpsertContainerCompliancePolicy(*r.client, policy)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, policy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating Container Compliance Policy resource", 
@@ -83,7 +83,7 @@ func (r *ContainerCompliancePolicyResource) Create(ctx context.Context, req reso
 	}
 
     // Retrieve newly created container compliance policy 
-    response, err := policyAPI.GetContainerCompliancePolicy(*r.client)
+    response, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceContainer)
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created Container Compliance Policy resource", 
@@ -123,7 +123,7 @@ func (r *ContainerCompliancePolicyResource) Read(ctx context.Context, req resour
     }
 
     // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetContainerCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceContainer)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Container Compliance Policy resource", 
@@ -178,7 +178,7 @@ func (r *ContainerCompliancePolicyResource) Update(ctx context.Context, req reso
     }
 
     // Update existing policy
-    err := policyAPI.UpsertContainerCompliancePolicy(*r.client, planPolicy)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, planPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Container Compliance Policy resource", 
@@ -188,7 +188,7 @@ func (r *ContainerCompliancePolicyResource) Update(ctx context.Context, req reso
 	}
 
     // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetContainerCompliancePolicy(*r.client)
+    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceContainer)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Container Compliance Policy resource", 
@@ -236,7 +236,7 @@ func (r *ContainerCompliancePolicyResource) Delete(ctx context.Context, req reso
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertContainerCompliancePolicy(*r.client, updatedPlan)
+    err := policyAPI.UpsertCompliancePolicy(*r.client, updatedPlan)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting Container Compliance Policy resource", 
@@ -253,8 +253,6 @@ func (r *ContainerCompliancePolicyResource) ImportState(ctx context.Context, req
 
 func (r *ContainerCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
-    //util.DLog(ctx, fmt.Sprintf("%v+", resp))
-    //util.DLog(ctx, fmt.Sprintf("%v+", req))
 
     var plan *CompliancePolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
