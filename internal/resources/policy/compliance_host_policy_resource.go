@@ -225,8 +225,6 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
     }
 
     // Clear policy rules
-    //emptyRules := []CompliancePolicyRuleResourceModel{}
-    //state.Rules = &emptyRules
     state.Rules = &[]CompliancePolicyRuleResourceModel{}
 
     // Generate API request body from plan
@@ -250,7 +248,7 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
 // TODO: Define ImportState to work properly with this resource
 func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
     util.DLog(ctx, "executing ImportState")
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+    resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -275,9 +273,6 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
         return
     }
 
-    //fmt.Printf("%v\n", *plan.Rules)
-
-    util.DLog(ctx, "getting vulns")
     complianceVulnerabilities, err := systemAPI.GetComplianceVulnerabilities(*r.client, plan.PolicyType.ValueString())
 	if err != nil {
 		diags.AddError(
@@ -333,17 +328,6 @@ func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resou
 
         resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
     }
-
-    //var respPlan CompliancePolicyResourceModel
-    //diags = resp.Plan.Get(ctx, &respPlan)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
-
-    //fmt.Printf("%+v\n", respPlan)
-    //fmt.Printf("%+v\n", *respPlan.Rules)
-    ////fmt.Printf("%+v\n", &respPlan.Rules.Elements()[0].Condition)
 
     util.DLog(ctx, "exiting ModifyPlan")
 }

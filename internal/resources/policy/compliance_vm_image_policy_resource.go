@@ -225,8 +225,6 @@ func (r *VmImageCompliancePolicyResource) Delete(ctx context.Context, req resour
     }
 
     // Clear policy rules
-    //emptyRules := []CompliancePolicyRuleResourceModel{}
-    //state.Rules = &emptyRules
     state.Rules = &[]CompliancePolicyRuleResourceModel{}
 
     // Generate API request body from plan
