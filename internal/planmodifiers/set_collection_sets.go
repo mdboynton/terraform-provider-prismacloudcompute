@@ -2,7 +2,7 @@ package planmodifiers
 
 import (
 	"context"
-    "fmt"
+    //"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	//"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -24,23 +24,23 @@ func (m useDefaultForUnknownCollectionSets) MarkdownDescription(_ context.Contex
 }
 
 func (m useDefaultForUnknownCollectionSets) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-    if req.PlanValue.IsUnknown() {
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-        fmt.Println("planvalue is unknown")
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-        return
-    }
-    if req.PlanValue.IsNull() {
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-        fmt.Println("planvalue is null")
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-        return
-    }
-        
-    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-    fmt.Println("in set_collection_sets")
-    fmt.Println(req.PlanValue)
-    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
+    //if req.PlanValue.IsUnknown() {
+    //    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
+    //    fmt.Println("planvalue is unknown")
+    //    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
+    //    return
+    //}
+    //if req.PlanValue.IsNull() {
+    //    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
+    //    fmt.Println("planvalue is null")
+    //    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
+    //    return
+    //}
+    //    
+    //fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
+    //fmt.Println("in set_collection_sets")
+    //fmt.Println(req.PlanValue)
+    //fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
 
         
     //if req.PlanValue.IsUnknown() {

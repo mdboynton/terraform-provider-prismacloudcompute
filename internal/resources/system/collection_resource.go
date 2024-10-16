@@ -12,6 +12,7 @@ import (
     "github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func (r *CollectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -244,6 +245,18 @@ func CollectionObjectDefaultAttrValueMap() map[string]attr.Value {
         "prisma": types.BoolValue(false),
         "system": types.BoolValue(true),
     }
+}
+
+func GetDefaultCollectionObject() basetypes.ListValue {
+    return types.ListValueMust(
+        CollectionObjectType(),
+        []attr.Value{
+            types.ObjectValueMust(
+                CollectionObjectAttrTypeMap(),
+                CollectionObjectDefaultAttrValueMap(),
+            ),
+        },
+    )
 }
 
 func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {

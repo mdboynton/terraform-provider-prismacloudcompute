@@ -2,7 +2,6 @@ package planmodifiers
 
 import (
 	"context"
-    "fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -52,29 +51,7 @@ func (m removeNullObjects) MarkdownDescription(_ context.Context) string {
 }
 
 func (m removeNullObjects) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-    //fmt.Println("!!!!!!!!!!!!!!!!!!!!")
-    //fmt.Println("entering RemoveNullObjects")
-    //fmt.Println("planValue:")
-    //fmt.Println(req.PlanValue)
-    //fmt.Println("stateValue:")
-    //fmt.Println(req.StateValue)
-    //fmt.Println("!!!!!!!!!!!!!!!!!!!!")
-    
-    //if !req.PlanValue.IsNull() && 
-    //if req.PlanValue != req.StateValue {
-    //    
-    //}
-
-    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-    fmt.Println(req.PlanValue.Elements())
-    fmt.Println(len(req.ConfigValue.Elements()))
-    fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-
     if len(req.ConfigValue.Elements()) == 0 {
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-        fmt.Println("RemoveNullObjects: setting PlanValue to NewListUnknown")
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%%%")
-
         resp.PlanValue = basetypes.NewListUnknown(CollectionObjectType())
         return
     }

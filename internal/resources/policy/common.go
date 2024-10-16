@@ -91,8 +91,6 @@ func SortCompliancePolicyRules(rules *[]policyAPI.CompliancePolicyRule, planRule
 
 func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePolicyRuleResourceModel, planRules *[]CompliancePolicyRuleResourceModel) {
     util.DLog(ctx, "entering SortComplianceSchemaRules")
-    util.DLog(ctx, fmt.Sprintf("%v", *schemaRules))
-    util.DLog(ctx, fmt.Sprintf("%v", *planRules))
 
     if planRules == nil {
         for i := 0; i < len(*schemaRules); i++ {
@@ -117,6 +115,10 @@ func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePol
         }
         return cmp.Compare(orderA, orderB)
     })
+
+
+    //util.DLog(ctx, fmt.Sprintf("entering SortComplianceSchemaRules")
+    util.DLogf(ctx, *schemaRules)
 
     for i := 0; i < len(*schemaRules); i++ {
         (*schemaRules)[i].Order = (*planRules)[i].Order
@@ -197,6 +199,8 @@ func GenerateConditionFromEffect(
     //}
     var diags diag.Diagnostics
 
+    util.DLogf(ctx, rule)
+    
     // Create static values
     effect := rule.Effect.ValueString()
     vulnerabilityObjectValues := []attr.Value{}
@@ -215,68 +219,112 @@ func GenerateConditionFromEffect(
     }
     conditionObject := types.ObjectNull(conditionObjectValueTypes)
 
-    // If the effect is "alert, block", create condition vulnerabilities object from plan
-    if effect == "alert, block" {
-        var ruleConditionVulns []policyAPI.CompliancePolicyRuleVulnerability
-
+    if policyType == "serverlessCompliance" {
         if rule.Condition.IsUnknown() {
-            diags.AddError(
-                "Missing condition from \"alert, block\" effect rule",
-                "Condition attribute must be defined for rules with effect \"alert, block\".",
-            )
-            return conditionObject, diags
-        }
+            util.DLog(ctx, "condition is unknown")
+            if effect != "ignore" {
+                if effect == "unknown" {
+                    complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
+                }
+                // If this block executes and effect is unknown, effect must be set to "alert"
+                for _, vuln := range complianceVulnerabilities {
+                    vulnerabilityObjectValue := types.ObjectValueMust(
+                        vulnerabilitiesAttributeTypes,
+                        map[string]attr.Value{
+                            "id": types.Int32Value(int32(vuln.Id)),
+                            "block": types.BoolValue(false),
+                        },
+                    )
+                    vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+                }
+            }
+        } else {
+            util.DLog(ctx, "condition is not unknown")
+            // Get rule condition configuration
+            ruleCondition := policyAPI.CompliancePolicyRuleCondition{} 
+            diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
+            if diags.HasError() {
+                return conditionObject, diags
+            }
+            ruleConditionVulns := ruleCondition.Vulnerabilities
 
-        ruleCondition := policyAPI.CompliancePolicyRuleCondition{} 
-        diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
-        if diags.HasError() {
-            return conditionObject, diags
+            // Loop over condition configuration and populate specified values to vulnerabilityObjectValues
+            for _, vuln := range ruleConditionVulns {
+                vulnerabilityObjectValue := types.ObjectValueMust(
+                    vulnerabilitiesAttributeTypes,
+                    map[string]attr.Value{
+                        "id": types.Int32Value(int32(vuln.Id)),
+                        //"block": types.BoolValue(vuln.Block),
+                        // TODO: change this value in resp to "false" if not already set to false
+                        "block": types.BoolValue(false),
+                    },
+                )
+                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+            }
         }
-        ruleConditionVulns = ruleCondition.Vulnerabilities
+    } else {
+        // If the effect is "alert, block", create condition vulnerabilities object from plan
+        if effect == "alert, block" {
+            var ruleConditionVulns []policyAPI.CompliancePolicyRuleVulnerability
 
-        for _, vuln := range ruleConditionVulns {
-            vulnerabilityObjectValue := types.ObjectValueMust(
-                vulnerabilitiesAttributeTypes,
-                map[string]attr.Value{
-                    "id": types.Int32Value(int32(vuln.Id)),
-                    "block": types.BoolValue(vuln.Block),
-                },
-            )
-            vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-        }
-    // Otherwise, if the rule effect is not "ignore", create condition vulnerabilities using Prisma Cloud vulnerability data
-    } else if effect != "ignore" {
-        if effect == "unknown" {
-           complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
-        }
-
-        isBlockEffect := (effect == "block")
-
-        var block bool
-        for _, vuln := range complianceVulnerabilities {
-            if policyType == "hostCompliance" {
-                block = (isBlockEffect && !(vuln.Type == "windows"))
-            } else if policyType == "containerCompliance" {
-                block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
-            } else if policyType == "ciImagesCompliance" {
-                //block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
-                block = isBlockEffect
-            } else if policyType == "vmCompliance" {
-                block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
-            } else {
-                // TODO: append error here
+            if rule.Condition.IsUnknown() {
+                diags.AddError(
+                    "Missing condition from \"alert, block\" effect rule",
+                    "Condition attribute must be defined for rules with effect \"alert, block\".",
+                )
                 return conditionObject, diags
             }
 
-            vulnerabilityObjectValue := types.ObjectValueMust(
-                vulnerabilitiesAttributeTypes,
-                map[string]attr.Value{
-                    "id": types.Int32Value(int32(vuln.Id)),
-                    "block": types.BoolValue(block),
-                },
-            )
-            
-            vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+            ruleCondition := policyAPI.CompliancePolicyRuleCondition{} 
+            diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
+            if diags.HasError() {
+                return conditionObject, diags
+            }
+            ruleConditionVulns = ruleCondition.Vulnerabilities
+
+            for _, vuln := range ruleConditionVulns {
+                vulnerabilityObjectValue := types.ObjectValueMust(
+                    vulnerabilitiesAttributeTypes,
+                    map[string]attr.Value{
+                        "id": types.Int32Value(int32(vuln.Id)),
+                        "block": types.BoolValue(vuln.Block),
+                    },
+                )
+                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+            }
+        // Otherwise, if the rule effect is not "ignore", create condition vulnerabilities using Prisma Cloud vulnerability data
+        } else if effect != "ignore" {
+            if effect == "unknown" {
+                complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
+            }
+
+            isBlockEffect := (effect == "block")
+
+            var block bool
+            for _, vuln := range complianceVulnerabilities {
+                if policyType == "hostCompliance" {
+                    block = (isBlockEffect && !(vuln.Type == "windows"))
+                } else if policyType == "containerCompliance" {
+                    block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
+                } else if policyType == "ciImagesCompliance" {
+                    block = isBlockEffect
+                } else if policyType == "vmCompliance" {
+                    block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
+                } else {
+                    // TODO: append error here
+                    return conditionObject, diags
+                }
+
+                vulnerabilityObjectValue := types.ObjectValueMust(
+                    vulnerabilitiesAttributeTypes,
+                    map[string]attr.Value{
+                        "id": types.Int32Value(int32(vuln.Id)),
+                        "block": types.BoolValue(block),
+                    },
+                )
+                
+                vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
+            }
         }
     }
 
@@ -302,6 +350,8 @@ func GenerateConditionFromEffect(
             "vulnerabilities": vulnerabilityObject,
         },
     )
+    
+    util.DLog(ctx, fmt.Sprintf("created conditionObject:\n\n%v\n", conditionObject))
 
     return conditionObject, diags
 }
@@ -633,25 +683,21 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
     util.DLog(ctx, "starting loop over rules")
 
     for index, rule := range *plan.Rules {
+        // Set default collection if one is not specified in rule configuration
         if len(rule.Collections.Elements()) == 0 {
-            collections := types.ListValueMust(
-                system.CollectionObjectType(),
-                []attr.Value{
-                    types.ObjectValueMust(
-                        system.CollectionObjectAttrTypeMap(),
-                        system.CollectionObjectDefaultAttrValueMap(),
-                    ),
-                },
-            )
-            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), collections)...)
+            defaultCollection := system.GetDefaultCollectionObject()
+            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), system.GetDefaultCollectionObject())...)
         }
 
+        // Set unknown/null rule order to the value of the rule's index in the configuration
         if rule.Order.IsUnknown() || rule.Order.IsNull() {
             rule.Order = types.Int32Value(int32(index + 1))
             diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))...)
             if diags.HasError() {
                 return
             }
+        // Raise error if specified rule order value is less than 1
+        // TODO: can this logic live in a validator for the attribute?
         } else if int(rule.Order.ValueInt32()) < 1 {
             resp.Diagnostics.AddError(
 		    	"Invalid Resource Configuration",
@@ -659,9 +705,9 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
 		    )
             return
         }
-
+        
+        // Set unknown rule effect to "alert"
         if rule.Effect.IsUnknown() {
-            fmt.Printf("rule %s has unknown effect\n", rule.Name.ValueString())
             rule.Effect = types.StringValue("unknown")
             diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
             if diags.HasError() {
@@ -669,6 +715,7 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
             }
         } 
 
+        // Generate rule condition value from effect and set in response
         conditionObject, diags := GenerateConditionFromEffect(ctx, *client, plan.PolicyType.ValueString(), rule, complianceVulnerabilities)
         if diags.HasError() {
             return 

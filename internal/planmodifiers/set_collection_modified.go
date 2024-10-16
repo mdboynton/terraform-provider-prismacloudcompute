@@ -53,19 +53,8 @@ func (m *useEmptyStringForNull) MarkdownDescription(_ context.Context) string {
 }
 
 func (m *useEmptyStringForNull) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%")
-        fmt.Println("entering UseEmptyStringForNull")
-        fmt.Println("planValue:")
-        fmt.Println(req.PlanValue)
-        fmt.Println("%%%%%%%%%%%%%%%%%%%%")
-
         if req.PlanValue.IsUnknown() {
-        //if req.PlanValue.IsNull() {
-            fmt.Println("%%%%%%%%%%%%%%%%%%%%")
-            fmt.Println("setting null modified to empty string")
-            fmt.Println("%%%%%%%%%%%%%%%%%%%%")
             resp.PlanValue = types.StringValue("")
-            return
         }
 
         return

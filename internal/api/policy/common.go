@@ -12,6 +12,8 @@ const (
 	PolicyTypeComplianceContainer     = "containerCompliance"
 	PolicyTypeComplianceHost          = "hostCompliance"
 	PolicyTypeComplianceVmImage       = "vmCompliance"
+	PolicyTypeComplianceFunction      = "serverlessCompliance"
+	PolicyTypeComplianceCiFunction    = "ciServerlessCompliance"
 	PolicyTypeRuntimeContainer        = "containerRuntime"
 	PolicyTypeRuntimeHost             = "hostRuntime"
 	PolicyTypeVulnerabilityCiCoderepo = "ciCodeRepoVulnerability"

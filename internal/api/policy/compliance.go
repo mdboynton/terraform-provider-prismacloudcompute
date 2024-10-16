@@ -13,6 +13,7 @@ const (
 	ContainerComplianceEndpoint = "api/v1/policies/compliance/container"
 	CiImageComplianceEndpoint   = "api/v1/policies/compliance/ci/images"
 	VmImageComplianceEndpoint   = "api/v1/policies/compliance/vms"
+    FunctionComplianceEndpoint  = "api/v1/policies/compliance/serverless"
 )
 
 func getEndpointAndPolicyName(policyType string) (string, string, error) {
@@ -25,6 +26,8 @@ func getEndpointAndPolicyName(policyType string) (string, string, error) {
             return CiImageComplianceEndpoint, "CI image", nil
         case "vmCompliance":
             return VmImageComplianceEndpoint, "VM image", nil
+        case "serverlessCompliance":
+            return FunctionComplianceEndpoint, "function", nil
         default:
             return "", "", fmt.Errorf("invalid policy type specified")
     }
