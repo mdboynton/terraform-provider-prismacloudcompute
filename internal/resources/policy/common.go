@@ -131,6 +131,7 @@ func GenerateConditionFromEffect(
     policyType string,
     rule CompliancePolicyRuleResourceModel, 
     complianceVulnerabilities []systemAPI.Vulnerability) (basetypes.ObjectValue, diag.Diagnostics) {
+    util.DLog(ctx, "entering GenerateConditionFromEffect")
     // TODO: fix modification from "effect = alert" to no effect not creating the right values (doesnt think any
     // changes are needed since effect gets set to "alert" when initially creating a rule with no effect value)
 
@@ -219,7 +220,7 @@ func GenerateConditionFromEffect(
     }
     conditionObject := types.ObjectNull(conditionObjectValueTypes)
 
-    if policyType == "serverlessCompliance" {
+    if policyType == "serverlessCompliance" || policyType == "ciServerlessCompliance" {
         if rule.Condition.IsUnknown() {
             util.DLog(ctx, "condition is unknown")
             if effect != "ignore" {
@@ -370,7 +371,6 @@ func CompliancePolicySchemaToPolicy(ctx context.Context, plan *CompliancePolicyR
         return policy, diags
     }
 
-    //rules, diags := containerComplianceRuleSchemaToPolicy(ctx, *plan.Rules, client)
     rules, diags := CompliancePolicyRuleSchemaToPolicy(ctx, *plan.Rules, client)
     if diags.HasError() {
         return policy, diags
@@ -392,7 +392,6 @@ func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []Complia
         collections := []collectionAPI.Collection{}
         diags = planRule.Collections.ElementsAs(ctx, &collections, false)
         if diags.HasError() {
-            fmt.Println(diags)
             return rules, diags
         }
 
@@ -673,7 +672,8 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
     util.DLog(ctx, "getting vulns")
     complianceVulnerabilities, err := systemAPI.GetComplianceVulnerabilities(*client, plan.PolicyType.ValueString())
 	if err != nil {
-		diags.AddError(
+		//diags.AddError(
+		resp.Diagnostics.AddError(
             "Error modifying planned policy rules", 
             "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
         )
@@ -685,7 +685,6 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
     for index, rule := range *plan.Rules {
         // Set default collection if one is not specified in rule configuration
         if len(rule.Collections.Elements()) == 0 {
-            defaultCollection := system.GetDefaultCollectionObject()
             diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), system.GetDefaultCollectionObject())...)
         }
 

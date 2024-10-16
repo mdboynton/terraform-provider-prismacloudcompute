@@ -93,6 +93,7 @@ func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType 
         case "vmCompliance":
             vulnTypes = getVmImageComplianceVulnTypes()
         case "serverlessCompliance":
+        case "ciServerlessCompliance":
             vulnTypes = []string{"serverless"}
         default:
             return complianceVulns, fmt.Errorf("invalid compliance policy type supplied: \"%s\"", policyType)
