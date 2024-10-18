@@ -90,8 +90,6 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 
 	var buf bytes.Buffer
 
-    fmt.Print(data)
-
 	if data != nil {
 		data_json, err := json.Marshal(data)
 		if err != nil {
@@ -138,6 +136,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 
 	// Retry in case backend responds with HTTP 429
 	// sleep for 3 seconds before retry
+    // TODO: set a limit for the number of retries
 	if res.StatusCode == 429 {
 		time.Sleep(3 * time.Second)
 		return c.Request(method, endpoint, query, data, &response)
