@@ -44,7 +44,7 @@ func UpsertCompliancePolicy(c api.PrismaCloudComputeAPIClient, policy Compliance
     }
 
     if err := c.Request(http.MethodPut, endpoint, nil, policy, nil); err != nil {
-		return fmt.Errorf("error getting %s compliance policy: %s", policyName, err)
+		return fmt.Errorf("error upserting %s compliance policy: %s", policyName, err)
     }
     
     return nil
