@@ -4,7 +4,6 @@ import (
     "context"
 	"fmt"
     "time"
-    "reflect"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
@@ -47,9 +46,6 @@ func (r *ApplicationControlPolicyResource) Configure(ctx context.Context, req re
 }
 
 func (r *ApplicationControlPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    policyAPI.DeleteApplicationControlPolicyRule(*r.client, policyAPI.ApplicationControlPolicyRule{Id: 11000})
-    _ = reflect.TypeOf(ctx)
-
     // Retrieve values from plan
     util.DLog(ctx, "retrieving plan and serializing into ApplicationControlPolicyResourceModel")
     var plan ApplicationControlPolicyResourceModel 
