@@ -7,19 +7,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 )
 
-const (
-    RolesEndpoint = "api/v1/rbac/roles"
-    PermissionRadarsContainers = "radarsContainers"
-    PermissionRadarsHosts = "radarsHosts"
-    PermissionRadarsServerless = "radarsServerless"
-    PermissionRadarsCloud = "radarsCloud"
-    PermissionPolicyContainers = "policyContainers"
-    PermissionPolicyHosts = "policyHosts"
-    PermissionPolicyServerless = "policyServerless"
-    PermissionPolicyCloud = "policyCloud"
-    PermissionPolicyComplianceCustomRules = "policyComplianceCustomRules"
-    PermissionPolicyRuntimeContainer = "policyRuntimeContainer"
-)
+const RolesEndpoint = "api/v1/rbac/roles"
 
 type Role struct {
 	Description string              `json:"description,omitempty"`
