@@ -87,6 +87,7 @@ func (p *PrismaCloudComputeProvider) Metadata(_ context.Context, _ provider.Meta
 func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() resource.Resource {
     return []func() resource.Resource{
        auth.NewUserResource,
+       auth.NewRoleResource,
        system.NewCollectionResource,
        policy.NewHostCompliancePolicyResource,
        policy.NewContainerCompliancePolicyResource,

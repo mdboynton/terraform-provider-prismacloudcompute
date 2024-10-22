@@ -7,12 +7,25 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 )
 
-const RolesEndpoint = "api/v1/rbac/roles"
+const (
+    RolesEndpoint = "api/v1/rbac/roles"
+    PermissionRadarsContainers = "radarsContainers"
+    PermissionRadarsHosts = "radarsHosts"
+    PermissionRadarsServerless = "radarsServerless"
+    PermissionRadarsCloud = "radarsCloud"
+    PermissionPolicyContainers = "policyContainers"
+    PermissionPolicyHosts = "policyHosts"
+    PermissionPolicyServerless = "policyServerless"
+    PermissionPolicyCloud = "policyCloud"
+    PermissionPolicyComplianceCustomRules = "policyComplianceCustomRules"
+    PermissionPolicyRuntimeContainer = "policyRuntimeContainer"
+)
 
 type Role struct {
-	Description string           `json:"description,omitempty"`
-	Name        string           `json:"name,omitempty"`
-	Permissions []RolePermission `json:"perms,omitempty"`
+	Description string              `json:"description,omitempty"`
+	Name        string              `json:"name,omitempty"`
+    System      bool                `json:"system"`
+	Permissions []RolePermission    `json:"perms,omitempty"`
 }
 
 type RolePermission struct {
@@ -20,7 +33,6 @@ type RolePermission struct {
 	ReadWrite bool   `json:"readWrite,omitempty"`
 }
 
-// Get all roles.
 func ListRoles(c api.PrismaCloudComputeAPIClient) ([]Role, error) {
 	var ans []Role
 	if err := c.Request(http.MethodGet, RolesEndpoint, nil, nil, &ans); err != nil {
@@ -29,7 +41,6 @@ func ListRoles(c api.PrismaCloudComputeAPIClient) ([]Role, error) {
 	return ans, nil
 }
 
-// Get a specific role.
 func GetRole(c api.PrismaCloudComputeAPIClient, name string) (*Role, error) {
 	roles, err := ListRoles(c)
 	if err != nil {
@@ -43,17 +54,14 @@ func GetRole(c api.PrismaCloudComputeAPIClient, name string) (*Role, error) {
 	return nil, fmt.Errorf("role '%s' not found", name)
 }
 
-// Create a new role.
 func CreateRole(c api.PrismaCloudComputeAPIClient, role Role) error {
 	return c.Request(http.MethodPost, RolesEndpoint, nil, role, nil)
 }
 
-// Update an existing role.
 func UpdateRole(c api.PrismaCloudComputeAPIClient, role Role) error {
 	return c.Request(http.MethodPut, RolesEndpoint, nil, role, nil)
 }
 
-// Delete an existing role.
 func DeleteRole(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", RolesEndpoint, name), nil, nil, nil)
 }

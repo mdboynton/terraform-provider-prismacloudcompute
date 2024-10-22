@@ -76,6 +76,7 @@ func (r *ApplicationControlPolicyResource) GetSchema() schema.Schema {
                             Optional: true,
                             Computed: true,
                             PlanModifiers: []planmodifier.Int32{
+                                // TODO: can probably just use the included UseStateForUnknown() here
                                 planmodifiers.UseStateRuleIdForUnknownIfExists(),
                             },
                         },

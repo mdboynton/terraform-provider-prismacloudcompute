@@ -162,20 +162,20 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		return err
 	}
 
-    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-    fmt.Printf("unmarshalling response body (endpoint: %s)\n", endpoint)
-    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+    //fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+    //fmt.Printf("unmarshalling response body (endpoint: %s)\n", endpoint)
+    //fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
 	if len(body) > 0 && response != nil {
 		if err = json.Unmarshal(body, response); err != nil {
 			return err
 		}
         
-        if endpoint != "/api/v1/authenticate" && endpoint != "api/v1/static/vulnerabilities" {
-            fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-            fmt.Println("recieved response from endpoint: ")
-            fmt.Printf("%+v\n", response)
-            fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-        }
+        //if endpoint != "/api/v1/authenticate" && endpoint != "api/v1/static/vulnerabilities" {
+        //    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+        //    fmt.Println("recieved response from endpoint: ")
+        //    fmt.Printf("%+v\n", response)
+        //    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
+        //}
 	}
 	return nil
 }

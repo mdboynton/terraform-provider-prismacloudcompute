@@ -87,6 +87,7 @@ func (r *CiFunctionCompliancePolicyResource) Create(ctx context.Context, req res
     }
 
     createdPolicy, diags := CompliancePolicyToSchema(ctx, *response, plan)
+    // TODO: change this (and all other instances of this in other resources) to append to resp diags
     if diags.HasError() {
         return
     }

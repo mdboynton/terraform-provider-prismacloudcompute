@@ -52,6 +52,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
     }
 
     // Handle state changes that would cause API errors
+    // TODO: move this to a validator
     if (plan.Role.ValueString() == "admin" || plan.Role.ValueString() == "operator") && plan.Permissions != nil {
         resp.Diagnostics.AddError(
             "Invalid Resource Configuration",
@@ -80,8 +81,8 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
     _, err := auth.CreateUser(*r.client, user)
 	if err != nil {
 		resp.Diagnostics.AddError(
-            "Error creating User resource", 
-            "Failed to create user: " + err.Error(),
+            "Error retrieving created User resource", 
+            "Failed to retrieve created user: " + err.Error(),
         )
         return
 	}
