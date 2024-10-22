@@ -96,6 +96,7 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
        policy.NewFunctionCompliancePolicyResource,
        policy.NewCiFunctionCompliancePolicyResource,
        policy.NewApplicationControlPolicyResource,
+       policy.NewCustomComplianceCheckResource,
     }
 }
 
