@@ -74,6 +74,14 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
 
     // Retrieve newly created collection
     response, err := collectionAPI.GetCollection(*r.client, collection.Name)
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error retrieving created Collection resource", 
+            "Failed to retrieve created collection: " + err.Error(),
+        )
+        return
+	}
+    
     updatedCollection, diags := collectionToSchema(ctx, *response)
 
     // Set state to collection data
