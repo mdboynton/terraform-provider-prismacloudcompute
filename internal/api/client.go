@@ -14,12 +14,12 @@ import (
 )
 
 type PrismaCloudComputeAPIClientConfig struct {
-	ConsoleURL           string `tfsdk:"console_url"`
-	//Project              string `tfsdk:"project"`
-	Username             string `tfsdk:"username"`
-	Password             string `tfsdk:"password"`
-	Insecure             bool   `tfsdk:"insecure"`
-	//ConfigFile           string `tfsdk:"config_file"`
+    ConsoleURL  *string `tfsdk:"console_url" json:"console_url"`
+    Username    *string `tfsdk:"username" json:"username"`
+    Password    *string `tfsdk:"password" json:"password"`
+    Insecure    bool   `tfsdk:"insecure" json:"insecure"`
+    ConfigFile  *string `tfsdk:"config_file" json:"config_file"`
+	//Project   string `tfsdk:"project"`
 }
 
 type PrismaCloudComputeAPIClient struct {
@@ -53,20 +53,20 @@ func (c *PrismaCloudComputeAPIClient) Initialize(filename string) error {
 		}
 	}
 
-	if c.Config.ConsoleURL == "" && c2.Config.ConsoleURL != "" {
-		c.Config.ConsoleURL = c2.Config.ConsoleURL
+	if *c.Config.ConsoleURL == "" && *c2.Config.ConsoleURL != "" {
+		*c.Config.ConsoleURL = *c2.Config.ConsoleURL
 	}
 
 	//if c.Config.Project == "" && c2.Config.Project != "" {
 	//	c.Config.Project = c2.Config.Project
 	//}
 
-	if c.Config.Username == "" && c2.Config.Username != "" {
-		c.Config.Username = c2.Config.Username
+	if *c.Config.Username == "" && *c2.Config.Username != "" {
+		*c.Config.Username = *c2.Config.Username
 	}
 
-	if c.Config.Password == "" && c2.Config.Password != "" {
-		c.Config.Password = c2.Config.Password
+	if *c.Config.Password == "" && *c2.Config.Password != "" {
+		*c.Config.Password = *c2.Config.Password
 	}
 
 	c.HTTPClient = &http.Client{}
@@ -75,7 +75,7 @@ func (c *PrismaCloudComputeAPIClient) Initialize(filename string) error {
 }
 
 func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, data, response interface{}) (err error) {
-    parsedURL, err := url.Parse(c.Config.ConsoleURL)
+    parsedURL, err := url.Parse(*c.Config.ConsoleURL)
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
 	}
 
 	res := AuthResponse{}
-	if err := c.Request(http.MethodPost, "api/v1/authenticate", nil, AuthRequest{c.Config.Username, c.Config.Password}, &res); err != nil {
+	if err := c.Request(http.MethodPost, "api/v1/authenticate", nil, AuthRequest{*c.Config.Username, *c.Config.Password}, &res); err != nil {
 		return fmt.Errorf("error POSTing to authenticate endpoint: %v", err)
 	}
 	c.JWT = res.Token

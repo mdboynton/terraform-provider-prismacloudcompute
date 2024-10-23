@@ -20,11 +20,13 @@ func main() {
     flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-    err := providerserver.Serve(context.Background(), p.New(version), providerserver.ServeOpts {
-        Address:    "registry.terraform.io/PaloAltoNetworks/terraform-provider-prismacloudcompute",
+    opts := providerserver.ServeOpts {
+        Address:    "registry.terraform.io/PaloAltoNetworks/prismacloudcompute",
         Debug:      debug,
-    })
-    
+    }
+
+    err := providerserver.Serve(context.Background(), p.New(version), opts)
+        
     if err != nil {
         log.Fatal(err)
     }
