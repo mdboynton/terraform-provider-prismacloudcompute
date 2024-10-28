@@ -63,6 +63,7 @@ If you're interested in developing the provider, see below for a basic setup gui
 This also moves the compiled binary to the appropriate location.
     ```bash
     # macOS-specific OS_ARCH; adjust as necessary
+    # For M1 machines, use darwin_arm64 
     make install OS_ARCH=darwin_amd64 VERSION=0.0.0-testing
     ```
 4. Point your terraform file to this local plugin.
