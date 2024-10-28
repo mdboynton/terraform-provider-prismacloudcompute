@@ -1,11 +1,13 @@
-HOSTNAME = paloaltonetworks.com
-NAMESPACE = prismacloud
+HOSTNAME = registry.terraform.io
+NAMESPACE = PaloAltoNetworks
 NAME = prismacloudcompute
 BINARY = terraform-provider-${NAME}
 
-VERSION ?= 0.0.1
-#OS_ARCH ?= darwin_amd64
-OS_ARCH ?= darwin_arm64
+VERSION ?= 0.0.0-testing
+OS_ARCH ?= darwin_amd64
+
+# For M1 Macbooks:
+#OS_ARCH ?= darwin_arm64 
 
 default: install
 
