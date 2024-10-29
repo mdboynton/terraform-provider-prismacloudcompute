@@ -51,6 +51,33 @@ func GetCollection(c api.PrismaCloudComputeAPIClient, name string) (*Collection,
 	return nil, fmt.Errorf("collection '%s' not found", name)
 }
 
+func GetCollections(c api.PrismaCloudComputeAPIClient, names []string) ([]Collection, error) {
+    collections := []Collection{}
+
+	allCollections, err := ListCollections(c)
+	if err != nil {
+		return collections, err
+	}
+
+    var found bool
+	for _, name := range names {
+        found = false
+        for _, collection := range allCollections {
+		    if collection.Name == name {
+                found = true
+		    	collections = append(collections, collection)
+                break
+		    }
+        }
+
+        if !found {
+	        return collections, fmt.Errorf("collection '%s' not found", name)
+        }
+	}
+
+	return collections, nil
+}
+
 // Create a new collection.
 func CreateCollection(c api.PrismaCloudComputeAPIClient, collection Collection) error {
 	return c.Request(http.MethodPost, CollectionsEndpoint, nil, collection, nil)

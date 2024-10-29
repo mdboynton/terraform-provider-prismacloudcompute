@@ -15,7 +15,8 @@ format:
 	gofmt -l -w .
 
 build:
-	go build -o ${BINARY}
+	#go build -o ${BINARY}
+	go build -gcflags="all=-N -l" -o ${BINARY}
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
