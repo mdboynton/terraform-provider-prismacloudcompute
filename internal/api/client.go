@@ -45,7 +45,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 	}
 
     // Set headers
-	req.Header.Set("Authorization", "Bearer "+c.JWT)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.JWT))
 	req.Header.Set("Content-Type", "application/json")
 
 	// TODO: simplify logic
