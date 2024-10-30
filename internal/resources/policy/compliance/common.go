@@ -9,6 +9,7 @@ import (
     "time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
@@ -26,10 +27,10 @@ import (
 //type CompliancePolicyResourceModel struct {
 //    Id          types.String                                `tfsdk:"id"`
 //    PolicyType  types.String                                `tfsdk:"policy_type"`
-//    Rules       *[]CompliancePolicyRuleResourceModel    `tfsdk:"rules"`
+//    Rules       *[]models.CompliancePolicyRuleResourceModel    `tfsdk:"rules"`
 //}
 //
-//type CompliancePolicyRuleResourceModel struct {
+//type models.CompliancePolicyRuleResourceModel struct {
 //    BlockMessage                    types.String    `tfsdk:"block_message"`
 //    Collections                     types.List      `tfsdk:"collections"`
 //    Condition                       types.Object    `tfsdk:"condition"`
@@ -44,7 +45,7 @@ import (
 //    Verbose                         types.Bool      `tfsdk:"verbose"`
 //}
 
-func GenerateCompliancePolicyRulesOrderMap(rules []CompliancePolicyRuleResourceModel) map[string]int {
+func GenerateCompliancePolicyRulesOrderMap(rules []models.CompliancePolicyRuleResourceModel) map[string]int {
     orderedRulesMap := make(map[int][]string)
 
     for _, rule := range rules {
@@ -80,7 +81,7 @@ func GenerateCompliancePolicyRulesOrderMap(rules []CompliancePolicyRuleResourceM
     return ruleOrders
 }
 
-func SortCompliancePolicyRules(rules *[]policyAPI.CompliancePolicyRule, planRules *[]CompliancePolicyRuleResourceModel) {
+func SortCompliancePolicyRules(rules *[]policyAPI.CompliancePolicyRule, planRules *[]models.CompliancePolicyRuleResourceModel) {
     rulesOrderMap := GenerateCompliancePolicyRulesOrderMap(*planRules) 
     r := *rules
     sort.Slice(r, func(i, j int) bool {
@@ -89,7 +90,7 @@ func SortCompliancePolicyRules(rules *[]policyAPI.CompliancePolicyRule, planRule
     rules = &r 
 }
 
-func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePolicyRuleResourceModel, planRules *[]CompliancePolicyRuleResourceModel) {
+func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]models.CompliancePolicyRuleResourceModel, planRules *[]models.CompliancePolicyRuleResourceModel) {
     util.DLog(ctx, "entering SortComplianceSchemaRules")
 
     if planRules == nil {
@@ -104,7 +105,7 @@ func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]CompliancePol
         ruleOrderMap[planRule.Name.ValueString()] = int32(index)
     }
 
-    slices.SortFunc(*schemaRules, func(a, b CompliancePolicyRuleResourceModel) int {
+    slices.SortFunc(*schemaRules, func(a, b models.CompliancePolicyRuleResourceModel) int {
         orderA, okA := ruleOrderMap[a.Name.ValueString()]
         if !okA {
             orderA = int32(len(ruleOrderMap) + 1)
@@ -129,7 +130,7 @@ func GenerateConditionFromEffect(
     ctx context.Context, 
     client api.PrismaCloudComputeAPIClient, 
     policyType string,
-    rule CompliancePolicyRuleResourceModel, 
+    rule models.CompliancePolicyRuleResourceModel, 
     complianceVulnerabilities []systemAPI.Vulnerability) (basetypes.ObjectValue, diag.Diagnostics) {
     util.DLog(ctx, "entering GenerateConditionFromEffect")
     // TODO: fix modification from "effect = alert" to no effect not creating the right values (doesnt think any
@@ -357,7 +358,7 @@ func GenerateConditionFromEffect(
     return conditionObject, diags
 }
 
-func CompliancePolicySchemaToPolicy(ctx context.Context, plan *CompliancePolicyResourceModel, client *api.PrismaCloudComputeAPIClient,/*, username types.String*/) (policyAPI.CompliancePolicy, diag.Diagnostics) {
+func CompliancePolicySchemaToPolicy(ctx context.Context, plan *models.CompliancePolicyResourceModel, client *api.PrismaCloudComputeAPIClient,/*, username types.String*/) (policyAPI.CompliancePolicy, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     policy := policyAPI.CompliancePolicy{
@@ -381,7 +382,7 @@ func CompliancePolicySchemaToPolicy(ctx context.Context, plan *CompliancePolicyR
     return policy, diags
 }
 
-func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []CompliancePolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, /*, username types.String*/) ([]policyAPI.CompliancePolicyRule, diag.Diagnostics) {
+func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []models.CompliancePolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, /*, username types.String*/) ([]policyAPI.CompliancePolicyRule, diag.Diagnostics) {
     util.DLog(ctx, "entering ComplianceRuleSchemaToPolicy")
 
     var diags diag.Diagnostics
@@ -525,15 +526,15 @@ func CollectionsToSchema(ctx context.Context, collections []collectionAPI.Collec
 }
 
 
-func CompliancePolicyToSchema(ctx context.Context, policy policyAPI.CompliancePolicy, plan CompliancePolicyResourceModel) (CompliancePolicyResourceModel, diag.Diagnostics) {
+func CompliancePolicyToSchema(ctx context.Context, policy policyAPI.CompliancePolicy, plan models.CompliancePolicyResourceModel) (models.CompliancePolicyResourceModel, diag.Diagnostics) {
     var diags diag.Diagnostics
 
-    schema := CompliancePolicyResourceModel{
+    schema := models.CompliancePolicyResourceModel{
         Id: types.StringValue(policy.Id),
         PolicyType: types.StringValue(policy.PolicyType),
     }
 
-    var rules []CompliancePolicyRuleResourceModel
+    var rules []models.CompliancePolicyRuleResourceModel
 
     if policy.Rules != nil {
         rules, diags = CompliancePolicyRulesToSchema(ctx, *policy.Rules, plan.Rules)
@@ -542,7 +543,7 @@ func CompliancePolicyToSchema(ctx context.Context, policy policyAPI.CompliancePo
             return schema, diags
         }
     } else {
-        rules = []CompliancePolicyRuleResourceModel{}
+        rules = []models.CompliancePolicyRuleResourceModel{}
     }
 
     schema.Rules = &rules
@@ -550,19 +551,19 @@ func CompliancePolicyToSchema(ctx context.Context, policy policyAPI.CompliancePo
     return schema, diags
 }
 
-func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.CompliancePolicyRule, planRules *[]CompliancePolicyRuleResourceModel) ([]CompliancePolicyRuleResourceModel, diag.Diagnostics) {
+func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.CompliancePolicyRule, planRules *[]models.CompliancePolicyRuleResourceModel) ([]models.CompliancePolicyRuleResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "entering CompliancePolicyRulesToSchema")
 
     var diags diag.Diagnostics
 
-    schemaRules := []CompliancePolicyRuleResourceModel{}
+    schemaRules := []models.CompliancePolicyRuleResourceModel{}
 
     if len(rules) == 0 {
         return schemaRules, diags
     }
 
     for _, rule := range rules {
-        schemaRule := CompliancePolicyRuleResourceModel{
+        schemaRule := models.CompliancePolicyRuleResourceModel{
             Disabled: types.BoolValue(rule.Disabled),
             Effect: types.StringValue(rule.Effect),
             Modified: types.StringValue(""),
@@ -652,7 +653,7 @@ func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.Compli
 }
 
 
-func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComputeAPIClient, plan *CompliancePolicyResourceModel, resp *resource.ModifyPlanResponse) {
+func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComputeAPIClient, plan *models.CompliancePolicyResourceModel, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyCompliancePolicyResourcePlan")
     
     var diags diag.Diagnostics
@@ -662,7 +663,7 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
     }
 
     if plan.Rules == nil {
-        emptyRules := []CompliancePolicyRuleResourceModel{}
+        emptyRules := []models.CompliancePolicyRuleResourceModel{}
         diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules"), &emptyRules)...)
         return
     }

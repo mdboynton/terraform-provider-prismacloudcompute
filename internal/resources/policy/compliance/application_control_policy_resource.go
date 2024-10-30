@@ -6,6 +6,7 @@ import (
     "time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
@@ -48,7 +49,7 @@ func (r *ApplicationControlPolicyResource) Configure(ctx context.Context, req re
 func (r *ApplicationControlPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // Retrieve values from plan
     util.DLog(ctx, "retrieving plan and serializing into ApplicationControlPolicyResourceModel")
-    var plan ApplicationControlPolicyResourceModel 
+    var plan models.ApplicationControlPolicyResourceModel 
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -107,7 +108,7 @@ func (r *ApplicationControlPolicyResource) Read(ctx context.Context, req resourc
     util.DLog(ctx, "starting Read() execution")
 
     // Get current state
-    var state ApplicationControlPolicyResourceModel 
+    var state models.ApplicationControlPolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -147,7 +148,7 @@ func (r *ApplicationControlPolicyResource) Read(ctx context.Context, req resourc
 
 func (r *ApplicationControlPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Get current state
-    var state ApplicationControlPolicyResourceModel 
+    var state models.ApplicationControlPolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -155,18 +156,12 @@ func (r *ApplicationControlPolicyResource) Update(ctx context.Context, req resou
     }
 
     // Retrieve values from plan
-    var plan ApplicationControlPolicyResourceModel 
+    var plan models.ApplicationControlPolicyResourceModel 
     diags = req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-
-    //for index, stateRule := range *state.Rules {
-    //    if !stateRule.Equals(ctx, (*plan.Rules)[index]) {
-    //        util.DLog(ctx, "rule mismatch")
-    //    }
-    //}
 
     // Generate API request body from plan
     planPolicy, diags := schemaToPolicy(ctx, &plan, r.client)
@@ -218,7 +213,7 @@ func (r *ApplicationControlPolicyResource) Update(ctx context.Context, req resou
 
 func (r *ApplicationControlPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
-	var state ApplicationControlPolicyResourceModel 
+	var state models.ApplicationControlPolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -245,7 +240,7 @@ func (r *ApplicationControlPolicyResource) Delete(ctx context.Context, req resou
     }
     
     // Clear policy rules
-    state.Rules = &[]ApplicationControlPolicyRuleResourceModel{}
+    state.Rules = &[]models.ApplicationControlPolicyRuleResourceModel{}
 }
 
 func (r *ApplicationControlPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -269,7 +264,7 @@ func (r *ApplicationControlPolicyResource) ImportState(ctx context.Context, req 
 //}
 
 
-func schemaToPolicy(ctx context.Context, plan *ApplicationControlPolicyResourceModel, client *api.PrismaCloudComputeAPIClient,/*, username types.String*/) ([]policyAPI.ApplicationControlPolicyRule, diag.Diagnostics) {
+func schemaToPolicy(ctx context.Context, plan *models.ApplicationControlPolicyResourceModel, client *api.PrismaCloudComputeAPIClient,/*, username types.String*/) ([]policyAPI.ApplicationControlPolicyRule, diag.Diagnostics) {
     util.DLog(ctx, "entering schemaToPolicy")
     var diags diag.Diagnostics
 
@@ -307,12 +302,12 @@ func schemaToPolicy(ctx context.Context, plan *ApplicationControlPolicyResourceM
     return policy, diags
 }
 
-func policyToSchema(ctx context.Context, rules []policyAPI.ApplicationControlPolicyRule) (ApplicationControlPolicyResourceModel, diag.Diagnostics) {
+func policyToSchema(ctx context.Context, rules []policyAPI.ApplicationControlPolicyRule) (models.ApplicationControlPolicyResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "entering policyToSchema")
     var diags diag.Diagnostics
     
-    schemaPolicy := ApplicationControlPolicyResourceModel{}
-    schemaRules := []ApplicationControlPolicyRuleResourceModel{}
+    schemaPolicy := models.ApplicationControlPolicyResourceModel{}
+    schemaRules := []models.ApplicationControlPolicyRuleResourceModel{}
     
     for _, rule := range rules {
         schemaRule, diags := policyRuleToSchema(ctx, rule)
@@ -330,12 +325,12 @@ func policyToSchema(ctx context.Context, rules []policyAPI.ApplicationControlPol
     return schemaPolicy, diags
 }
 
-func policyRuleToSchema(ctx context.Context, rule policyAPI.ApplicationControlPolicyRule) (ApplicationControlPolicyRuleResourceModel, diag.Diagnostics) {
+func policyRuleToSchema(ctx context.Context, rule policyAPI.ApplicationControlPolicyRule) (models.ApplicationControlPolicyRuleResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "entering policyRuleToSchema")
     //util.DLogf(ctx, rule)
     var diags diag.Diagnostics
 
-    schemaRule := ApplicationControlPolicyRuleResourceModel{
+    schemaRule := models.ApplicationControlPolicyRuleResourceModel{
         Id: types.Int32Value(int32(rule.Id)),
         Name: types.StringValue(rule.Name),
         Description: types.StringValue(rule.Description),
@@ -411,13 +406,4 @@ func policyRuleToSchema(ctx context.Context, rule policyAPI.ApplicationControlPo
 
     util.DLog(ctx, "exiting policyRuleToSchema")
     return schemaRule, diags
-}
-
-
-func (r *ApplicationControlPolicyRuleResourceModel) Equals(ctx context.Context, compare ApplicationControlPolicyRuleResourceModel) bool {
-    if (*r).Description.ValueString() != compare.Description.ValueString() {
-        return false
-    }
-
-    return true
 }

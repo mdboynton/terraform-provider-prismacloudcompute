@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	//policyResource "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
@@ -51,8 +52,8 @@ func (r *CiFunctionCompliancePolicyResource) Create(ctx context.Context, req res
     //}
 
     // Retrieve values from plan
-    util.DLog(ctx, "retrieving plan and serializing into CompliancePolicyResourceModel")
-    var plan CompliancePolicyResourceModel
+    util.DLog(ctx, "retrieving plan and serializing into models.CompliancePolicyResourceModel")
+    var plan models.CompliancePolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -107,7 +108,7 @@ func (r *CiFunctionCompliancePolicyResource) Read(ctx context.Context, req resou
     util.DLog(ctx, "starting Read() execution")
 
     // Get current state
-    var state CompliancePolicyResourceModel 
+    var state models.CompliancePolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -147,7 +148,7 @@ func (r *CiFunctionCompliancePolicyResource) Read(ctx context.Context, req resou
 
 func (r *CiFunctionCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Get current state
-    var state CompliancePolicyResourceModel 
+    var state models.CompliancePolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -155,7 +156,7 @@ func (r *CiFunctionCompliancePolicyResource) Update(ctx context.Context, req res
     }
 
     // Retrieve values from plan
-    var plan CompliancePolicyResourceModel 
+    var plan models.CompliancePolicyResourceModel 
     diags = req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -210,7 +211,7 @@ func (r *CiFunctionCompliancePolicyResource) Update(ctx context.Context, req res
 
 func (r *CiFunctionCompliancePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
-	var state CompliancePolicyResourceModel 
+	var state models.CompliancePolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -218,7 +219,7 @@ func (r *CiFunctionCompliancePolicyResource) Delete(ctx context.Context, req res
     }
 
     // Clear policy rules
-    state.Rules = &[]CompliancePolicyRuleResourceModel{}
+    state.Rules = &[]models.CompliancePolicyRuleResourceModel{}
 
     // Generate API request body from plan
     updatedPlan, diags := CompliancePolicySchemaToPolicy(ctx, &state, r.client)
@@ -246,7 +247,7 @@ func (r *CiFunctionCompliancePolicyResource) ImportState(ctx context.Context, re
 func (r *CiFunctionCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
 
-    var plan *CompliancePolicyResourceModel
+    var plan *models.CompliancePolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {

@@ -23,6 +23,7 @@ import (
 	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// Generic compliance policy models
 type CompliancePolicyResourceModel struct {
     Id          types.String                                `tfsdk:"id"`
     PolicyType  types.String                                `tfsdk:"policy_type"`
@@ -42,4 +43,27 @@ type CompliancePolicyRuleResourceModel struct {
     Owner                           types.String    `tfsdk:"owner"`
     ReportAllPassedAndFailedChecks  types.Bool      `tfsdk:"report_passed_and_failed_checks"`
     Verbose                         types.Bool      `tfsdk:"verbose"`
+}
+
+// Application control policy models
+type ApplicationControlPolicyResourceModel struct {
+    Rules       *[]ApplicationControlPolicyRuleResourceModel    `tfsdk:"rules"`
+}
+
+type ApplicationControlPolicyRuleResourceModel struct {
+    Id              types.Int32     `tfsdk:"id"`
+    Applications    types.Set       `tfsdk:"applications"`
+    Description     types.String    `tfsdk:"description"`
+    //Disabled        types.Bool      `tfsdk:"disabled"` // TODO: is this even supported? doesnt appear in UI
+    Modified        types.String    `tfsdk:"modified"`
+    Name            types.String    `tfsdk:"name"`
+    Notes           types.String    `tfsdk:"notes"` // TODO: is this even supported? doesnt appear in UI
+    Owner           types.String    `tfsdk:"owner"`
+    PreviousName    types.String    `tfsdk:"previous_name"`
+    Severity        types.String    `tfsdk:"severity"`
+}
+
+type ApplicationControlPolicyRuleAppliactionResourceModel struct {
+    Name            types.String    `tfsdk:"name"`
+    AllowedVersions types.List      `tfsdk:"allowed_versions"`
 }
