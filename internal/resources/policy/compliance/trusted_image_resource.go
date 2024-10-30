@@ -6,6 +6,7 @@ import (
     "time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
@@ -49,8 +50,8 @@ func (r *TrustedImagesPolicyResource) Configure(ctx context.Context, req resourc
 
 func (r *TrustedImagesPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // Retrieve values from plan
-    util.DLog(ctx, "retrieving plan and serializing into TrustedImagesPolicyResourceModel")
-    var plan TrustedImagesPolicyResourceModel
+    util.DLog(ctx, "retrieving plan and serializing into models.TrustedImagesPolicyResourceModel")
+    var plan models.TrustedImagesPolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -106,7 +107,7 @@ func (r *TrustedImagesPolicyResource) Read(ctx context.Context, req resource.Rea
     util.DLog(ctx, "starting Read() execution")
 
     // Get current state
-    var state TrustedImagesPolicyResourceModel 
+    var state models.TrustedImagesPolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -142,7 +143,7 @@ func (r *TrustedImagesPolicyResource) Read(ctx context.Context, req resource.Rea
 
 func (r *TrustedImagesPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Get current state
-    var state TrustedImagesPolicyResourceModel 
+    var state models.TrustedImagesPolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -150,7 +151,7 @@ func (r *TrustedImagesPolicyResource) Update(ctx context.Context, req resource.U
     }
 
     // Retrieve values from plan
-    var plan TrustedImagesPolicyResourceModel 
+    var plan models.TrustedImagesPolicyResourceModel 
     diags = req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -201,7 +202,7 @@ func (r *TrustedImagesPolicyResource) Update(ctx context.Context, req resource.U
 
 func (r *TrustedImagesPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
-	var state TrustedImagesPolicyResourceModel 
+	var state models.TrustedImagesPolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -209,10 +210,10 @@ func (r *TrustedImagesPolicyResource) Delete(ctx context.Context, req resource.D
     }
 
     // Clear policy rules
-    state.Policy.Rules = &[]TrustedImagesPolicyRuleResourceModel{}
+    state.Policy.Rules = &[]models.TrustedImagesPolicyRuleResourceModel{}
 
     // Clear groups
-    state.Groups = &[]TrustGroupResourceModel{}
+    state.Groups = &[]models.TrustGroupResourceModel{}
 
     // Disable policy
     state.Policy.Enabled = types.BoolValue(false)
@@ -243,7 +244,7 @@ func (r *TrustedImagesPolicyResource) ImportState(ctx context.Context, req resou
 func (r *TrustedImagesPolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
 
-    var plan *TrustedImagesPolicyResourceModel
+    var plan *models.TrustedImagesPolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -263,7 +264,7 @@ func (r *TrustedImagesPolicyResource) ModifyPlan(ctx context.Context, req resour
 }
 
 
-func schemaToTrustedImagesPolicy(ctx context.Context, client api.PrismaCloudComputeAPIClient, plan *TrustedImagesPolicyResourceModel) (policyAPI.TrustedImages, diag.Diagnostics) {
+func schemaToTrustedImagesPolicy(ctx context.Context, client api.PrismaCloudComputeAPIClient, plan *models.TrustedImagesPolicyResourceModel) (policyAPI.TrustedImages, diag.Diagnostics) {
     util.DLog(ctx, "entering schemaToTrustedImagesPolicy")
     var diags diag.Diagnostics
     
@@ -297,7 +298,7 @@ func schemaToTrustedImagesPolicy(ctx context.Context, client api.PrismaCloudComp
     return policy, diags
 }
 
-func schemaToTrustedImagesPolicyGroups(ctx context.Context, schemaGroups []TrustGroupResourceModel) ([]policyAPI.TrustGroup, diag.Diagnostics) {
+func schemaToTrustedImagesPolicyGroups(ctx context.Context, schemaGroups []models.TrustGroupResourceModel) ([]policyAPI.TrustGroup, diag.Diagnostics) {
     util.DLog(ctx, "entering schemaToTrustedImagesPolicyGroups")
     
     var diags diag.Diagnostics
@@ -325,7 +326,7 @@ func schemaToTrustedImagesPolicyGroups(ctx context.Context, schemaGroups []Trust
     return groups, diags
 }
 
-func schemaToTrustedImagesPolicyRules(ctx context.Context, client api.PrismaCloudComputeAPIClient, schemaRules TrustedImagesPolicyRulesResourceModel) (policyAPI.TrustedImagesPolicy, diag.Diagnostics) {
+func schemaToTrustedImagesPolicyRules(ctx context.Context, client api.PrismaCloudComputeAPIClient, schemaRules models.TrustedImagesPolicyRulesResourceModel) (policyAPI.TrustedImagesPolicy, diag.Diagnostics) {
     util.DLog(ctx, "entering schemaToTrustedImagesPolicyRules")
     
     var diags diag.Diagnostics
@@ -394,10 +395,10 @@ func schemaToTrustedImagesPolicyRules(ctx context.Context, client api.PrismaClou
     return rules, diags
 }
 
-func trustedImagesPolicyToSchema(ctx context.Context, policy policyAPI.TrustedImages) (TrustedImagesPolicyResourceModel, diag.Diagnostics) {
+func trustedImagesPolicyToSchema(ctx context.Context, policy policyAPI.TrustedImages) (models.TrustedImagesPolicyResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "entering trustedImagesPolicyToSchema")
     
-    schemaPolicy := TrustedImagesPolicyResourceModel{}
+    schemaPolicy := models.TrustedImagesPolicyResourceModel{}
 
     schemaGroups, diags := trustedImagesPolicyGroupsToSchema(ctx, policy.Groups)
     if diags.HasError() {
@@ -416,12 +417,12 @@ func trustedImagesPolicyToSchema(ctx context.Context, policy policyAPI.TrustedIm
     return schemaPolicy, diags
 }
 
-func trustedImagesPolicyGroupsToSchema(ctx context.Context, groups []policyAPI.TrustGroup) ([]TrustGroupResourceModel, diag.Diagnostics) {
+func trustedImagesPolicyGroupsToSchema(ctx context.Context, groups []policyAPI.TrustGroup) ([]models.TrustGroupResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "entering trustedImagesPolicyGroupsToSchema")
     
     var diags diag.Diagnostics
 
-    schemaGroups := []TrustGroupResourceModel{}
+    schemaGroups := []models.TrustGroupResourceModel{}
 
     for _, group := range groups {
         images, diags := types.SetValueFrom(ctx, types.StringType, group.Images)
@@ -429,7 +430,7 @@ func trustedImagesPolicyGroupsToSchema(ctx context.Context, groups []policyAPI.T
             return schemaGroups, diags
         }
 
-        schemaGroup := TrustGroupResourceModel{
+        schemaGroup := models.TrustGroupResourceModel{
             Id: types.StringValue(group.Id),
             Images: images,
             //Modified: types.StringValue(group.Modified),
@@ -447,23 +448,23 @@ func trustedImagesPolicyGroupsToSchema(ctx context.Context, groups []policyAPI.T
     return schemaGroups, diags
 }
 
-func trustedImagesPolicyRulesToSchema(ctx context.Context, rules policyAPI.TrustedImagesPolicy) (TrustedImagesPolicyRulesResourceModel, diag.Diagnostics) {
+func trustedImagesPolicyRulesToSchema(ctx context.Context, rules policyAPI.TrustedImagesPolicy) (models.TrustedImagesPolicyRulesResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "entering trustedImagesPolicyRulesToSchema")
     
     var diags diag.Diagnostics
 
-    schemaPolicy := TrustedImagesPolicyRulesResourceModel{
+    schemaPolicy := models.TrustedImagesPolicyRulesResourceModel{
         Id: types.StringValue(rules.Id),
         Enabled: types.BoolValue(rules.Enabled),
     }
 
     if len(rules.Rules) == 0 {
-        emptyRules := []TrustedImagesPolicyRuleResourceModel{}
+        emptyRules := []models.TrustedImagesPolicyRuleResourceModel{}
         schemaPolicy.Rules = &emptyRules
         return schemaPolicy, diags
     }
 
-    schemaRules := []TrustedImagesPolicyRuleResourceModel{}
+    schemaRules := []models.TrustedImagesPolicyRuleResourceModel{}
     for _, rule := range rules.Rules {
         //action, diags := types.SetValueFrom(ctx, types.StringType, rule.Action)
         //if diags.HasError() {
@@ -502,7 +503,7 @@ func trustedImagesPolicyRulesToSchema(ctx context.Context, rules policyAPI.Trust
             return schemaPolicy, diags
         }
 
-        schemaRule := TrustedImagesPolicyRuleResourceModel{
+        schemaRule := models.TrustedImagesPolicyRuleResourceModel{
             //Action: action,
             AllowedGroups: allowedGroups,
             Collections: collections,
