@@ -207,64 +207,8 @@ func (r *CollectionResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func CollectionObjectType() types.ObjectType {
-    return types.ObjectType{
-        AttrTypes: CollectionObjectAttrTypeMap(),
-    }
-}
-
-func CollectionObjectAttrTypeMap() map[string]attr.Type {
-    return map[string]attr.Type{
-        "account_ids":  types.SetType{ElemType: types.StringType},
-        "app_ids":  types.SetType{ElemType: types.StringType},
-        "clusters":  types.SetType{ElemType: types.StringType},
-        "color":        types.StringType,
-        "containers":  types.SetType{ElemType: types.StringType},
-        "description":  types.StringType,
-        "functions":  types.SetType{ElemType: types.StringType},
-        "hosts":  types.SetType{ElemType: types.StringType},
-        "images":  types.SetType{ElemType: types.StringType},
-        "labels":  types.SetType{ElemType: types.StringType},
-        "modified": types.StringType,
-        "name":         types.StringType,
-        "namespaces":  types.SetType{ElemType: types.StringType},
-        "owner":        types.StringType,
-        "prisma":       types.BoolType,
-        "system":       types.BoolType,
-    }
-}
-
-func CollectionObjectDefaultAttrValueMap() map[string]attr.Value {
-    return map[string]attr.Value{
-        "account_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "app_ids": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "clusters": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "color": types.StringValue("#3FA2F7"),
-        "containers": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "description": types.StringValue("System - all resources collection"),
-        "functions": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "hosts": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "images": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "labels": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "modified": types.StringValue(""),
-        "name": types.StringValue("All"),
-        "namespaces": types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("*") }),
-        "owner": types.StringValue("system"),
-        "prisma": types.BoolValue(false),
-        "system": types.BoolValue(true),
-    }
-}
-
-func GetDefaultCollectionObject() basetypes.ListValue {
-    return types.ListValueMust(
-        CollectionObjectType(),
-        []attr.Value{
-            types.ObjectValueMust(
-                CollectionObjectAttrTypeMap(),
-                CollectionObjectDefaultAttrValueMap(),
-            ),
-        },
-    )
+func GetAllCollectionSet() basetypes.SetValue {
+    return types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("All") })
 }
 
 func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {
@@ -361,6 +305,8 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
     //if collection.Modified != nil {
     //    schema.Modified = collection.Modified
     //}
+
+    // TODO: remove all these null checks 
 
     if collection.AccountIDs != nil {
         accountIds, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)

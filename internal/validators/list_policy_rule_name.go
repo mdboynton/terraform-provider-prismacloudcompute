@@ -12,8 +12,8 @@ import (
 type HostCompliancePolicyRuleResourceModel struct {
     Name types.String `tfsdk:"name"`
     Order types.Int32 `tfsdk:"order"`
-    Collections types.List `tfsdk:"collections"`
-    //Collections types.Set `tfsdk:"collections"`
+    //Collections types.List `tfsdk:"collections"`
+    Collections types.Set `tfsdk:"collections"`
     ReportAllPassedAndFailedChecks types.Bool `tfsdk:"report_passed_and_failed_checks"`
     BlockMessage types.String `tfsdk:"block_message"`
     Condition types.Object `tfsdk:"condition"`

@@ -36,7 +36,7 @@ func CollectionObjectAttrTypeMap() map[string]attr.Type {
     }
 }
 
-func RemoveNullObjects() planmodifier.List {
+func RemoveNullObjects() planmodifier.Set {
     return removeNullObjects{} 
 }
 
@@ -50,9 +50,11 @@ func (m removeNullObjects) MarkdownDescription(_ context.Context) string {
     return ""
 }
 
-func (m removeNullObjects) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+func (m removeNullObjects) PlanModifySet(ctx context.Context, req planmodifier.SetRequest, resp *planmodifier.SetResponse) {
     if len(req.ConfigValue.Elements()) == 0 {
-        resp.PlanValue = basetypes.NewListUnknown(CollectionObjectType())
+        resp.PlanValue = basetypes.NewSetUnknown(types.SetType{
+            ElemType: types.StringType,
+        })
         return
     }
 

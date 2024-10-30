@@ -24,27 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-//type CompliancePolicyResourceModel struct {
-//    Id          types.String                                `tfsdk:"id"`
-//    PolicyType  types.String                                `tfsdk:"policy_type"`
-//    Rules       *[]models.CompliancePolicyRuleResourceModel    `tfsdk:"rules"`
-//}
-//
-//type models.CompliancePolicyRuleResourceModel struct {
-//    BlockMessage                    types.String    `tfsdk:"block_message"`
-//    Collections                     types.List      `tfsdk:"collections"`
-//    Condition                       types.Object    `tfsdk:"condition"`
-//    Disabled                        types.Bool      `tfsdk:"disabled"`
-//    Effect                          types.String    `tfsdk:"effect"`
-//    Modified                        types.String    `tfsdk:"modified"`
-//    Name                            types.String    `tfsdk:"name"`
-//    Notes                           types.String    `tfsdk:"notes"`
-//    Order                           types.Int32     `tfsdk:"order"`
-//    Owner                           types.String    `tfsdk:"owner"`
-//    ReportAllPassedAndFailedChecks  types.Bool      `tfsdk:"report_passed_and_failed_checks"`
-//    Verbose                         types.Bool      `tfsdk:"verbose"`
-//}
-
 func GenerateCompliancePolicyRulesOrderMap(rules []models.CompliancePolicyRuleResourceModel) map[string]int {
     orderedRulesMap := make(map[int][]string)
 
@@ -118,7 +97,6 @@ func SortComplianceSchemaRules(ctx context.Context, schemaRules *[]models.Compli
     })
 
 
-    //util.DLog(ctx, fmt.Sprintf("entering SortComplianceSchemaRules")
     util.DLogf(ctx, *schemaRules)
 
     for i := 0; i < len(*schemaRules); i++ {
@@ -358,7 +336,7 @@ func GenerateConditionFromEffect(
     return conditionObject, diags
 }
 
-func CompliancePolicySchemaToPolicy(ctx context.Context, plan *models.CompliancePolicyResourceModel, client *api.PrismaCloudComputeAPIClient,/*, username types.String*/) (policyAPI.CompliancePolicy, diag.Diagnostics) {
+func CompliancePolicySchemaToPolicy(ctx context.Context, plan *models.CompliancePolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (policyAPI.CompliancePolicy, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     policy := policyAPI.CompliancePolicy{
@@ -382,7 +360,7 @@ func CompliancePolicySchemaToPolicy(ctx context.Context, plan *models.Compliance
     return policy, diags
 }
 
-func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []models.CompliancePolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, /*, username types.String*/) ([]policyAPI.CompliancePolicyRule, diag.Diagnostics) {
+func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []models.CompliancePolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient) ([]policyAPI.CompliancePolicyRule, diag.Diagnostics) {
     util.DLog(ctx, "entering ComplianceRuleSchemaToPolicy")
 
     var diags diag.Diagnostics
@@ -390,9 +368,18 @@ func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []models.
     rules := []policyAPI.CompliancePolicyRule{}
 
     for _, planRule := range planRules {
-        collections := []collectionAPI.Collection{}
-        diags = planRule.Collections.ElementsAs(ctx, &collections, false)
+        collectionNames := []string{}
+        diags = planRule.Collections.ElementsAs(ctx, &collectionNames, false)
         if diags.HasError() {
+            return rules, diags
+        }
+
+        collections, err := collectionAPI.GetCollections(*client, collectionNames)
+        if err != nil {
+            diags.AddError(
+                "Value Conversion Error",
+                fmt.Sprintf("Error retrieving collection names while converting compliance policy rules to schema: %s", err.Error()),
+            )
             return rules, diags
         }
 
@@ -434,97 +421,12 @@ func CompliancePolicyRuleSchemaToPolicy(ctx context.Context, planRules []models.
         rules = append(rules, rule)
     }
 
-    //sortContainerCompliancePolicyRules(&rules, &planRules)
     SortCompliancePolicyRules(&rules, &planRules)
 
     util.DLog(ctx, fmt.Sprintf("exiting ComplianceRuleSchemaToPolicy with return value rules:\n\n %+v", rules))
     
     return rules, diags
 }
-
-func CollectionsToSchema(ctx context.Context, collections []collectionAPI.Collection) (types.List, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    collectionList := types.ListNull(system.CollectionObjectType())
-    collectionObjectValues := []attr.Value{}
-    for _, collection := range(collections) {
-        accountIDs, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        appIDs, diags := types.SetValueFrom(ctx, types.StringType, collection.AppIDs)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        clusters, diags := types.SetValueFrom(ctx, types.StringType, collection.Clusters)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        containers, diags := types.SetValueFrom(ctx, types.StringType, collection.Containers)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        functions, diags := types.SetValueFrom(ctx, types.StringType, collection.Functions)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        hosts, diags := types.SetValueFrom(ctx, types.StringType, collection.Hosts)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        images, diags := types.SetValueFrom(ctx, types.StringType, collection.Images)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        labels, diags := types.SetValueFrom(ctx, types.StringType, collection.Labels)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-        
-        namespaces, diags := types.SetValueFrom(ctx, types.StringType, collection.Namespaces)
-        if diags.HasError() {
-            return collectionList, diags
-        }
-
-        collectionObjectValue := types.ObjectValueMust(
-            system.CollectionObjectAttrTypeMap(),
-            map[string]attr.Value{
-                "account_ids": accountIDs,
-                "app_ids": appIDs,
-                "clusters": clusters,
-                "color": types.StringValue(collection.Color),
-                "containers": containers,
-                "description": types.StringValue(collection.Description),
-                "functions": functions,
-                "hosts": hosts,
-                "images": images,
-                "labels": labels,
-                "modified": types.StringValue(""),
-                "name": types.StringValue(collection.Name),
-                "namespaces": namespaces,
-                "owner": types.StringValue(collection.Owner),
-                "prisma": types.BoolValue(collection.Prisma),
-                "system": types.BoolValue(collection.System),
-            },
-        )
-
-        collectionObjectValues = append(collectionObjectValues, collectionObjectValue)
-    }
-
-    collectionList, diags = types.ListValueFrom(ctx, system.CollectionObjectType(), collectionObjectValues)
-
-    util.DLog(ctx, "exiting collectionsToContainerSchema")
-
-    return collectionList, diags
-}
-
 
 func CompliancePolicyToSchema(ctx context.Context, policy policyAPI.CompliancePolicy, plan models.CompliancePolicyResourceModel) (models.CompliancePolicyResourceModel, diag.Diagnostics) {
     var diags diag.Diagnostics
@@ -573,14 +475,17 @@ func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.Compli
             Verbose: types.BoolValue(rule.Verbose),
         }
 
-        if rule.Collections != nil {
-            collections, diags := CollectionsToSchema(ctx, rule.Collections)
-            if diags.HasError() {
-                return schemaRules, diags
-            }
-
-            schemaRule.Collections = collections
+        collectionNames := []string{}
+        for _, collection := range rule.Collections {
+            collectionNames = append(collectionNames, collection.Name) 
         }
+
+        collections, diags := types.SetValueFrom(ctx, types.StringType, collectionNames)
+        if diags.HasError() {
+            return schemaRules, diags
+        }
+
+        schemaRule.Collections = collections
 
         if rule.Effect == "alert, block" {
             rule.Effect = "block" 
@@ -668,12 +573,9 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
         return
     }
 
-    //fmt.Printf("%v\n", *plan.Rules)
-
     util.DLog(ctx, "getting vulns")
     complianceVulnerabilities, err := systemAPI.GetComplianceVulnerabilities(*client, plan.PolicyType.ValueString())
 	if err != nil {
-		//diags.AddError(
 		resp.Diagnostics.AddError(
             "Error modifying planned policy rules", 
             "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: " + err.Error(),
@@ -686,7 +588,10 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
     for index, rule := range *plan.Rules {
         // Set default collection if one is not specified in rule configuration
         if len(rule.Collections.Elements()) == 0 {
-            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), system.GetDefaultCollectionObject())...)
+            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), system.GetAllCollectionSet())...)
+            if diags.HasError() {
+                return
+            }
         }
 
         // Set unknown/null rule order to the value of the rule's index in the configuration

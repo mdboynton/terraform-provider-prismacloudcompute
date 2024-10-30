@@ -78,7 +78,16 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             Computed: true,
                             Default: stringdefault.StaticString(""),
                         },
-                        "collections": r.GetCollectionsSchema(),
+                        "collections": schema.SetAttribute{
+                            ElementType: types.StringType,
+                            MarkdownDescription: "TODO",
+                            Optional: true,
+                            Computed: true,
+                            // TODO: add validator to ensure this is not empty
+                            PlanModifiers: []planmodifier.Set{
+                                planmodifiers.UseEmptySetForUnknown(),
+                            },
+                        },
                         "condition": schema.SingleNestedAttribute{
                             MarkdownDescription: "TODO",
                             Optional: true,
@@ -159,161 +168,6 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             Default: booldefault.StaticBool(false),
                         },
                     },
-                },
-            },
-        },
-    }
-}
-
-func (r *HostCompliancePolicyResource) GetCollectionsSchema() schema.ListNestedAttribute {
-    return schema.ListNestedAttribute{
-        MarkdownDescription: "TODO",
-        Optional: true,
-        Computed: true,
-        // TODO: see if we can omit all but the name field and get away with it
-        PlanModifiers: []planmodifier.List{
-            planmodifiers.RemoveNullObjects(),
-        },
-        NestedObject: schema.NestedAttributeObject{
-            Attributes: map[string]schema.Attribute{
-                "account_ids": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "app_ids": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "clusters": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "color": schema.StringAttribute{
-                    MarkdownDescription: "TODO",
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.String{
-                    //    planmodifiers.UseDefaultColorForDefaultCollectionColor(), 
-                    //},
-                },
-                "containers": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "description": schema.StringAttribute{
-                    MarkdownDescription: "TODO",
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.String{
-                    //    planmodifiers.UseDefaultForDefaultCollectionDescription(),
-                    //},
-                },
-                "functions": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "hosts": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "images": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "labels": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "modified": schema.StringAttribute{
-                    MarkdownDescription: "TODO",
-                    Optional: true,
-                    Computed: true,
-                    PlanModifiers: []planmodifier.String{
-                        //UseStateForUnknown(),
-                        //UsePlanForUnknownString(),
-                        planmodifiers.UseEmptyStringForNull(),
-                    },
-                },
-                "name": schema.StringAttribute{
-                    MarkdownDescription: "TODO",
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.String{
-                    //    planmodifiers.UseAllForDefaultCollectionName(),
-                    //},
-                },
-                "namespaces": schema.SetAttribute{
-                    MarkdownDescription: "TODO",
-                    ElementType: types.StringType,
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Set{
-                    //    planmodifiers.UseDefaultForUnknownCollectionSets(),
-                    //},
-                },
-                "owner": schema.StringAttribute{
-                    MarkdownDescription: "TODO",
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.String{
-                    //    planmodifiers.UseSystemForDefaultCollectionOwner(), 
-                    //},
-                },
-                "prisma": schema.BoolAttribute{
-                    MarkdownDescription: "TODO",
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Bool{
-                    //    planmodifiers.UseFalseForDefaultCollectionBools(), 
-                    //},
-                },
-                "system": schema.BoolAttribute{
-                    MarkdownDescription: "TODO",
-                    Optional: true,
-                    Computed: true,
-                    //PlanModifiers: []planmodifier.Bool{
-                    //    planmodifiers.UseTrueForDefaultCollectionBools(), 
-                    //},
                 },
             },
         },
