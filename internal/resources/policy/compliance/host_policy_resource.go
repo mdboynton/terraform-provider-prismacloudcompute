@@ -41,14 +41,6 @@ func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resour
 }
 
 func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    // TODO: refine this logic to populate Owner with the value in config, if it exists
-    //var username types.String
-    //diags := req.Config.GetAttribute(ctx, path.Root("username"), &username)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
-
     // Retrieve values from plan
     util.DLog(ctx, "retrieving plan and serializing into CompliancePolicyResourceModel")
     var plan CompliancePolicyResourceModel
@@ -66,7 +58,6 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     }
 
     // Create new host compliance policy 
-    util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
     err := policyAPI.UpsertCompliancePolicy(*r.client, policy)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -91,8 +82,6 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
         return
     }
 
-    util.DLog(ctx, fmt.Sprintf("created policy with rules:\n\n %+v", *createdPolicy.Rules))
-    
     // Set state to collection data
     diags = resp.State.Set(ctx, createdPolicy)
     resp.Diagnostics.Append(diags...)
@@ -122,16 +111,12 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
         return
     }
 
-    util.DLog(ctx, fmt.Sprintf("retrieved host compliance policy with rules:\n\n %+v", *policy.Rules))
-  
     // Overwrite state values with Prisma Cloud data
     policySchema, diags := CompliancePolicyToSchema(ctx, *policy, state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-
-    util.DLog(ctx, fmt.Sprintf("policy schema rules:\n\n %+v", policySchema.Rules))
 
     // Set refreshed state
     diags = resp.State.Set(ctx, &policySchema)
@@ -187,16 +172,12 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
         return
     }
 
-    util.DLog(ctx, fmt.Sprintf("retrieved host compliance policy during Update() execution with rules:\n\n %+v", *policy.Rules))
-  
     // Convert updated policy into schema
     policySchema, diags := CompliancePolicyToSchema(ctx, *policy, plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-
-    util.DLog(ctx, fmt.Sprintf("setting state from Update() with rules:\n\n %+v", policySchema.Rules))
 
     // Set updated state
     diags = resp.State.Set(ctx, policySchema)
@@ -243,8 +224,6 @@ func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req reso
 
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
-    //util.DLog(ctx, fmt.Sprintf("%v+", resp))
-    //util.DLog(ctx, fmt.Sprintf("%v+", req))
 
     var plan *CompliancePolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)

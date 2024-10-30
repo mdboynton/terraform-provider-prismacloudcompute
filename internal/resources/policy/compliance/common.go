@@ -23,26 +23,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-type CompliancePolicyResourceModel struct {
-    Id          types.String                                `tfsdk:"id"`
-    PolicyType  types.String                                `tfsdk:"policy_type"`
-    Rules       *[]CompliancePolicyRuleResourceModel    `tfsdk:"rules"`
-}
-
-type CompliancePolicyRuleResourceModel struct {
-    BlockMessage                    types.String    `tfsdk:"block_message"`
-    Collections                     types.List      `tfsdk:"collections"`
-    Condition                       types.Object    `tfsdk:"condition"`
-    Disabled                        types.Bool      `tfsdk:"disabled"`
-    Effect                          types.String    `tfsdk:"effect"`
-    Modified                        types.String    `tfsdk:"modified"`
-    Name                            types.String    `tfsdk:"name"`
-    Notes                           types.String    `tfsdk:"notes"`
-    Order                           types.Int32     `tfsdk:"order"`
-    Owner                           types.String    `tfsdk:"owner"`
-    ReportAllPassedAndFailedChecks  types.Bool      `tfsdk:"report_passed_and_failed_checks"`
-    Verbose                         types.Bool      `tfsdk:"verbose"`
-}
+//type CompliancePolicyResourceModel struct {
+//    Id          types.String                                `tfsdk:"id"`
+//    PolicyType  types.String                                `tfsdk:"policy_type"`
+//    Rules       *[]CompliancePolicyRuleResourceModel    `tfsdk:"rules"`
+//}
+//
+//type CompliancePolicyRuleResourceModel struct {
+//    BlockMessage                    types.String    `tfsdk:"block_message"`
+//    Collections                     types.List      `tfsdk:"collections"`
+//    Condition                       types.Object    `tfsdk:"condition"`
+//    Disabled                        types.Bool      `tfsdk:"disabled"`
+//    Effect                          types.String    `tfsdk:"effect"`
+//    Modified                        types.String    `tfsdk:"modified"`
+//    Name                            types.String    `tfsdk:"name"`
+//    Notes                           types.String    `tfsdk:"notes"`
+//    Order                           types.Int32     `tfsdk:"order"`
+//    Owner                           types.String    `tfsdk:"owner"`
+//    ReportAllPassedAndFailedChecks  types.Bool      `tfsdk:"report_passed_and_failed_checks"`
+//    Verbose                         types.Bool      `tfsdk:"verbose"`
+//}
 
 func GenerateCompliancePolicyRulesOrderMap(rules []CompliancePolicyRuleResourceModel) map[string]int {
     orderedRulesMap := make(map[int][]string)
