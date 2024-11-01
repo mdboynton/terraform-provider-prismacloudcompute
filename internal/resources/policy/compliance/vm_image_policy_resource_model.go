@@ -56,8 +56,12 @@ func (r *VmImageCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
+                PlanModifiers: []planmodifier.List{
+                    planmodifiers.UseIndexForUnknownOrder("VM compliance"),
+                },
                 Validators: []validator.List{
                     validators.PolicyRuleNameIsUnique("VM compliance"),
+                    validators.PolicyRuleOrderIsPositiveNonZero("VM compliance"),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{

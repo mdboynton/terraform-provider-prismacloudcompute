@@ -56,8 +56,12 @@ func (r *FunctionCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
+                PlanModifiers: []planmodifier.List{
+                    planmodifiers.UseIndexForUnknownOrder("container compliance"),
+                },
                 Validators: []validator.List{
                     validators.PolicyRuleNameIsUnique("function compliance"),
+                    validators.PolicyRuleOrderIsPositiveNonZero("function compliance"),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{

@@ -48,8 +48,12 @@ func (r *CiImageCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
+                PlanModifiers: []planmodifier.List{
+                    planmodifiers.UseIndexForUnknownOrder("CI image compliance"),
+                },
                 Validators: []validator.List{
                     validators.PolicyRuleNameIsUnique("CI image compliance"),
+                    validators.PolicyRuleOrderIsPositiveNonZero("CI image compliance"),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{

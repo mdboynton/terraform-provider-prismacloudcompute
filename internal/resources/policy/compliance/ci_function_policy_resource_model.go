@@ -56,8 +56,12 @@ func (r *CiFunctionCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
+                PlanModifiers: []planmodifier.List{
+                    planmodifiers.UseIndexForUnknownOrder("CI function compliance"),
+                },
                 Validators: []validator.List{
                     validators.PolicyRuleNameIsUnique("CI function compliance"),
+                    validators.PolicyRuleOrderIsPositiveNonZero("CI function compliance"),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{

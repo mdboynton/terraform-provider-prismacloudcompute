@@ -56,8 +56,12 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
+                PlanModifiers: []planmodifier.List{
+                    planmodifiers.UseIndexForUnknownOrder("host compliance"),
+                },
                 Validators: []validator.List{
                     validators.PolicyRuleNameIsUnique("host compliance"),
+                    validators.PolicyRuleOrderIsPositiveNonZero("host compliance"),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{

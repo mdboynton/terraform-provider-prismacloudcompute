@@ -775,39 +775,16 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
         ruleName := rule.Name.ValueString()
 
         ruleCollectionNames := []string{}
-        diags = rule.Collections.ElementsAs(ctx, &ruleCollectionNames, false)
-        if diags.HasError() {
-            // TODO: add the error message in diags to this created error
-            diags.AddError(
-                "Value Conversion Error",
-                fmt.Sprintf("Error occured while converting collections for policy rule \"%s\" during %s resource plan modification.", ruleName, policyType),
-            )
+        resp.Diagnostics.Append(rule.Collections.ElementsAs(ctx, &ruleCollectionNames, false)...)
+        if resp.Diagnostics.HasError() {
             return
         }
-
        
         // Validate configured collections to ensure compatibility with policy type
         diags = validateRuleCollectionsByPolicyType(ctx, policyType, ruleName, ruleCollectionNames, collections) 
         resp.Diagnostics.Append(diags...)
         if resp.Diagnostics.HasError() {
             return 
-        }
-
-        // Set unknown/null rule order to the value of the rule's index in the configuration
-        if rule.Order.IsUnknown() || rule.Order.IsNull() {
-            rule.Order = types.Int32Value(int32(index + 1))
-            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))...)
-            if diags.HasError() {
-                return
-            }
-        // Raise error if specified rule order value is less than 1
-        // TODO: can this logic live in a validator for the attribute?
-        } else if int(rule.Order.ValueInt32()) < 1 {
-            resp.Diagnostics.AddError(
-		    	"Invalid Resource Configuration",
-		    	fmt.Sprintf("Host Compliance Policy Rule specified an invalid order (%d). Order values must be positive non-zero integers.", int(rule.Order.ValueInt32())),
-		    )
-            return
         }
         
         // Set unknown rule effect to "alert"
