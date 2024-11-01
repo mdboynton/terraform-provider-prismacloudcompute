@@ -5,6 +5,7 @@ import (
     "sort"
 	"fmt"
     "slices"
+    "strings"
     "cmp"
     "time"
 
@@ -557,6 +558,171 @@ func CompliancePolicyRulesToSchema(ctx context.Context, rules []policyAPI.Compli
     return schemaRules, diags
 }
 
+func isWildcard(val []string) bool {
+    return len(val) == 1 && val[0] == "*"
+}
+
+func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string, collections []collectionAPI.Collection, rule models.CompliancePolicyRuleResourceModel) diag.Diagnostics {
+    var diags diag.Diagnostics
+
+
+    ruleName := rule.Name.ValueString()
+
+    planCollectionNames := []string{}
+    diags = rule.Collections.ElementsAs(ctx, &planCollectionNames, false)
+    if diags.HasError() {
+        // TODO: add the error message in diags to this created error
+        diags.AddError(
+            "Value Conversion Error",
+            fmt.Sprintf("Error occured while converting collections for policy rule \"%s\" during %s resource plan modification.", ruleName, policyType),
+        )
+        return diags
+    }
+
+    for _, planCollectionName := range planCollectionNames {
+        found := false
+        invalidFields := make([]string, 0)
+
+        for _, collection := range collections {
+            if planCollectionName == collection.Name {
+                found = true
+
+                switch policyType {
+                    case "containerCompliance":
+                    //case "container compliance":
+                        if !isWildcard(collection.Functions) {
+                            invalidFields = append(invalidFields, "Functions")
+                        }
+                    case "ciImagesCompliance":
+                    //case "CI images compliance":
+                        if !isWildcard(collection.Containers) {
+                            invalidFields = append(invalidFields, "Containers")
+                        }
+                        if !isWildcard(collection.Hosts) {
+                            invalidFields = append(invalidFields, "Hosts")
+                        }
+                        if !isWildcard(collection.AppIDs) {
+                            invalidFields = append(invalidFields, "App IDs")
+                        }
+                        if !isWildcard(collection.Functions) {
+                            invalidFields = append(invalidFields, "Functions")
+                        }
+                        if !isWildcard(collection.Namespaces) {
+                            invalidFields = append(invalidFields, "Namespaces")
+                        }
+                        if !isWildcard(collection.AccountIDs) {
+                            invalidFields = append(invalidFields, "Account IDs")
+                        }
+                        if !isWildcard(collection.Clusters) {
+                            invalidFields = append(invalidFields, "Clusters")
+                        }
+                    case "hostCompliance":
+                    //case "host compliance":
+                        if !isWildcard(collection.Containers) {
+                            invalidFields = append(invalidFields, "Containers")
+                        }
+                        if !isWildcard(collection.Images) {
+                            invalidFields = append(invalidFields, "Images")
+                        }
+                        if !isWildcard(collection.AppIDs) {
+                            invalidFields = append(invalidFields, "App IDs")
+                        }
+                        if !isWildcard(collection.Functions) {
+                            invalidFields = append(invalidFields, "Functions")
+                        }
+                        if !isWildcard(collection.Namespaces) {
+                            invalidFields = append(invalidFields, "Namespaces")
+                        }
+                    case "vmCompliance":
+                    //case "vm compliance":
+                        if !isWildcard(collection.Containers) {
+                            invalidFields = append(invalidFields, "Containers")
+                        }
+                        if !isWildcard(collection.Hosts) {
+                            invalidFields = append(invalidFields, "Hosts")
+                        }
+                        if !isWildcard(collection.AppIDs) {
+                            invalidFields = append(invalidFields, "App IDs")
+                        }
+                        if !isWildcard(collection.Functions) {
+                            invalidFields = append(invalidFields, "Functions")
+                        }
+                        if !isWildcard(collection.Namespaces) {
+                            invalidFields = append(invalidFields, "Namespaces")
+                        }
+                        if !isWildcard(collection.Clusters) {
+                            invalidFields = append(invalidFields, "Clusters")
+                        }
+                    case "serverlessCompliance":
+                    //case "function compliance":
+                        if !isWildcard(collection.Containers) {
+                            invalidFields = append(invalidFields, "Containers")
+                        }
+                        if !isWildcard(collection.Hosts) {
+                            invalidFields = append(invalidFields, "Hosts")
+                        }
+                        if !isWildcard(collection.Images) {
+                            invalidFields = append(invalidFields, "Images")
+                        }
+                        if !isWildcard(collection.AppIDs) {
+                            invalidFields = append(invalidFields, "App IDs")
+                        }
+                        if !isWildcard(collection.Namespaces) {
+                            invalidFields = append(invalidFields, "Namespaces")
+                        }
+                        if !isWildcard(collection.Clusters) {
+                            invalidFields = append(invalidFields, "Clusters")
+                        }
+                    case "ciServerlessCompliance":
+                    //case "CI function compliance":
+                        if !isWildcard(collection.Containers) {
+                            invalidFields = append(invalidFields, "Containers")
+                        }
+                        if !isWildcard(collection.Hosts) {
+                            invalidFields = append(invalidFields, "Hosts")
+                        }
+                        if !isWildcard(collection.Images) {
+                            invalidFields = append(invalidFields, "Images")
+                        }
+                        if !isWildcard(collection.AppIDs) {
+                            invalidFields = append(invalidFields, "App IDs")
+                        }
+                        if !isWildcard(collection.Namespaces) {
+                            invalidFields = append(invalidFields, "Namespaces")
+                        }
+                        if !isWildcard(collection.AccountIDs) {
+                            invalidFields = append(invalidFields, "Account IDs")
+                        }
+                        if !isWildcard(collection.Clusters) {
+                            invalidFields = append(invalidFields, "Clusters")
+                        }
+                    //case "trust":
+                    default:
+                        diags.AddError(
+                            "Resource Validation Error",
+                            fmt.Sprintf("Error occured during validation of collections for policy rule \"%s\": Invalid policy type \"%s\"", ruleName, policyType),
+                        )
+                }
+
+                if !found {
+                    diags.AddError(
+                        "Resource Validation Error",
+                        fmt.Sprintf("Error occured during validation of collections for policy rule \"%s\": Collection name \"%s\" not found", ruleName, policyType),
+                    )
+                    //return
+                } else if len(invalidFields) > 0 {
+                    invalidFieldsString := strings.Join(invalidFields, ", ")
+                    diags.AddError(
+                        "Resource Validation Error",
+                        fmt.Sprintf("%s policy rule \"%s\" is configured with collection \"%s\", which contains invalid values. The following fields in the collection must only contain the wildcard value (\"*\") for the collection to be compatible with this policy: %s", policyType, ruleName, planCollectionName, invalidFieldsString),
+                    )
+                }
+            }
+        }
+    }
+
+    return diags
+}
 
 func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComputeAPIClient, plan *models.CompliancePolicyResourceModel, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyCompliancePolicyResourcePlan")
@@ -573,8 +739,10 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
         return
     }
 
-    util.DLog(ctx, "getting vulns")
-    complianceVulnerabilities, err := systemAPI.GetComplianceVulnerabilities(*client, plan.PolicyType.ValueString())
+    policyType := plan.PolicyType.ValueString()
+
+    util.DLog(ctx, "Retrieving vulnerability data")
+    complianceVulnerabilities, err := systemAPI.GetComplianceVulnerabilities(*client, policyType)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error modifying planned policy rules", 
@@ -583,7 +751,17 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
         return
 	}
 
-    util.DLog(ctx, "starting loop over rules")
+    util.DLog(ctx, "Retrieving collections")
+    collections, err := collectionAPI.ListCollections(*client)
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error modifying planned policy rules", 
+            "Failed to retrieve collections from Prisma Cloud while modifying plan rules: " + err.Error(),
+        )
+        return
+	}
+    
+    util.DLog(ctx, "Beginning loop over rules")
 
     for index, rule := range *plan.Rules {
         // Set default collection if one is not specified in rule configuration
@@ -592,6 +770,13 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
             if diags.HasError() {
                 return
             }
+        }
+       
+        // Validate configured collections to ensure compatibility with policy type
+        diags = validateRuleCollectionsByPolicyType(ctx, policyType, collections, rule) 
+        resp.Diagnostics.Append(diags...)
+        if resp.Diagnostics.HasError() {
+            return 
         }
 
         // Set unknown/null rule order to the value of the rule's index in the configuration

@@ -4,26 +4,9 @@ import (
     "context"
     "fmt"
 	
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-    "github.com/hashicorp/terraform-plugin-framework/types"
 )
-
-// TODO: figure out a way to import this from resource_policy_compliance_host
-type HostCompliancePolicyRuleResourceModel struct {
-    Name types.String `tfsdk:"name"`
-    Order types.Int32 `tfsdk:"order"`
-    //Collections types.List `tfsdk:"collections"`
-    Collections types.Set `tfsdk:"collections"`
-    ReportAllPassedAndFailedChecks types.Bool `tfsdk:"report_passed_and_failed_checks"`
-    BlockMessage types.String `tfsdk:"block_message"`
-    Condition types.Object `tfsdk:"condition"`
-    Disabled types.Bool `tfsdk:"disabled"`
-    Effect types.String `tfsdk:"effect"`
-    Modified types.String `tfsdk:"modified"`
-    Notes types.String `tfsdk:"notes"`
-    Owner types.String `tfsdk:"owner"`
-    Verbose types.Bool `tfsdk:"verbose"`
-}
 
 type policyRuleNameIsUniqueValidator struct {
     PolicyType string
@@ -38,11 +21,8 @@ func (v policyRuleNameIsUniqueValidator) MarkdownDescription(ctx context.Context
 }
 
 func (v policyRuleNameIsUniqueValidator) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-    rulesModel := []HostCompliancePolicyRuleResourceModel{}
+    rulesModel := []models.CompliancePolicyRuleResourceModel{}
     diags := req.ConfigValue.ElementsAs(ctx, &rulesModel, false)
-    fmt.Println("%%%%%%%%%%%%%%%%%%")
-    fmt.Println(diags)
-    fmt.Println("%%%%%%%%%%%%%%%%%%")
     if diags.HasError() {
         resp.Diagnostics.AddError(
             "Value Conversion Error",

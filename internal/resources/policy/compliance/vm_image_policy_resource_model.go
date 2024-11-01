@@ -57,7 +57,7 @@ func (r *VmImageCompliancePolicyResource) GetSchema() schema.Schema {
                 Optional: true,
                 Computed: true,
                 Validators: []validator.List{
-                    validators.PolicyRuleNameIsUnique("vm compliance"),
+                    validators.PolicyRuleNameIsUnique("VM compliance"),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
