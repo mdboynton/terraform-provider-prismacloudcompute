@@ -562,29 +562,29 @@ func isWildcard(val []string) bool {
     return len(val) == 1 && val[0] == "*"
 }
 
-func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string, collections []collectionAPI.Collection, rule models.CompliancePolicyRuleResourceModel) diag.Diagnostics {
+//func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string, collections []collectionAPI.Collection, rule models.CompliancePolicyRuleResourceModel) diag.Diagnostics {
+func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string, ruleName string, ruleCollectionNames []string, collections []collectionAPI.Collection) diag.Diagnostics {
     var diags diag.Diagnostics
 
+    //ruleName := rule.Name.ValueString()
 
-    ruleName := rule.Name.ValueString()
+    //planCollectionNames := []string{}
+    //diags = rule.Collections.ElementsAs(ctx, &planCollectionNames, false)
+    //if diags.HasError() {
+    //    // TODO: add the error message in diags to this created error
+    //    diags.AddError(
+    //        "Value Conversion Error",
+    //        fmt.Sprintf("Error occured while converting collections for policy rule \"%s\" during %s resource plan modification.", ruleName, policyType),
+    //    )
+    //    return diags
+    //}
 
-    planCollectionNames := []string{}
-    diags = rule.Collections.ElementsAs(ctx, &planCollectionNames, false)
-    if diags.HasError() {
-        // TODO: add the error message in diags to this created error
-        diags.AddError(
-            "Value Conversion Error",
-            fmt.Sprintf("Error occured while converting collections for policy rule \"%s\" during %s resource plan modification.", ruleName, policyType),
-        )
-        return diags
-    }
-
-    for _, planCollectionName := range planCollectionNames {
+    for _, ruleCollectionName := range ruleCollectionNames {
         found := false
         invalidFields := make([]string, 0)
 
         for _, collection := range collections {
-            if planCollectionName == collection.Name {
+            if ruleCollectionName == collection.Name {
                 found = true
 
                 switch policyType {
@@ -714,7 +714,7 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
                     invalidFieldsString := strings.Join(invalidFields, ", ")
                     diags.AddError(
                         "Resource Validation Error",
-                        fmt.Sprintf("%s policy rule \"%s\" is configured with collection \"%s\", which contains invalid values. The following fields in the collection must only contain the wildcard value (\"*\") for the collection to be compatible with this policy: %s", policyType, ruleName, planCollectionName, invalidFieldsString),
+                        fmt.Sprintf("%s policy rule \"%s\" is configured with collection \"%s\", which contains invalid values. The following fields in the collection must only contain the wildcard value (\"*\") for the collection to be compatible with this policy: %s", policyType, ruleName, ruleCollectionName, invalidFieldsString),
                     )
                 }
             }
@@ -771,9 +771,23 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
                 return
             }
         }
+
+        ruleName := rule.Name.ValueString()
+
+        ruleCollectionNames := []string{}
+        diags = rule.Collections.ElementsAs(ctx, &ruleCollectionNames, false)
+        if diags.HasError() {
+            // TODO: add the error message in diags to this created error
+            diags.AddError(
+                "Value Conversion Error",
+                fmt.Sprintf("Error occured while converting collections for policy rule \"%s\" during %s resource plan modification.", ruleName, policyType),
+            )
+            return
+        }
+
        
         // Validate configured collections to ensure compatibility with policy type
-        diags = validateRuleCollectionsByPolicyType(ctx, policyType, collections, rule) 
+        diags = validateRuleCollectionsByPolicyType(ctx, policyType, ruleName, ruleCollectionNames, collections) 
         resp.Diagnostics.Append(diags...)
         if resp.Diagnostics.HasError() {
             return 
