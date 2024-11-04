@@ -562,131 +562,86 @@ func isWildcard(val []string) bool {
 func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string, ruleName string, ruleCollectionNames []string, collections []collectionAPI.Collection) diag.Diagnostics {
     var diags diag.Diagnostics
 
+    policyValidations := map[string][]string{
+        "containerCompliance": {"Functions"},
+        "ciImagesCompliance":  {"Containers", "Hosts", "AppIDs", "Functions", "Namespaces", "AccountIDs", "Clusters"},
+        "hostCompliance":      {"Containers", "Images", "AppIDs", "Functions", "Namespaces"},
+        "vmCompliance":        {"Containers", "Hosts", "AppIDs", "Functions", "Namespaces", "Clusters"},
+        "serverlessCompliance": {"Containers", "Hosts", "Images", "AppIDs", "Namespaces", "Clusters"},
+        "ciServerlessCompliance": {"Containers", "Hosts", "Images", "AppIDs", "Namespaces", "AccountIDs", "Clusters"},
+        // "trust":  add rules for "trust" when implemented
+    }
+
+    // Retrieve the validation fields for the given policyType
+    fieldsToCheck, ok := policyValidations[policyType]
+    if !ok {
+        diags.AddError(
+            "Resource Validation Error",
+            fmt.Sprintf("Error during validation for rule \"%s\": Invalid policy type \"%s\"", ruleName, policyType),
+        )
+        return diags
+    }
+
+    // Iterate over the collection names in rule config
     for _, ruleCollectionName := range ruleCollectionNames {
         found := false
         invalidFields := make([]string, 0)
 
+        // Iterate over the collections from the console to find the collection with the current ruleCollectionName
         for _, collection := range collections {
             if ruleCollectionName == collection.Name {
                 found = true
-
-                switch policyType {
-                    case "containerCompliance":
-                        if !isWildcard(collection.Functions) {
-                            invalidFields = append(invalidFields, "Functions")
-                        }
-                    case "ciImagesCompliance":
-                        if !isWildcard(collection.Containers) {
-                            invalidFields = append(invalidFields, "Containers")
-                        }
-                        if !isWildcard(collection.Hosts) {
-                            invalidFields = append(invalidFields, "Hosts")
-                        }
-                        if !isWildcard(collection.AppIDs) {
-                            invalidFields = append(invalidFields, "App IDs")
-                        }
-                        if !isWildcard(collection.Functions) {
-                            invalidFields = append(invalidFields, "Functions")
-                        }
-                        if !isWildcard(collection.Namespaces) {
-                            invalidFields = append(invalidFields, "Namespaces")
-                        }
-                        if !isWildcard(collection.AccountIDs) {
-                            invalidFields = append(invalidFields, "Account IDs")
-                        }
-                        if !isWildcard(collection.Clusters) {
-                            invalidFields = append(invalidFields, "Clusters")
-                        }
-                    case "hostCompliance":
-                        if !isWildcard(collection.Containers) {
-                            invalidFields = append(invalidFields, "Containers")
-                        }
-                        if !isWildcard(collection.Images) {
-                            invalidFields = append(invalidFields, "Images")
-                        }
-                        if !isWildcard(collection.AppIDs) {
-                            invalidFields = append(invalidFields, "App IDs")
-                        }
-                        if !isWildcard(collection.Functions) {
-                            invalidFields = append(invalidFields, "Functions")
-                        }
-                        if !isWildcard(collection.Namespaces) {
-                            invalidFields = append(invalidFields, "Namespaces")
-                        }
-                    case "vmCompliance":
-                        if !isWildcard(collection.Containers) {
-                            invalidFields = append(invalidFields, "Containers")
-                        }
-                        if !isWildcard(collection.Hosts) {
-                            invalidFields = append(invalidFields, "Hosts")
-                        }
-                        if !isWildcard(collection.AppIDs) {
-                            invalidFields = append(invalidFields, "App IDs")
-                        }
-                        if !isWildcard(collection.Functions) {
-                            invalidFields = append(invalidFields, "Functions")
-                        }
-                        if !isWildcard(collection.Namespaces) {
-                            invalidFields = append(invalidFields, "Namespaces")
-                        }
-                        if !isWildcard(collection.Clusters) {
-                            invalidFields = append(invalidFields, "Clusters")
-                        }
-                    case "serverlessCompliance":
-                        if !isWildcard(collection.Containers) {
-                            invalidFields = append(invalidFields, "Containers")
-                        }
-                        if !isWildcard(collection.Hosts) {
-                            invalidFields = append(invalidFields, "Hosts")
-                        }
-                        if !isWildcard(collection.Images) {
-                            invalidFields = append(invalidFields, "Images")
-                        }
-                        if !isWildcard(collection.AppIDs) {
-                            invalidFields = append(invalidFields, "App IDs")
-                        }
-                        if !isWildcard(collection.Namespaces) {
-                            invalidFields = append(invalidFields, "Namespaces")
-                        }
-                        if !isWildcard(collection.Clusters) {
-                            invalidFields = append(invalidFields, "Clusters")
-                        }
-                    case "ciServerlessCompliance":
-                        if !isWildcard(collection.Containers) {
-                            invalidFields = append(invalidFields, "Containers")
-                        }
-                        if !isWildcard(collection.Hosts) {
-                            invalidFields = append(invalidFields, "Hosts")
-                        }
-                        if !isWildcard(collection.Images) {
-                            invalidFields = append(invalidFields, "Images")
-                        }
-                        if !isWildcard(collection.AppIDs) {
-                            invalidFields = append(invalidFields, "App IDs")
-                        }
-                        if !isWildcard(collection.Namespaces) {
-                            invalidFields = append(invalidFields, "Namespaces")
-                        }
-                        if !isWildcard(collection.AccountIDs) {
-                            invalidFields = append(invalidFields, "Account IDs")
-                        }
-                        if !isWildcard(collection.Clusters) {
-                            invalidFields = append(invalidFields, "Clusters")
-                        }
-                    // TODO: implement logic for trusted images
-                    //case "trust":
-                    default:
-                        diags.AddError(
-                            "Resource Validation Error",
-                            fmt.Sprintf("Error occured during validation of collections for policy rule \"%s\": Invalid policy type \"%s\"", ruleName, policyType),
-                        )
+               
+                // Check each field specified in fieldsToCheck for non-wildcard values, adding the field name to invalidFields if
+                // the value is not a slice with a single wildcard string
+                for _, field := range fieldsToCheck {
+                    switch field {
+                        case "Containers":
+                            if !isWildcard(collection.Containers) {
+                                invalidFields = append(invalidFields, "Containers")
+                            }
+                        case "Hosts":
+                            if !isWildcard(collection.Hosts) {
+                                invalidFields = append(invalidFields, "Hosts")
+                            }
+                        case "Images":
+                            if !isWildcard(collection.Images) {
+                                invalidFields = append(invalidFields, "Images")
+                            }
+                        case "Labels":
+                            if !isWildcard(collection.Labels) {
+                                invalidFields = append(invalidFields, "Labels")
+                            }
+                        case "AppIDs":
+                            if !isWildcard(collection.AppIDs) {
+                                invalidFields = append(invalidFields, "AppIDs")
+                            }
+                        case "Functions":
+                            if !isWildcard(collection.Functions) {
+                                invalidFields = append(invalidFields, "Functions")
+                            }
+                        case "Namespaces":
+                            if !isWildcard(collection.Namespaces) {
+                                invalidFields = append(invalidFields, "Namespaces")
+                            }
+                        case "AccountIDs":
+                            if !isWildcard(collection.AccountIDs) {
+                                invalidFields = append(invalidFields, "AccountIDs")
+                            }
+                        case "Clusters":
+                            if !isWildcard(collection.Clusters) {
+                                invalidFields = append(invalidFields, "Clusters")
+                            }
+                    }
                 }
 
+                // Append error if the collection is not found in the console
                 if !found {
                     diags.AddError(
                         "Resource Validation Error",
                         fmt.Sprintf("Error occured during validation of collections for policy rule \"%s\": Collection name \"%s\" not found", ruleName, policyType),
                     )
+                // Otherwise, if there's a non-zero amount of invalid fields, append an error with the field names
                 } else if len(invalidFields) > 0 {
                     invalidFieldsString := strings.Join(invalidFields, ", ")
                     diags.AddError(
