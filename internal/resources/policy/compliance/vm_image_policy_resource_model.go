@@ -6,7 +6,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
-    //"github.com/hashicorp/terraform-plugin-framework/attr"
+    "github.com/hashicorp/terraform-plugin-framework/attr"
     "github.com/hashicorp/terraform-plugin-framework/types"
 	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -87,7 +87,9 @@ func (r *VmImageCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            // TODO: add validator to ensure this is not empty
+                            Default: setdefault.StaticValue(
+                                types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("All") }),
+                            ),
                             PlanModifiers: []planmodifier.Set{
                                 planmodifiers.UseEmptySetForUnknown(),
                             },

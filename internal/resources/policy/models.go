@@ -1,26 +1,7 @@
 package policy
 
 import (
-    //"context"
-    //"sort"
-	//"fmt"
-    //"slices"
-    //"cmp"
-    //"time"
-
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	//policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
-	//collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
-	//systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
-
-    //"github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/types"
-    //"github.com/hashicorp/terraform-plugin-framework/diag"
-    //"github.com/hashicorp/terraform-plugin-framework/attr"
-	//"github.com/hashicorp/terraform-plugin-framework/resource"
-	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Generic compliance policy models
@@ -32,7 +13,6 @@ type CompliancePolicyResourceModel struct {
 
 type CompliancePolicyRuleResourceModel struct {
     BlockMessage                    types.String    `tfsdk:"block_message"`
-    //Collections                     types.List      `tfsdk:"collections"`
     Collections                     types.Set `tfsdk:"collections"`
     Condition                       types.Object    `tfsdk:"condition"`
     Disabled                        types.Bool      `tfsdk:"disabled"`

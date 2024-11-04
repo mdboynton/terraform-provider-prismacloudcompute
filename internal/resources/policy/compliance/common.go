@@ -14,7 +14,6 @@ import (
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
     "github.com/hashicorp/terraform-plugin-framework/path"
@@ -560,22 +559,8 @@ func isWildcard(val []string) bool {
     return len(val) == 1 && val[0] == "*"
 }
 
-//func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string, collections []collectionAPI.Collection, rule models.CompliancePolicyRuleResourceModel) diag.Diagnostics {
 func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string, ruleName string, ruleCollectionNames []string, collections []collectionAPI.Collection) diag.Diagnostics {
     var diags diag.Diagnostics
-
-    //ruleName := rule.Name.ValueString()
-
-    //planCollectionNames := []string{}
-    //diags = rule.Collections.ElementsAs(ctx, &planCollectionNames, false)
-    //if diags.HasError() {
-    //    // TODO: add the error message in diags to this created error
-    //    diags.AddError(
-    //        "Value Conversion Error",
-    //        fmt.Sprintf("Error occured while converting collections for policy rule \"%s\" during %s resource plan modification.", ruleName, policyType),
-    //    )
-    //    return diags
-    //}
 
     for _, ruleCollectionName := range ruleCollectionNames {
         found := false
@@ -587,12 +572,10 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
 
                 switch policyType {
                     case "containerCompliance":
-                    //case "container compliance":
                         if !isWildcard(collection.Functions) {
                             invalidFields = append(invalidFields, "Functions")
                         }
                     case "ciImagesCompliance":
-                    //case "CI images compliance":
                         if !isWildcard(collection.Containers) {
                             invalidFields = append(invalidFields, "Containers")
                         }
@@ -615,7 +598,6 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
                             invalidFields = append(invalidFields, "Clusters")
                         }
                     case "hostCompliance":
-                    //case "host compliance":
                         if !isWildcard(collection.Containers) {
                             invalidFields = append(invalidFields, "Containers")
                         }
@@ -632,7 +614,6 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
                             invalidFields = append(invalidFields, "Namespaces")
                         }
                     case "vmCompliance":
-                    //case "vm compliance":
                         if !isWildcard(collection.Containers) {
                             invalidFields = append(invalidFields, "Containers")
                         }
@@ -652,7 +633,6 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
                             invalidFields = append(invalidFields, "Clusters")
                         }
                     case "serverlessCompliance":
-                    //case "function compliance":
                         if !isWildcard(collection.Containers) {
                             invalidFields = append(invalidFields, "Containers")
                         }
@@ -672,7 +652,6 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
                             invalidFields = append(invalidFields, "Clusters")
                         }
                     case "ciServerlessCompliance":
-                    //case "CI function compliance":
                         if !isWildcard(collection.Containers) {
                             invalidFields = append(invalidFields, "Containers")
                         }
@@ -694,6 +673,7 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
                         if !isWildcard(collection.Clusters) {
                             invalidFields = append(invalidFields, "Clusters")
                         }
+                    // TODO: implement logic for trusted images
                     //case "trust":
                     default:
                         diags.AddError(
@@ -707,7 +687,6 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
                         "Resource Validation Error",
                         fmt.Sprintf("Error occured during validation of collections for policy rule \"%s\": Collection name \"%s\" not found", ruleName, policyType),
                     )
-                    //return
                 } else if len(invalidFields) > 0 {
                     invalidFieldsString := strings.Join(invalidFields, ", ")
                     diags.AddError(
@@ -762,16 +741,6 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
     util.DLog(ctx, "Beginning loop over rules")
 
     for index, rule := range *plan.Rules {
-        // Set default collection if one is not specified in rule configuration
-
-        // TODO: does this break stuff if we dont specify a collection?
-        if len(rule.Collections.Elements()) == 0 {
-            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), system.GetAllCollectionSet())...)
-            if diags.HasError() {
-                return
-            }
-        }
-
         ruleName := rule.Name.ValueString()
         rulePath := path.Root("rules").AtListIndex(index)
 
