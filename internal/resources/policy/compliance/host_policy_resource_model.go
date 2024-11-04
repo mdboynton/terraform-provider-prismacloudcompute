@@ -128,6 +128,9 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
+                            PlanModifiers: []planmodifier.String{
+                                planmodifiers.UseAlertForUnknownEffect(),
+                            },
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),
                             },

@@ -202,12 +202,11 @@ func GenerateConditionFromEffect(
 
     if policyType == "serverlessCompliance" || policyType == "ciServerlessCompliance" {
         if rule.Condition.IsUnknown() {
-            util.DLog(ctx, "condition is unknown")
             if effect != "ignore" {
-                if effect == "unknown" {
+                if effect == "default" {
                     complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
                 }
-                // If this block executes and effect is unknown, effect must be set to "alert"
+                // If this block executes and effect is default, effect must be set to "alert"
                 for _, vuln := range complianceVulnerabilities {
                     vulnerabilityObjectValue := types.ObjectValueMust(
                         vulnerabilitiesAttributeTypes,
@@ -220,7 +219,6 @@ func GenerateConditionFromEffect(
                 }
             }
         } else {
-            util.DLog(ctx, "condition is not unknown")
             // Get rule condition configuration
             ruleCondition := policyAPI.CompliancePolicyRuleCondition{} 
             diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
@@ -275,7 +273,7 @@ func GenerateConditionFromEffect(
             }
         // Otherwise, if the rule effect is not "ignore", create condition vulnerabilities using Prisma Cloud vulnerability data
         } else if effect != "ignore" {
-            if effect == "unknown" {
+            if effect == "default" {
                 complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
             }
 
@@ -765,6 +763,8 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
 
     for index, rule := range *plan.Rules {
         // Set default collection if one is not specified in rule configuration
+
+        // TODO: does this break stuff if we dont specify a collection?
         if len(rule.Collections.Elements()) == 0 {
             diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("collections"), system.GetAllCollectionSet())...)
             if diags.HasError() {
@@ -773,6 +773,7 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
         }
 
         ruleName := rule.Name.ValueString()
+        rulePath := path.Root("rules").AtListIndex(index)
 
         ruleCollectionNames := []string{}
         resp.Diagnostics.Append(rule.Collections.ElementsAs(ctx, &ruleCollectionNames, false)...)
@@ -787,22 +788,26 @@ func ModifyCompliancePolicyResourcePlan(ctx context.Context, client *api.PrismaC
             return 
         }
         
-        // Set unknown rule effect to "alert"
-        if rule.Effect.IsUnknown() {
-            rule.Effect = types.StringValue("unknown")
-            diags.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), types.StringValue("alert"))...)
-            if diags.HasError() {
-                return
-            }
-        } 
-
-        // Generate rule condition value from effect and set in response
+        // Generate rule condition value from effect
         conditionObject, diags := GenerateConditionFromEffect(ctx, *client, plan.PolicyType.ValueString(), rule, complianceVulnerabilities)
-        if diags.HasError() {
+        resp.Diagnostics.Append(diags...)
+        if resp.Diagnostics.HasError() {
             return 
         }
 
-        resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), conditionObject)...)
+        // Set condition to generated value
+        resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, rulePath.AtName("condition"), conditionObject)...)
+        if resp.Diagnostics.HasError() {
+            return 
+        }
+
+        // Set effect to "alert" if its currently set to the placeholder value ("default")
+        if rule.Effect.ValueString() == "default" {
+            resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, rulePath.AtName("effect"), types.StringValue("alert"))...)
+            if resp.Diagnostics.HasError() {
+                return 
+            }
+        }
     }
 
     util.DLog(ctx, "exiting ModifyCompliancePolicyResourcePlan")
