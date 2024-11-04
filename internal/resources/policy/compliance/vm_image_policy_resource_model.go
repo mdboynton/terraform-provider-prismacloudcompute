@@ -2,6 +2,7 @@ package policy
 
 import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -44,24 +45,24 @@ func (r *VmImageCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("vmCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceVmImage),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("vmCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceVmImage),
             },
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
                 PlanModifiers: []planmodifier.List{
-                    planmodifiers.UseIndexForUnknownOrder("VM compliance"),
+                    planmodifiers.UseIndexForUnknownOrder(policyAPI.PolicyTypeComplianceVmImageFormatted),
                 },
                 Validators: []validator.List{
-                    validators.PolicyRuleNameIsUnique("VM compliance"),
-                    validators.PolicyRuleOrderIsPositiveNonZero("VM compliance"),
+                    validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeComplianceVmImageFormatted),
+                    validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeComplianceVmImageFormatted),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
@@ -130,6 +131,9 @@ func (r *VmImageCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
+                            PlanModifiers: []planmodifier.String{
+                                planmodifiers.UseDefaultForUnknownEffect(),
+                            },
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),
                             },

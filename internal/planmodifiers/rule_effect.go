@@ -8,23 +8,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func UseAlertForUnknownEffect() planmodifier.String {
-    return &useAlertForUnknownEffect{}
+func UseDefaultForUnknownEffect() planmodifier.String {
+    return &useDefaultForUnknownEffect{}
 }
 
-type useAlertForUnknownEffect struct {}
+type useDefaultForUnknownEffect struct {}
 
-func (m *useAlertForUnknownEffect) Description(_ context.Context) string {
+func (m *useDefaultForUnknownEffect) Description(_ context.Context) string {
     return ""
 }
 
-func (m *useAlertForUnknownEffect) MarkdownDescription(_ context.Context) string {
+func (m *useDefaultForUnknownEffect) MarkdownDescription(_ context.Context) string {
     return ""
 }
 
-func (m *useAlertForUnknownEffect) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+func (m *useDefaultForUnknownEffect) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
     if req.PlanValue.IsUnknown() {
-        //resp.PlanValue = types.StringValue("unknown")
         resp.PlanValue = types.StringValue("default")
         return
     }

@@ -2,10 +2,12 @@ package policy
 
 import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
+
     "github.com/hashicorp/terraform-plugin-framework/attr"
     "github.com/hashicorp/terraform-plugin-framework/types"
 	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -44,24 +46,24 @@ func (r *CiFunctionCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("ciServerlessCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceCiFunction),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("ciServerlessCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceCiFunction),
             },
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
                 PlanModifiers: []planmodifier.List{
-                    planmodifiers.UseIndexForUnknownOrder("CI function compliance"),
+                    planmodifiers.UseIndexForUnknownOrder(policyAPI.PolicyTypeComplianceCiFunctionFormatted),
                 },
                 Validators: []validator.List{
-                    validators.PolicyRuleNameIsUnique("CI function compliance"),
-                    validators.PolicyRuleOrderIsPositiveNonZero("CI function compliance"),
+                    validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeComplianceCiFunctionFormatted),
+                    validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeComplianceCiFunctionFormatted),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
@@ -90,9 +92,9 @@ func (r *CiFunctionCompliancePolicyResource) GetSchema() schema.Schema {
                             Default: setdefault.StaticValue(
                                 types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("All") }),
                             ),
-                            PlanModifiers: []planmodifier.Set{
-                                planmodifiers.UseEmptySetForUnknown(),
-                            },
+                            //PlanModifiers: []planmodifier.Set{
+                            //    planmodifiers.UseEmptySetForUnknown(),
+                            //},
                         },
                         "condition": schema.SingleNestedAttribute{
                             MarkdownDescription: "TODO",
@@ -137,7 +139,7 @@ func (r *CiFunctionCompliancePolicyResource) GetSchema() schema.Schema {
                                 stringvalidator.OneOf("ignore", "alert"),
                             },
                             PlanModifiers: []planmodifier.String{
-                                planmodifiers.AllowUnknownEffect(),
+                                planmodifiers.UseDefaultForUnknownEffect(),
                             },
                         },
                         "modified": schema.StringAttribute{

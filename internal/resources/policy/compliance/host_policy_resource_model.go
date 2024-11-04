@@ -2,6 +2,7 @@ package policy
 
 import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -44,24 +45,24 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("hostCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceHost),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("hostCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceHost),
             },
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
                 PlanModifiers: []planmodifier.List{
-                    planmodifiers.UseIndexForUnknownOrder("host compliance"),
+                    planmodifiers.UseIndexForUnknownOrder(policyAPI.PolicyTypeComplianceHostFormatted),
                 },
                 Validators: []validator.List{
-                    validators.PolicyRuleNameIsUnique("host compliance"),
-                    validators.PolicyRuleOrderIsPositiveNonZero("host compliance"),
+                    validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeComplianceHostFormatted),
+                    validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeComplianceHostFormatted),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
@@ -131,7 +132,7 @@ func (r *HostCompliancePolicyResource) GetSchema() schema.Schema {
                             Optional: true,
                             Computed: true,
                             PlanModifiers: []planmodifier.String{
-                                planmodifiers.UseAlertForUnknownEffect(),
+                                planmodifiers.UseDefaultForUnknownEffect(),
                             },
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),

@@ -41,7 +41,7 @@ func (v policyRuleOrderIsPositiveNonZero) ValidateList(ctx context.Context, req 
         if int(order) < 1 {
             resp.Diagnostics.AddError(
 		    	"Invalid Resource Configuration",
-		    	fmt.Sprintf("policy rule \"%s\" configured with a negative or non-zero order (%d)", name, order),
+		    	fmt.Sprintf("%s policy rule \"%s\" configured with a negative or non-zero order (%d)", v.PolicyType, name, order),
             )
         }
     }

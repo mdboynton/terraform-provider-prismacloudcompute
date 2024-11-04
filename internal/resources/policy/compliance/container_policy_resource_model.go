@@ -2,6 +2,7 @@ package policy
 
 import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
     //"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -44,24 +45,24 @@ func (r *ContainerCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("containerCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceContainer),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("containerCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceContainer),
             },
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
                 PlanModifiers: []planmodifier.List{
-                    planmodifiers.UseIndexForUnknownOrder("container compliance"),
+                    planmodifiers.UseIndexForUnknownOrder(policyAPI.PolicyTypeComplianceContainerFormatted),
                 },
                 Validators: []validator.List{
-                    validators.PolicyRuleNameIsUnique("container compliance"),
-                    validators.PolicyRuleOrderIsPositiveNonZero("container compliance"),
+                    validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeComplianceContainerFormatted),
+                    validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeComplianceContainerFormatted),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
@@ -130,6 +131,9 @@ func (r *ContainerCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
+                            PlanModifiers: []planmodifier.String{
+                                planmodifiers.UseDefaultForUnknownEffect(),
+                            },
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),
                             },

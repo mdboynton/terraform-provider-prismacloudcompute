@@ -2,6 +2,7 @@ package policy
 
 import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
 
@@ -38,24 +39,24 @@ func (r *CiImageCompliancePolicyResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("ciImagesCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceCiImage),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("ciImagesCompliance"),
+                Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceCiImage),
             },
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
                 PlanModifiers: []planmodifier.List{
-                    planmodifiers.UseIndexForUnknownOrder("CI image compliance"),
+                    planmodifiers.UseIndexForUnknownOrder(policyAPI.PolicyTypeComplianceCiImageFormatted),
                 },
                 Validators: []validator.List{
-                    validators.PolicyRuleNameIsUnique("CI image compliance"),
-                    validators.PolicyRuleOrderIsPositiveNonZero("CI image compliance"),
+                    validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeComplianceCiImageFormatted),
+                    validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeComplianceCiImageFormatted),
                 },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
@@ -124,6 +125,9 @@ func (r *CiImageCompliancePolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
+                            PlanModifiers: []planmodifier.String{
+                                planmodifiers.UseDefaultForUnknownEffect(),
+                            },
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),
                             },
@@ -132,18 +136,13 @@ func (r *CiImageCompliancePolicyResource) GetSchema() schema.Schema {
                            MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            //Default: stringdefault.StaticString(time.Now().Format("2006-01-02T15:04:05.000Z")),
                             PlanModifiers: []planmodifier.String{
-                                //UseStateForUnknown(),
-                                //UsePlanForUnknownString(),
                                 planmodifiers.UseEmptyStringForNull(),
                             },
                         },
                         "name": schema.StringAttribute{
                             MarkdownDescription: "TODO",
                             Required: true,
-                            //Optional: true,
-                            //Computed: true,
                         },
                         "notes": schema.StringAttribute{
                             MarkdownDescription: "TODO",

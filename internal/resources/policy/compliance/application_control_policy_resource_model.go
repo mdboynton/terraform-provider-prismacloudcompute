@@ -82,13 +82,6 @@ func (r *ApplicationControlPolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
-                            // TODO: validate that this is not empty
-                            //Validators: []validator.String{
-                            //    stringvalidator.OneOf("ignore", "alert"),
-                            //},
-                            //PlanModifiers: []planmodifier.String{
-                            //    planmodifiers.AllowUnknownEffect(),
-                            //},
                         },
                         //"disabled": schema.BoolAttribute{
                         //    MarkdownDescription: "TODO",
