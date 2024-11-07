@@ -25,7 +25,6 @@ func (m *useEmptyStringForUnknown) MarkdownDescription(_ context.Context) string
 func (m *useEmptyStringForUnknown) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
     if req.PlanValue.IsUnknown() {
         resp.PlanValue = types.StringValue("")
-        return
     }
 
     return

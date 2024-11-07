@@ -10,7 +10,8 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/auth"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/compliance"
+	compliance "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/compliance"
+	vulnerability "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/vulnerability"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -89,15 +90,18 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
 		auth.NewUserResource,
 		auth.NewRoleResource,
 		system.NewCollectionResource,
-		policy.NewHostCompliancePolicyResource,
-		policy.NewContainerCompliancePolicyResource,
-		policy.NewCiImageCompliancePolicyResource,
-		policy.NewVmImageCompliancePolicyResource,
-		policy.NewFunctionCompliancePolicyResource,
-		policy.NewCiFunctionCompliancePolicyResource,
-		policy.NewApplicationControlPolicyResource,
-		policy.NewTrustedImagesPolicyResource,
-		policy.NewCustomComplianceCheckResource,
+        // Compliance policy resources
+		compliance.NewHostCompliancePolicyResource,
+		compliance.NewContainerCompliancePolicyResource,
+		compliance.NewCiImageCompliancePolicyResource,
+		compliance.NewVmImageCompliancePolicyResource,
+		compliance.NewFunctionCompliancePolicyResource,
+		compliance.NewCiFunctionCompliancePolicyResource,
+		compliance.NewApplicationControlPolicyResource,
+		compliance.NewTrustedImagesPolicyResource,
+		compliance.NewCustomComplianceCheckResource,
+        // Vulnerability policy resources
+        vulnerability.NewDeployedImagesVulnerabilityPolicyResource,
 	}
 }
 
