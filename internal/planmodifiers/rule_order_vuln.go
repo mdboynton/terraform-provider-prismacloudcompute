@@ -10,31 +10,32 @@ import (
     "github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func UseIndexForUnknownOrder(policyType string) planmodifier.List {
-    return useIndexForUnknownOrder{
+func UseIndexForUnknownOrderVuln(policyType string) planmodifier.List {
+    return useIndexForUnknownOrderVuln{
         PolicyType: policyType,
     } 
 }
 
-type useIndexForUnknownOrder struct {
+type useIndexForUnknownOrderVuln struct {
     PolicyType string
 }
 
-func (m useIndexForUnknownOrder) Description(_ context.Context) string {
+func (m useIndexForUnknownOrderVuln) Description(_ context.Context) string {
     return ""
 }
 
-func (m useIndexForUnknownOrder) MarkdownDescription(_ context.Context) string {
+func (m useIndexForUnknownOrderVuln) MarkdownDescription(_ context.Context) string {
     return ""
 }
 
-func (m useIndexForUnknownOrder) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-    util.DLog(ctx, "Executing UseIndexForUnknownOrder")
+func (m useIndexForUnknownOrderVuln) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+    util.DLog(ctx, "Executing UseIndexForUnknownOrderVuln")
 
-    var rules []models.CompliancePolicyRuleResourceModel
+    var rules []models.VulnerabilityPolicyRuleResourceModel
     diags := req.PlanValue.ElementsAs(ctx, &rules, false)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
+        util.DLog(ctx, "error in UseIndexForUnknownOrderVuln")
         return
     }
 
@@ -53,6 +54,7 @@ func (m useIndexForUnknownOrder) PlanModifyList(ctx context.Context, req planmod
     updatedPlan, diags := types.ListValueFrom(ctx, req.PlanValue.ElementType(ctx), rules)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
+        util.DLog(ctx, "error in UseIndexForUnknownOrderVuln")
         return
     }
 
