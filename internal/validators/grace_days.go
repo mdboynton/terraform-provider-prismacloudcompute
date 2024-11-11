@@ -4,7 +4,7 @@ import (
     "context"
     "fmt"
 	
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	//"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,7 +26,7 @@ func (v policyRuleGraceDaysConfigIsValid) MarkdownDescription(ctx context.Contex
 func (v policyRuleGraceDaysConfigIsValid) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
     util.DLog(ctx, "Executing PolicyRuleGraceDaysConfigIsValid")
 
-    rules := []models.VulnerabilityPolicyRuleResourceModel{}
+    rules := []policy.VulnerabilityPolicyRuleResourceModel{}
     resp.Diagnostics.Append(req.ConfigValue.ElementsAs(ctx, &rules, false)...)
     if resp.Diagnostics.HasError() {
         util.DLog(ctx, "error in PolicyRuleGraceDaysConfigIsValid")

@@ -3,6 +3,7 @@ package policy
 import (
 	"fmt"
 	"net/http"
+    "sort"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
@@ -37,6 +38,12 @@ type CompliancePolicy struct {
     Id          string                      `json:"_id"`
 	Rules       *[]CompliancePolicyRule `json:"rules"`
 	PolicyType  string                      `json:"policyType"`
+}
+
+func (p *CompliancePolicy) SortRules(orderMap map[string]int) {
+    sort.Slice(*p.Rules, func(i, j int) bool {
+        return orderMap[(*p.Rules)[i].Name] < orderMap[(*p.Rules)[j].Name]
+    })
 }
 
 type CompliancePolicyRule struct {

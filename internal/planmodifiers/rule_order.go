@@ -3,7 +3,7 @@ package planmodifiers
 import (
 	"context"
 
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,7 +31,7 @@ func (m useIndexForUnknownOrder) MarkdownDescription(_ context.Context) string {
 func (m useIndexForUnknownOrder) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
     util.DLog(ctx, "Executing UseIndexForUnknownOrder")
 
-    var rules []models.CompliancePolicyRuleResourceModel
+    var rules []policy.CompliancePolicyRuleResourceModel
     diags := req.PlanValue.ElementsAs(ctx, &rules, false)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
