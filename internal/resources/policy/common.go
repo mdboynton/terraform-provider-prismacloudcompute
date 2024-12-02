@@ -40,7 +40,6 @@ import (
 )
 
 func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted string, policyContext string, metaType string) schema.Schema {
-    util.DLog(ctx, fmt.Sprintf("Executing GetPolicySchema(%s, %s, %s, %s)", policyType, policyTypeFormatted, policyContext, metaType))
     return schema.Schema{
         MarkdownDescription: "TODO",
         Attributes: map[string]schema.Attribute{
@@ -1448,7 +1447,6 @@ func SchemaRuleOrderIsRestored(ctx context.Context, planRules *[]models.PolicyRu
     for index := range *planRules {
         planRuleName, createdRuleName := (*planRules)[index].Name.ValueString(), (*createdRules)[index].Name.ValueString()
         if planRuleName != createdRuleName {
-            util.DLog(ctx, fmt.Sprintf("Rule order mismatch: %s != %s", planRuleName, createdRuleName))
             orderIsRestored = false
         }
     }
@@ -1750,7 +1748,6 @@ func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComput
         return
     }
     moduleType = moduleTypeValue.ValueString()
-
 
     util.DLog(ctx, "Retrieving vulnerability data")
     if moduleType == "compliance" {
