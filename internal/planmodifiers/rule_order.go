@@ -3,11 +3,12 @@ package planmodifiers
 import (
 	"context"
 
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+    "github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
     "github.com/hashicorp/terraform-plugin-framework/types"
+    "github.com/hashicorp/terraform-plugin-framework/path"
 )
 
 func UseIndexForUnknownOrder(policyType string) planmodifier.List {
@@ -31,32 +32,25 @@ func (m useIndexForUnknownOrder) MarkdownDescription(_ context.Context) string {
 func (m useIndexForUnknownOrder) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
     util.DLog(ctx, "Executing UseIndexForUnknownOrder")
 
-    var rules []models.CompliancePolicyRuleResourceModel
-    diags := req.PlanValue.ElementsAs(ctx, &rules, false)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
+    var rules basetypes.ListValue
+    diags := req.Plan.GetAttribute(ctx, path.Root("rules"), &rules)
+    if diags.HasError() {
         return
     }
 
-    // TODO: test this with empty rule set
-    if rules == nil {
-        return
-    }
+    var order basetypes.Int32Value
+    for index := range rules.Elements() {
+        diags = req.Plan.GetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), &order)
+        if diags.HasError() {
+            return
+        }
 
-    for index, rule := range rules {
-        if rule.Order.IsUnknown() {
-            rule.Order = types.Int32Value(int32(index + 1))
-            rules[index] = rule
+        if order.IsUnknown() {
+            diags = req.Plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("order"), types.Int32Value(int32(index + 1)))
         }
     }
 
-    updatedPlan, diags := types.ListValueFrom(ctx, req.PlanValue.ElementType(ctx), rules)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    resp.PlanValue = updatedPlan 
+    diags = req.Plan.GetAttribute(ctx, path.Root("rules"), &resp.PlanValue)
 
     return
 }

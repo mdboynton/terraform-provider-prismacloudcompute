@@ -6,7 +6,7 @@ import (
     "time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
@@ -18,7 +18,6 @@ import (
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func (r *TrustedImagesPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -50,7 +49,6 @@ func (r *TrustedImagesPolicyResource) Configure(ctx context.Context, req resourc
 
 func (r *TrustedImagesPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // Retrieve values from plan
-    util.DLog(ctx, "retrieving plan and serializing into models.TrustedImagesPolicyResourceModel")
     var plan models.TrustedImagesPolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
@@ -59,15 +57,14 @@ func (r *TrustedImagesPolicyResource) Create(ctx context.Context, req resource.C
     }
 
     // Generate API request body from plan
-    policy, diags := schemaToTrustedImagesPolicy(ctx, *r.client, &plan)
+    data, diags := schemaToTrustedImagesPolicy(ctx, *r.client, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
 
     // Create new trusted images compliance policy 
-    //util.DLog(ctx, fmt.Sprintf("creating policy resource with payload:\n\n %+v", *policy.Rules))
-    err := policyAPI.UpsertTrustedImagesPolicy(*r.client, policy)
+    err := policyAPI.UpsertTrustedImagesPolicy(*r.client, data)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating Trusted Images Policy resource", 
@@ -86,14 +83,10 @@ func (r *TrustedImagesPolicyResource) Create(ctx context.Context, req resource.C
         return
     }
 
-    //util.DLogf(ctx, response)
-
     createdPolicy, diags := trustedImagesPolicyToSchema(ctx, response)
     if diags.HasError() {
         return
     }
-
-    //util.DLog(ctx, fmt.Sprintf("created policy with rules:\n\n %+v", *createdPolicy.Rules))
 
     // Set state to policy data
     diags = resp.State.Set(ctx, createdPolicy)
@@ -104,8 +97,6 @@ func (r *TrustedImagesPolicyResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *TrustedImagesPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    util.DLog(ctx, "starting Read() execution")
-
     // Get current state
     var state models.TrustedImagesPolicyResourceModel 
     diags := req.State.Get(ctx, &state)
@@ -115,7 +106,7 @@ func (r *TrustedImagesPolicyResource) Read(ctx context.Context, req resource.Rea
     }
 
     // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetTrustedImagesPolicy(*r.client)
+    data, err := policyAPI.GetTrustedImagesPolicy(*r.client)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Trusted Images Policy resource", 
@@ -125,7 +116,7 @@ func (r *TrustedImagesPolicyResource) Read(ctx context.Context, req resource.Rea
     }
 
     // Overwrite state values with Prisma Cloud data
-    policySchema, diags := trustedImagesPolicyToSchema(ctx, policy)
+    policySchema, diags := trustedImagesPolicyToSchema(ctx, data)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -137,8 +128,6 @@ func (r *TrustedImagesPolicyResource) Read(ctx context.Context, req resource.Rea
     if resp.Diagnostics.HasError() {
         return
     }
-
-    util.DLog(ctx, "ending Read() execution")
 }
 
 func (r *TrustedImagesPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -176,7 +165,7 @@ func (r *TrustedImagesPolicyResource) Update(ctx context.Context, req resource.U
 	}
 
     // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetTrustedImagesPolicy(*r.client)
+    updatedPolicy, err := policyAPI.GetTrustedImagesPolicy(*r.client)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Trusted Images Policy resource", 
@@ -186,7 +175,7 @@ func (r *TrustedImagesPolicyResource) Update(ctx context.Context, req resource.U
     }
 
     // Convert updated policy into schema
-    policySchema, diags := trustedImagesPolicyToSchema(ctx, policy)
+    policySchema, diags := trustedImagesPolicyToSchema(ctx, updatedPolicy)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return

@@ -80,7 +80,7 @@ func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType 
 
     vulnsMap, err := GetComplianceVulnerabilitiesMap(c)
     if err != nil {
-		return complianceVulns, fmt.Errorf("error getting vm image compliance vulnerabilities: %s", err)
+		return complianceVulns, fmt.Errorf("error getting compliance vulnerabilities: %s", err)
     }
 
     switch policyType {
@@ -93,12 +93,12 @@ func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType 
         case "vmCompliance":
             vulnTypes = getVmImageComplianceVulnTypes()
         case "serverlessCompliance":
+            fallthrough
         case "ciServerlessCompliance":
             vulnTypes = []string{"serverless"}
         default:
             return complianceVulns, fmt.Errorf("invalid compliance policy type supplied: \"%s\"", policyType)
     }
-
 
     if policyType == "ciImagesCompliance" {
         for _, vuln := range vulnsMap["image"] {

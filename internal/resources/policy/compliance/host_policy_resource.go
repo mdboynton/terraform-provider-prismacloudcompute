@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
@@ -19,7 +20,7 @@ func (r *HostCompliancePolicyResource) Metadata(ctx context.Context, req resourc
 }
 
 func (r *HostCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-    resp.Schema = r.GetSchema()
+    resp.Schema = r.GetSchema(ctx)
 }
 
 func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -43,8 +44,7 @@ func (r *HostCompliancePolicyResource) Configure(ctx context.Context, req resour
 
 func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // Retrieve values from plan
-    util.DLog(ctx, "retrieving plan and serializing into models.CompliancePolicyResourceModel")
-    var plan models.CompliancePolicyResourceModel
+    var plan models.PolicyResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -52,14 +52,14 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
     }
 
     // Generate API request body from plan
-    policy, diags := CompliancePolicySchemaToPolicy(ctx, &plan, r.client)
+    data, diags := policy.PolicySchemaToTerraform(ctx, &plan, r.client)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
 
     // Create new host compliance policy 
-    err := policyAPI.UpsertCompliancePolicy(*r.client, policy)
+    err := policyAPI.UpsertPolicy(*r.client, data)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating Host Compliance Policy resource", 
@@ -69,7 +69,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
 	}
 
     // Retrieve newly created host compliance policy 
-    response, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceHost)
+    response, err := policyAPI.GetPolicy(*r.client, policyAPI.PolicyTypeComplianceHost)
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created Host Compliance Policy resource", 
@@ -78,7 +78,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
         return
     }
 
-    createdPolicy, diags := CompliancePolicyToSchema(ctx, *response, plan)
+    createdPolicy, diags := policy.PolicyTerraformToSchema(ctx, *response, plan)
     if diags.HasError() {
         return
     }
@@ -95,7 +95,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     util.DLog(ctx, "starting Read() execution")
 
     // Get current state
-    var state models.CompliancePolicyResourceModel 
+    var state models.PolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -103,7 +103,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     }
 
     // Get policy value from Prisma Cloud
-    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceHost)
+    data, err := policyAPI.GetPolicy(*r.client, policyAPI.PolicyTypeComplianceHost)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Host Compliance Policy resource", 
@@ -113,7 +113,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
     }
 
     // Overwrite state values with Prisma Cloud data
-    policySchema, diags := CompliancePolicyToSchema(ctx, *policy, state)
+    policySchema, diags := policy.PolicyTerraformToSchema(ctx, *data, state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -131,7 +131,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
 
 func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Get current state
-    var state models.CompliancePolicyResourceModel 
+    var state models.PolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -139,7 +139,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     }
 
     // Retrieve values from plan
-    var plan models.CompliancePolicyResourceModel 
+    var plan models.PolicyResourceModel 
     diags = req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -147,14 +147,14 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     }
 
     // Generate API request body from plan
-    planPolicy, diags := CompliancePolicySchemaToPolicy(ctx, &plan, r.client)
+    planPolicy, diags := policy.PolicySchemaToTerraform(ctx, &plan, r.client)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
 
     // Update existing policy
-    err := policyAPI.UpsertCompliancePolicy(*r.client, planPolicy)
+    err := policyAPI.UpsertPolicy(*r.client, planPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Host Compliance Policy resource", 
@@ -164,7 +164,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
 	}
 
     // Get updated policy value from Prisma Cloud
-    policy, err := policyAPI.GetCompliancePolicy(*r.client, policyAPI.PolicyTypeComplianceHost)
+    response, err := policyAPI.GetPolicy(*r.client, policyAPI.PolicyTypeComplianceHost)
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Host Compliance Policy resource", 
@@ -174,7 +174,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
     }
 
     // Convert updated policy into schema
-    policySchema, diags := CompliancePolicyToSchema(ctx, *policy, plan)
+    policySchema, diags := policy.PolicyTerraformToSchema(ctx, *response, plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -190,7 +190,7 @@ func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.
 
 func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
-	var state models.CompliancePolicyResourceModel 
+	var state models.PolicyResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -198,17 +198,17 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
     }
 
     // Clear policy rules
-    state.Rules = &[]models.CompliancePolicyRuleResourceModel{}
+    state.Rules = &[]models.PolicyRuleResourceModel{}
 
     // Generate API request body from plan
-    updatedPlan, diags := CompliancePolicySchemaToPolicy(ctx, &state, r.client)
+    updatedPlan, diags := policy.PolicySchemaToTerraform(ctx, &state, r.client)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertCompliancePolicy(*r.client, updatedPlan)
+    err := policyAPI.UpsertPolicy(*r.client, updatedPlan)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting Host Compliance Policy resource", 
@@ -226,14 +226,7 @@ func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req reso
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
 
-    var plan *models.CompliancePolicyResourceModel
-    diags := req.Plan.Get(ctx, &plan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    ModifyCompliancePolicyResourcePlan(ctx, r.client, plan, resp)
+    policy.ModifyPolicyResourcePlan(ctx, r.client, req.Plan, resp)
 
     util.DLog(ctx, "exiting ModifyPlan")
 }
