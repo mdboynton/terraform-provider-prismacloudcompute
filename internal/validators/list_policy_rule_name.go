@@ -4,7 +4,8 @@ import (
     "context"
     "fmt"
 	
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	//models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
@@ -22,7 +23,10 @@ func (v policyRuleNameIsUniqueValidator) MarkdownDescription(ctx context.Context
 }
 
 func (v policyRuleNameIsUniqueValidator) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-    rulesModel := []models.CompliancePolicyRuleResourceModel{}
+    util.DLog(ctx, "Executing PolicyRuleNameIsUnique")
+
+    //rulesModel := []models.CompliancePolicyRuleResourceModel{}
+    rulesModel := []models.PolicyRuleResourceModel{}
     diags := req.ConfigValue.ElementsAs(ctx, &rulesModel, false)
     if diags.HasError() {
         resp.Diagnostics.AddError(
@@ -47,6 +51,8 @@ func (v policyRuleNameIsUniqueValidator) ValidateList(ctx context.Context, req v
             return
         }
     }
+
+    util.DLog(ctx, "Finishing PolicyRuleNameIsUnique execution")
 
     return
 }

@@ -2,36 +2,133 @@ package policy
 
 import (
 	"fmt"
+    "context"
+    "sort"
 	"net/http"
 
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
 )
 
 const (
+    // Policy Type
 	PolicyTypeAdmission                         = "admission"
 	PolicyTypeComplianceCiImage                 = "ciImagesCompliance"
-	PolicyTypeComplianceCiImageFormatted        = "CI images compliance"
 	PolicyTypeComplianceContainer               = "containerCompliance"
-	PolicyTypeComplianceContainerFormatted      = "container compliance"
 	PolicyTypeComplianceHost                    = "hostCompliance"
-	PolicyTypeComplianceHostFormatted           = "host compliance"
 	PolicyTypeComplianceVmImage                 = "vmCompliance"
-	PolicyTypeComplianceVmImageFormatted        = "VM compliance"
 	PolicyTypeComplianceFunction                = "serverlessCompliance"
-	PolicyTypeComplianceFunctionFormatted       = "serverless compliance"
 	PolicyTypeComplianceCiFunction              = "ciServerlessCompliance"
-	PolicyTypeComplianceCiFunctionFormatted     = "CI serverless compliance"
     PolicyTypeComplianceTrustedImages           = "trust"
+    // Policy Type Formatted
+	PolicyTypeComplianceCiImageFormatted        = "CI images compliance"
+	PolicyTypeComplianceContainerFormatted      = "container compliance"
+	PolicyTypeComplianceHostFormatted           = "host compliance"
+	PolicyTypeComplianceVmImageFormatted        = "VM compliance"
+	PolicyTypeComplianceFunctionFormatted       = "serverless compliance"
+	PolicyTypeComplianceCiFunctionFormatted     = "CI serverless compliance"
 	PolicyTypeRuntimeContainer                  = "containerRuntime"
 	PolicyTypeRuntimeHost                       = "hostRuntime"
 	PolicyTypeVulnerabilityCiImage              = "ciImagesVulnerability"
 	PolicyTypeVulnerabilityHost                 = "hostVulnerability"
 	PolicyTypeVulnerabilityDeployedImage        = "containerVulnerability"
 	PolicyTypeVulnerabilityDeployedImageFormatted = "deployed image vulnerability"
+    // Policy Context
+	PolicyContextComplianceContainer              = "container"
+	PolicyContextComplianceCiFunction              = "ciServerless"
+	PolicyContextComplianceCiImage              = "ciImages"
+	PolicyContextComplianceFunction              = "serverless"
+	PolicyContextComplianceHost              = "host"
+	PolicyContextComplianceVmImage              = "vms"
 	PolicyContextVulnerabilityDeployedImage     = "images"
+    // Type
+	TypeCompliance                              = "compliance"
 	TypeVulnerability                           = "vulnerability"
 )
+
+type Policy struct {
+    Id              string                          `json:"_id"`
+	PolicyType      string                          `json:"policyType"`
+	PolicyContext   string                          `json:"policyContext"`
+	Rules           *[]PolicyRule                   `json:"rules"`
+    Type            string                          `json:"type"`
+}
+
+func (p *Policy) SortRules(ctx context.Context, planRules *[]models.PolicyRuleResourceModel) {
+    util.DLog(ctx, "Executing api.Policy.SortRules()")
+
+    rulesOrderMap := generatePolicyRulesOrderMap(*planRules)
+    sort.Slice((*p.Rules), func(i, j int) bool {
+        return rulesOrderMap[(*p.Rules)[i].Name] < rulesOrderMap[(*p.Rules)[j].Name]
+    })
+    
+    util.DLog(ctx, "Finishing api.Policy.SortRules() execution")
+}
+
+// TODO: remove this duplicate function when we can move the logic somewhere that can be used here
+// and by internal/resources/policy/common.go
+func generatePolicyRulesOrderMap(rules []models.PolicyRuleResourceModel) map[string]int {
+    orderedRulesMap := make(map[int][]string)
+
+    for _, rule := range rules {
+        order := int(rule.Order.ValueInt32())
+        if _, exists := orderedRulesMap[order]; exists {
+            orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
+        } else {
+            orderedRulesMap[order] = []string{rule.Name.ValueString()}
+        }
+    }
+        
+    sortedKeys := make([]int, 0, len(orderedRulesMap))
+    for key := range orderedRulesMap {
+        sortedKeys = append(sortedKeys, key)
+    }
+    sort.Ints(sortedKeys)
+
+    ruleOrders := make(map[string]int)
+    lastOrderValue := -1
+    for _, key := range sortedKeys {
+        offset := 0
+        if lastOrderValue != -1 && lastOrderValue >= key {
+            offset = lastOrderValue - key + 1
+        }
+
+        for sliceIndex, ruleName := range orderedRulesMap[key] {
+            orderValue := key + sliceIndex + offset
+            ruleOrders[ruleName] = orderValue
+            lastOrderValue = orderValue
+        }
+    }
+
+    return ruleOrders
+}
+
+type PolicyRule struct {
+    AlertThreshold                  AlertThreshold                  `json:"alertThreshold" tfsdk:"alert_threshold"`
+	BlockMessage                    string                              `json:"blockMsg"`
+    BlockThreshold                  BlockThreshold                  `json:"blockThreshold" tfsdk:"block_threshold"`
+    Collections                     []collection.Collection             `json:"collections" tfsdk:"collections"`
+    Condition                       *CompliancePolicyRuleCondition  `json:"condition" tfsdk:"condition"`
+    CVERules                        []Exception                         `json:"cveRules" tfsdk:"cve_rules"`
+	Disabled                        bool                                `json:"disabled"`
+	Effect                          string                              `json:"effect"`
+    ExcludeBaseImageVulns           bool                                `json:"excludeBaseImageVulns"`
+    GraceDays                       int                                 `json:"graceDays"`
+    GraceDaysPolicy                 GraceDaysPolicy                     `json:"graceDaysPolicy"`
+    Modified                        string                              `json:"modified"`
+	Name                            string                              `json:"name"`
+	Notes                           string                              `json:"notes"`
+    OnlyFixed                       bool                                `json:"onlyFixed"`
+    Order                           int                                 `json:"order"`
+    Owner                           string                              `json:"owner"`
+    PkgTypesThresholds              []PkgTypesThreshold                 `json:"pkgTypesThresholds"`
+	ReportAllPassedAndFailedChecks  bool                                `json:"allCompliance"`
+    RiskFactorEffects               []RiskFactorsEffect                 `json:"riskFactorsEffects"` 
+    Tags                            []Exception                         `json:"tags"`
+	Verbose                         bool                                `json:"verbose"`
+}
 
 type CompliancePolicy struct {
     Id          string                      `json:"_id"`
@@ -162,37 +259,23 @@ func getEndpointAndPolicyName(policyType string) (string, string, error) {
     }
 }
 
-// Create/Update/Delete compliance policy
-func UpsertCompliancePolicy(c api.PrismaCloudComputeAPIClient, policy CompliancePolicy) error {
+
+func UpsertPolicy(c api.PrismaCloudComputeAPIClient, policy Policy) error {
     endpoint, policyName, err := getEndpointAndPolicyName(policy.PolicyType)
     if err != nil {
 		return err
     }
 
     if err := c.Request(http.MethodPut, endpoint, nil, policy, nil); err != nil {
-		return fmt.Errorf("error upserting %s compliance policy: %s", policyName, err)
+		return fmt.Errorf("error upserting %s policy: %s", policyName, err)
     }
     
     return nil
 }
 
-// Create/Update/Delete vulnerability policy
-func UpsertVulnerabilityPolicy(c api.PrismaCloudComputeAPIClient, policy VulnerabilityPolicy) error {
-    endpoint, policyName, err := getEndpointAndPolicyName(policy.PolicyType)
-    if err != nil {
-		return err
-    }
 
-    if err := c.Request(http.MethodPut, endpoint, nil, policy, nil); err != nil {
-		return fmt.Errorf("error upserting %s vulnerability policy: %s", policyName, err)
-    }
-    
-    return nil
-}
-
-// Get compliance policy
-func GetCompliancePolicy(c api.PrismaCloudComputeAPIClient, policyType string) (*CompliancePolicy, error) {
-    var ans CompliancePolicy
+func GetPolicy(c api.PrismaCloudComputeAPIClient, policyType string) (*Policy, error) {
+    var ans Policy 
 
     endpoint, policyName, err := getEndpointAndPolicyName(policyType)
     if err != nil {
@@ -200,23 +283,7 @@ func GetCompliancePolicy(c api.PrismaCloudComputeAPIClient, policyType string) (
     }
     
     if err := c.Request(http.MethodGet, endpoint, nil, nil, &ans); err != nil {
-		return &ans, fmt.Errorf("error retrieving %s compliance policy: %s", policyName, err)
-    }
-    
-    return &ans, nil
-}
-
-// Get vulnerability policy
-func GetVulnerabilityPolicy(c api.PrismaCloudComputeAPIClient, policyType string) (*VulnerabilityPolicy, error) {
-    var ans VulnerabilityPolicy 
-
-    endpoint, policyName, err := getEndpointAndPolicyName(policyType)
-    if err != nil {
-		return &ans, err
-    }
-    
-    if err := c.Request(http.MethodGet, endpoint, nil, nil, &ans); err != nil {
-		return &ans, fmt.Errorf("error retrieving %s vulnerability policy: %s", policyName, err)
+		return &ans, fmt.Errorf("error retrieving %s policy: %s", policyName, err)
     }
     
     return &ans, nil

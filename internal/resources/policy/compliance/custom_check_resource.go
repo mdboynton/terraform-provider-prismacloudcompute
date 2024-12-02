@@ -45,7 +45,6 @@ func (r *CustomComplianceCheckResource) Configure(ctx context.Context, req resou
 
 func (r *CustomComplianceCheckResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // Retrieve values from plan
-    util.DLog(ctx, "retrieving plan and serializing into CustomComplianceCheckResourceModel")
     var plan CustomComplianceCheckResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
@@ -61,7 +60,6 @@ func (r *CustomComplianceCheckResource) Create(ctx context.Context, req resource
     }
 
     // Upsert custom compliance checks with new values
-    util.DLog(ctx, fmt.Sprintf("creating custom check resource with payload:\n\n %+v", check))
     createdCheck, err := policyAPI.UpsertCustomComplianceCheck(*r.client, check)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -86,8 +84,6 @@ func (r *CustomComplianceCheckResource) Create(ctx context.Context, req resource
 }
 
 func (r *CustomComplianceCheckResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    util.DLog(ctx, "starting Read() execution")
-
     // Get current state
     var state CustomComplianceCheckResourceModel 
     diags := req.State.Get(ctx, &state)
@@ -106,8 +102,6 @@ func (r *CustomComplianceCheckResource) Read(ctx context.Context, req resource.R
         return
     }
 
-    //util.DLog(ctx, fmt.Sprintf("retrieved container compliance policy with rules:\n\n %+v", *policy.Rules))
-  
     // Overwrite state values with Prisma Cloud data
     checkSchema, diags := checkToSchema(ctx, *check)
     resp.Diagnostics.Append(diags...)
@@ -115,16 +109,12 @@ func (r *CustomComplianceCheckResource) Read(ctx context.Context, req resource.R
         return
     }
 
-    //util.DLog(ctx, fmt.Sprintf("policy schema rules:\n\n %+v", policySchema.Rules))
-
     // Set refreshed state
     diags = resp.State.Set(ctx, &checkSchema)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-
-    util.DLog(ctx, "ending Read() execution")
 }
 
 func (r *CustomComplianceCheckResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -145,14 +135,14 @@ func (r *CustomComplianceCheckResource) Update(ctx context.Context, req resource
     }
 
     // Generate API request body from plan
-    check, diags := schemaToCheck(ctx, &plan, r.client)
+    data, diags := schemaToCheck(ctx, &plan, r.client)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
 
     // Update existing policy
-    updatedCheck, err := policyAPI.UpsertCustomComplianceCheck(*r.client, check)
+    updatedPolicy, err := policyAPI.UpsertCustomComplianceCheck(*r.client, data)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Custom Compliance Check resource", 
@@ -162,13 +152,11 @@ func (r *CustomComplianceCheckResource) Update(ctx context.Context, req resource
 	}
 
     // Convert updated policy into schema
-    checkSchema, diags := checkToSchema(ctx, *updatedCheck)
+    checkSchema, diags := checkToSchema(ctx, *updatedPolicy)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
-
-    //util.DLog(ctx, fmt.Sprintf("setting state from Update() with rules:\n\n %+v", policySchema.Rules))
 
     // Set updated state
     diags = resp.State.Set(ctx, checkSchema)
@@ -188,14 +176,14 @@ func (r *CustomComplianceCheckResource) Delete(ctx context.Context, req resource
     }
 
     // Generate API request body from plan
-    check, diags := schemaToCheck(ctx, &state, r.client)
+    data, diags := schemaToCheck(ctx, &state, r.client)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
     }
     
     // Delete existing check 
-    err := policyAPI.DeleteCustomComplianceCheck(*r.client, check.Id)
+    err := policyAPI.DeleteCustomComplianceCheck(*r.client, data.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting Container Compliance Policy resource", 

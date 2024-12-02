@@ -4,25 +4,15 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
-    //"github.com/hashicorp/terraform-plugin-log/tflog"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
+
     "github.com/hashicorp/terraform-plugin-framework/attr"
     "github.com/hashicorp/terraform-plugin-framework/types"
-	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
-	//"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	//"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 )
 
 var _ resource.Resource = &TrustedImagesPolicyResource{}

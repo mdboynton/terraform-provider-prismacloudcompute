@@ -4,7 +4,8 @@ import (
     "context"
     "fmt"
 	
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	//models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	//"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,9 +27,11 @@ func (v policyRuleOrderIsPositiveNonZero) MarkdownDescription(ctx context.Contex
 func (v policyRuleOrderIsPositiveNonZero) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
     util.DLog(ctx, "Executing PolicyRuleOrderIsPositiveNonZero")
 
-    rules := []models.CompliancePolicyRuleResourceModel{}
+    //rules := []models.CompliancePolicyRuleResourceModel{}
+    rules := []models.PolicyRuleResourceModel{}
     resp.Diagnostics.Append(req.ConfigValue.ElementsAs(ctx, &rules, false)...)
     if resp.Diagnostics.HasError() {
+        util.DLog(ctx, "conversion error")
         return
     }
 
@@ -48,6 +51,8 @@ func (v policyRuleOrderIsPositiveNonZero) ValidateList(ctx context.Context, req 
             )
         }
     }
+    
+    util.DLog(ctx, "Finishing PolicyRuleOrderIsPositiveNonZero execution")
 
     return
 }
