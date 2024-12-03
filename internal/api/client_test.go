@@ -20,13 +20,18 @@ func TestAPIClient(t *testing.T) {
 		fmt.Printf("error reading creds file: %v", err)
 		return
 	}
-	var config APIClientConfig
+	var config PrismaCloudComputeAPIClientConfig
 	if err := json.Unmarshal(fileContent, &config); err != nil {
 		fmt.Printf("error unmarshalling creds file: %v", err)
 		return
 	}
 
-	client, _ := APIClient(config)
+	client, err := Client(config)
+	if err != nil {
+		fmt.Printf("error initializing API client: %v", err)
+		return
+    }
+
 	if client.JWT == "" {
 		t.Errorf("JWT is empty. Authenticate did not work.")
 	}
