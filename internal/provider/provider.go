@@ -105,6 +105,7 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
         vulnerability.NewDeployedImagesVulnerabilityPolicyResource,
         vulnerability.NewCiImagesVulnerabilityPolicyResource,
         vulnerability.NewHostVulnerabilityPolicyResource,
+        vulnerability.NewVmImageVulnerabilityPolicyResource,
 	}
 }
 
