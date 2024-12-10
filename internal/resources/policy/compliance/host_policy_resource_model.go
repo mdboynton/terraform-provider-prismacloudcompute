@@ -28,7 +28,7 @@ func (r *HostCompliancePolicyResource) GetSchema(ctx context.Context) schema.Sch
         ctx,
         policyAPI.PolicyTypeComplianceHost, 
         policyAPI.PolicyTypeComplianceHostFormatted, 
-        policyAPI.PolicyContextComplianceHost,
+        policyAPI.PolicyContextHost,
         policyAPI.TypeCompliance,
     )
 }

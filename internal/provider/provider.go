@@ -101,8 +101,10 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
 		compliance.NewTrustedImagesPolicyResource,
 		compliance.NewCustomComplianceCheckResource,
         // Vulnerability policy resources
+        // TODO: need to rename deployed and ci images policy structs to be singular (Images -> Image)
         vulnerability.NewDeployedImagesVulnerabilityPolicyResource,
         vulnerability.NewCiImagesVulnerabilityPolicyResource,
+        vulnerability.NewHostVulnerabilityPolicyResource,
 	}
 }
 

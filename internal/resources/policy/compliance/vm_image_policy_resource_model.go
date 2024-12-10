@@ -28,7 +28,7 @@ func (r *VmImageCompliancePolicyResource) GetSchema(ctx context.Context) schema.
         ctx,
         policyAPI.PolicyTypeComplianceVmImage, 
         policyAPI.PolicyTypeComplianceVmImageFormatted, 
-        policyAPI.PolicyContextComplianceVmImage,
+        policyAPI.PolicyContextVmImage,
         policyAPI.TypeCompliance,
     )
 }
