@@ -28,7 +28,7 @@ func (r *CiImageCompliancePolicyResource) GetSchema(ctx context.Context) schema.
         ctx,
         policyAPI.PolicyTypeComplianceCiImage, 
         policyAPI.PolicyTypeComplianceCiImageFormatted, 
-        policyAPI.PolicyContextComplianceCiImage,
+        policyAPI.PolicyContextCiImage,
         policyAPI.TypeCompliance,
     )
 }

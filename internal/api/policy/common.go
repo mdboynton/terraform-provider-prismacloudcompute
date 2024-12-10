@@ -25,6 +25,9 @@ const (
 	PolicyTypeVulnerabilityDeployedImage          = "containerVulnerability"
 	PolicyTypeVulnerabilityCiImage                = "ciImagesVulnerability"
 	PolicyTypeVulnerabilityHost                   = "hostVulnerability"
+	PolicyTypeVulnerabilityVmImage                = "vmVulnerability"
+	PolicyTypeVulnerabilityFunction               = "serverlessVulnerability"
+	PolicyTypeVulnerabilityCiFunction             = "ciServerlessVulnerability"
 	PolicyTypeRuntimeContainer                    = "containerRuntime"
 	PolicyTypeRuntimeHost                         = "hostRuntime"
 	// Policy Type Formatted
@@ -36,15 +39,28 @@ const (
 	PolicyTypeComplianceCiFunctionFormatted       = "CI serverless compliance"
 	PolicyTypeVulnerabilityDeployedImageFormatted = "deployed image vulnerability"
 	PolicyTypeVulnerabilityCiImageFormatted       = "CI image vulnerability"
+	PolicyTypeVulnerabilityHostFormatted          = "host vulnerability"
+	PolicyTypeVulnerabilityVmImageFormatted       = "VM vulnerability"
+	PolicyTypeVulnerabilityFunctionFormatted      = "serverless vulnerability"
+	PolicyTypeVulnerabilityCiFunctionFormatted    = "CI serverless vulnerability"
 	// Policy Context
-	PolicyContextComplianceContainer        = "container"
-	PolicyContextComplianceCiFunction       = "ciServerless"
-	PolicyContextComplianceCiImage          = "ciImages"
-	PolicyContextComplianceFunction         = "serverless"
-	PolicyContextComplianceHost             = "host"
-	PolicyContextComplianceVmImage          = "vms"
-	PolicyContextVulnerabilityDeployedImage = "images"
-	PolicyContextVulnerabilityCiImage = "ciImages"
+	//PolicyContextComplianceContainer        = "container"
+	//PolicyContextComplianceCiFunction       = "ciServerless"
+	//PolicyContextComplianceCiImage          = "ciImages"
+	//PolicyContextComplianceFunction         = "serverless"
+	//PolicyContextComplianceHost             = "host"
+	//PolicyContextComplianceVmImage          = "vms"
+	//PolicyContextVulnerabilityDeployedImage = "images"
+	//PolicyContextVulnerabilityCiImage       = "ciImages"
+	//PolicyContextVulnerabilityHost          = "host"
+	//PolicyContextVulnerabilityVmImage       = "vms"
+	PolicyContextImage            = "images"
+	PolicyContextContainer        = "container"
+	PolicyContextCiFunction       = "ciServerless"
+	PolicyContextCiImage          = "ciImages"
+	PolicyContextFunction         = "serverless"
+	PolicyContextHost             = "host"
+	PolicyContextVmImage          = "vms"
 	// Type
 	TypeCompliance    = "compliance"
 	TypeVulnerability = "vulnerability"
@@ -199,9 +215,17 @@ func getEndpointAndPolicyName(policyType string) (string, string, error) {
 	case "ciServerlessCompliance":
 		return CiFunctionComplianceEndpoint, "CI function", nil
 	case "containerVulnerability":
-		return DeployedImagesVulnerabilityEndpoint, "deployed images", nil
+		return DeployedImageVulnerabilityEndpoint, "deployed image", nil
 	case "ciImagesVulnerability":
-		return CiImagesVulnerabilityEndpoint, "CI images", nil
+		return CiImageVulnerabilityEndpoint, "CI image", nil
+	case "hostVulnerability":
+		return HostVulnerabilityEndpoint, "host", nil
+	case "vmVulnerability":
+		return VmImageVulnerabilityEndpoint, "VM image", nil
+	case "serverlessVulnerability":
+		return FunctionVulnerabilityEndpoint, "function", nil
+	case "ciServerlessVulnerability":
+		return CiFunctionVulnerabilityEndpoint, "CI function", nil
 	default:
 		return "", "", fmt.Errorf("invalid policy type specified")
 	}

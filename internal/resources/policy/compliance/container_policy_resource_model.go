@@ -28,7 +28,7 @@ func (r *ContainerCompliancePolicyResource) GetSchema(ctx context.Context) schem
         ctx,
         policyAPI.PolicyTypeComplianceContainer, 
         policyAPI.PolicyTypeComplianceContainerFormatted, 
-        policyAPI.PolicyContextComplianceContainer,
+        policyAPI.PolicyContextContainer,
         policyAPI.TypeCompliance,
     )
 }

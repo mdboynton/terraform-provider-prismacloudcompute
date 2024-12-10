@@ -28,7 +28,7 @@ func (r *FunctionCompliancePolicyResource) GetSchema(ctx context.Context) schema
         ctx,
         policyAPI.PolicyTypeComplianceFunction, 
         policyAPI.PolicyTypeComplianceFunctionFormatted, 
-        policyAPI.PolicyContextComplianceFunction,
+        policyAPI.PolicyContextFunction,
         policyAPI.TypeCompliance,
     )
 }
