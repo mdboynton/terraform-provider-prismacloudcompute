@@ -18,6 +18,7 @@ const (
     CiFunctionComplianceEndpoint  = "api/v1/policies/compliance/ci/serverless"
     // Vulnerabilities endpoints
 	DeployedImagesVulnerabilityEndpoint      = "api/v1/policies/vulnerability/images"
+	CiImagesVulnerabilityEndpoint            = "api/v1/policies/vulnerability/ci/images"
 )
 
 //func getEndpointAndPolicyName(policyType string) (string, string, error) {
