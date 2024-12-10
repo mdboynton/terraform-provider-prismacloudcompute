@@ -22,33 +22,35 @@ type PolicyResourceModel struct {
 func (m *PolicyResourceModel) SortRules(ctx context.Context, planRules *[]PolicyRuleResourceModel) {
     util.DLog(ctx, "Executing PolicyResourceModel.SortRules()")
 
-    if planRules == nil {
+    if m.Rules != nil && len(*m.Rules) > 0 {
+        if planRules == nil {
+            for i := 0; i < len(*m.Rules); i++ {
+                (*m.Rules)[i].Order = types.Int32Value(int32(i + 1))
+            }
+            return
+        }
+
+        ruleOrderMap := make(map[string]int32)
+        for index, planRule := range *planRules {
+            ruleOrderMap[planRule.Name.ValueString()] = int32(index)
+        }
+
+        slices.SortFunc(*m.Rules, func(a, b PolicyRuleResourceModel) int {
+            orderA, okA := ruleOrderMap[a.Name.ValueString()]
+            if !okA {
+                orderA = int32(len(ruleOrderMap) + 1)
+            }
+            orderB, okB := ruleOrderMap[b.Name.ValueString()]
+            if !okB {
+                orderB = int32(len(ruleOrderMap) + 1)
+            }
+            return cmp.Compare(orderA, orderB)
+        })
+
+
         for i := 0; i < len(*m.Rules); i++ {
-            (*m.Rules)[i].Order = types.Int32Value(int32(i + 1))
+            (*m.Rules)[i].Order = (*planRules)[i].Order
         }
-        return
-    }
-
-    ruleOrderMap := make(map[string]int32)
-    for index, planRule := range *planRules {
-        ruleOrderMap[planRule.Name.ValueString()] = int32(index)
-    }
-
-    slices.SortFunc(*m.Rules, func(a, b PolicyRuleResourceModel) int {
-        orderA, okA := ruleOrderMap[a.Name.ValueString()]
-        if !okA {
-            orderA = int32(len(ruleOrderMap) + 1)
-        }
-        orderB, okB := ruleOrderMap[b.Name.ValueString()]
-        if !okB {
-            orderB = int32(len(ruleOrderMap) + 1)
-        }
-        return cmp.Compare(orderA, orderB)
-    })
-
-
-    for i := 0; i < len(*m.Rules); i++ {
-        (*m.Rules)[i].Order = (*planRules)[i].Order
     }
     
     util.DLog(ctx, "Finishing PolicyResourceModel.SortRules() execution")

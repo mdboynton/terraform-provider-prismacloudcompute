@@ -22,6 +22,11 @@ const (
 	PolicyTypeComplianceFunction      = "serverlessCompliance"
 	PolicyTypeComplianceCiFunction    = "ciServerlessCompliance"
 	PolicyTypeComplianceTrustedImages = "trust"
+	PolicyTypeVulnerabilityDeployedImage          = "containerVulnerability"
+	PolicyTypeVulnerabilityCiImage                = "ciImagesVulnerability"
+	PolicyTypeVulnerabilityHost                   = "hostVulnerability"
+	PolicyTypeRuntimeContainer                    = "containerRuntime"
+	PolicyTypeRuntimeHost                         = "hostRuntime"
 	// Policy Type Formatted
 	PolicyTypeComplianceCiImageFormatted          = "CI images compliance"
 	PolicyTypeComplianceContainerFormatted        = "container compliance"
@@ -29,12 +34,8 @@ const (
 	PolicyTypeComplianceVmImageFormatted          = "VM compliance"
 	PolicyTypeComplianceFunctionFormatted         = "serverless compliance"
 	PolicyTypeComplianceCiFunctionFormatted       = "CI serverless compliance"
-	PolicyTypeRuntimeContainer                    = "containerRuntime"
-	PolicyTypeRuntimeHost                         = "hostRuntime"
-	PolicyTypeVulnerabilityCiImage                = "ciImagesVulnerability"
-	PolicyTypeVulnerabilityHost                   = "hostVulnerability"
-	PolicyTypeVulnerabilityDeployedImage          = "containerVulnerability"
 	PolicyTypeVulnerabilityDeployedImageFormatted = "deployed image vulnerability"
+	PolicyTypeVulnerabilityCiImageFormatted       = "CI image vulnerability"
 	// Policy Context
 	PolicyContextComplianceContainer        = "container"
 	PolicyContextComplianceCiFunction       = "ciServerless"
@@ -43,6 +44,7 @@ const (
 	PolicyContextComplianceHost             = "host"
 	PolicyContextComplianceVmImage          = "vms"
 	PolicyContextVulnerabilityDeployedImage = "images"
+	PolicyContextVulnerabilityCiImage = "ciImages"
 	// Type
 	TypeCompliance    = "compliance"
 	TypeVulnerability = "vulnerability"
@@ -198,6 +200,8 @@ func getEndpointAndPolicyName(policyType string) (string, string, error) {
 		return CiFunctionComplianceEndpoint, "CI function", nil
 	case "containerVulnerability":
 		return DeployedImagesVulnerabilityEndpoint, "deployed images", nil
+	case "ciImagesVulnerability":
+		return CiImagesVulnerabilityEndpoint, "CI images", nil
 	default:
 		return "", "", fmt.Errorf("invalid policy type specified")
 	}

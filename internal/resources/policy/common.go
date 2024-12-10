@@ -943,6 +943,8 @@ func getPolicyContextAndModuleType(policyType string) (basetypes.StringValue, ba
 		return types.StringValue(policyAPI.PolicyContextComplianceCiFunction), types.StringValue(policyAPI.TypeCompliance), diags
 	case policyAPI.PolicyTypeVulnerabilityDeployedImage:
 		return types.StringValue(policyAPI.PolicyContextVulnerabilityDeployedImage), types.StringValue(policyAPI.TypeVulnerability), diags
+	case policyAPI.PolicyTypeVulnerabilityCiImage:
+		return types.StringValue(policyAPI.PolicyContextVulnerabilityCiImage), types.StringValue(policyAPI.TypeVulnerability), diags
 	default:
 		diags.AddError(
 			"Value Conversion Error", // TODO: probably need a better error type here
@@ -1472,6 +1474,7 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
 		"ciServerlessCompliance": {"Containers", "Hosts", "Images", "AppIDs", "Namespaces", "AccountIDs", "Clusters"},
 		// "trust":  add rules for "trust" when implemented
 		"containerVulnerability": {"Functions"},
+		"ciImagesVulnerability": {"Containers", "Hosts", "AppIDs", "Functions", "Namespaces", "AccountIDs", "Clusters"},
 	}
 
 	// Retrieve the validation fields for the given policyType
@@ -1479,7 +1482,7 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
 	if !ok {
 		diags.AddError(
 			"Resource Validation Error",
-			fmt.Sprintf("Error during validation for rule \"%s\": Invalid policy type \"%s\"", ruleName, policyType),
+			fmt.Sprintf("While validating collections for policy rule \"%s\", encountered unknown policy type \"%s\"", ruleName, policyType),
 		)
 		return diags
 	}
