@@ -1,7 +1,7 @@
 package policy
 
 import (
-	//"fmt"
+	"fmt"
 	//"net/http"
 
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
@@ -9,16 +9,24 @@ import (
 )
 
 const (
+    BaseEndpoint                = "api/v1/policies"
+)
+
+var (
     // Compliance endpoints
-	HostComplianceEndpoint      = "api/v1/policies/compliance/host"
-	ContainerComplianceEndpoint = "api/v1/policies/compliance/container"
-	CiImageComplianceEndpoint   = "api/v1/policies/compliance/ci/images"
-	VmImageComplianceEndpoint   = "api/v1/policies/compliance/vms"
-    FunctionComplianceEndpoint  = "api/v1/policies/compliance/serverless"
-    CiFunctionComplianceEndpoint  = "api/v1/policies/compliance/ci/serverless"
+	HostComplianceEndpoint      = fmt.Sprintf("%s/compliance/host", BaseEndpoint)
+	ContainerComplianceEndpoint = fmt.Sprintf("%s/compliance/container", BaseEndpoint)
+	CiImageComplianceEndpoint   = fmt.Sprintf("%s/compliance/ci/images", BaseEndpoint)
+	VmImageComplianceEndpoint   = fmt.Sprintf("%s/compliance/vms", BaseEndpoint)
+    FunctionComplianceEndpoint  = fmt.Sprintf("%s/compliance/serverless", BaseEndpoint)
+    CiFunctionComplianceEndpoint  = fmt.Sprintf("%s/compliance/ci/serverless", BaseEndpoint)
     // Vulnerabilities endpoints
-	DeployedImagesVulnerabilityEndpoint      = "api/v1/policies/vulnerability/images"
-	CiImagesVulnerabilityEndpoint            = "api/v1/policies/vulnerability/ci/images"
+	DeployedImageVulnerabilityEndpoint      = fmt.Sprintf("%s/vulnerability/images", BaseEndpoint)
+	CiImageVulnerabilityEndpoint            = fmt.Sprintf("%s/vulnerability/ci/images", BaseEndpoint)
+	HostVulnerabilityEndpoint               = fmt.Sprintf("%s/vulnerability/host", BaseEndpoint)
+	VmImageVulnerabilityEndpoint            = fmt.Sprintf("%s/vulnerability/vms", BaseEndpoint)
+	FunctionVulnerabilityEndpoint           = fmt.Sprintf("%s/vulnerability/serverless", BaseEndpoint)
+	CiFunctionVulnerabilityEndpoint         = fmt.Sprintf("%s/vulnerability/ci/serverless", BaseEndpoint)
 )
 
 //func getEndpointAndPolicyName(policyType string) (string, string, error) {

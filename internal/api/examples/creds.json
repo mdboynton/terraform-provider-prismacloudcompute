@@ -1,6 +1,6 @@
 {
-	"console_url": "https://example.com:8083",
-	"username": "username",
-	"password": "password",
-	"skip_cert_verification": true
+    "console_url": "https://router.max-dev.gov.gss",
+    "username": "admin",
+    "password": "BSU8tX4bEUq1XdefFgzDbeR2",
+	"insecure": true
 }

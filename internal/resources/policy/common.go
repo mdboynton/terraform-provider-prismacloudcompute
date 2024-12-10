@@ -930,21 +930,29 @@ func getPolicyContextAndModuleType(policyType string) (basetypes.StringValue, ba
 
 	switch policyType {
 	case policyAPI.PolicyTypeComplianceContainer:
-		return types.StringValue(policyAPI.PolicyContextComplianceContainer), types.StringValue(policyAPI.TypeCompliance), diags
+		return types.StringValue(policyAPI.PolicyContextContainer), types.StringValue(policyAPI.TypeCompliance), diags
 	case policyAPI.PolicyTypeComplianceCiImage:
-		return types.StringValue(policyAPI.PolicyContextComplianceCiImage), types.StringValue(policyAPI.TypeCompliance), diags
+		return types.StringValue(policyAPI.PolicyContextCiImage), types.StringValue(policyAPI.TypeCompliance), diags
 	case policyAPI.PolicyTypeComplianceHost:
-		return types.StringValue(policyAPI.PolicyContextComplianceHost), types.StringValue(policyAPI.TypeCompliance), diags
+		return types.StringValue(policyAPI.PolicyContextHost), types.StringValue(policyAPI.TypeCompliance), diags
 	case policyAPI.PolicyTypeComplianceVmImage:
-		return types.StringValue(policyAPI.PolicyContextComplianceVmImage), types.StringValue(policyAPI.TypeCompliance), diags
+		return types.StringValue(policyAPI.PolicyContextVmImage), types.StringValue(policyAPI.TypeCompliance), diags
 	case policyAPI.PolicyTypeComplianceFunction:
-		return types.StringValue(policyAPI.PolicyContextComplianceFunction), types.StringValue(policyAPI.TypeCompliance), diags
+		return types.StringValue(policyAPI.PolicyContextFunction), types.StringValue(policyAPI.TypeCompliance), diags
 	case policyAPI.PolicyTypeComplianceCiFunction:
-		return types.StringValue(policyAPI.PolicyContextComplianceCiFunction), types.StringValue(policyAPI.TypeCompliance), diags
+		return types.StringValue(policyAPI.PolicyContextCiFunction), types.StringValue(policyAPI.TypeCompliance), diags
 	case policyAPI.PolicyTypeVulnerabilityDeployedImage:
-		return types.StringValue(policyAPI.PolicyContextVulnerabilityDeployedImage), types.StringValue(policyAPI.TypeVulnerability), diags
+		return types.StringValue(policyAPI.PolicyContextImage), types.StringValue(policyAPI.TypeVulnerability), diags
 	case policyAPI.PolicyTypeVulnerabilityCiImage:
-		return types.StringValue(policyAPI.PolicyContextVulnerabilityCiImage), types.StringValue(policyAPI.TypeVulnerability), diags
+		return types.StringValue(policyAPI.PolicyContextCiImage), types.StringValue(policyAPI.TypeVulnerability), diags
+	case policyAPI.PolicyTypeVulnerabilityHost:
+		return types.StringValue(policyAPI.PolicyContextHost), types.StringValue(policyAPI.TypeVulnerability), diags
+	case policyAPI.PolicyTypeVulnerabilityVmImage:
+		return types.StringValue(policyAPI.PolicyContextVmImage), types.StringValue(policyAPI.TypeVulnerability), diags
+	case policyAPI.PolicyTypeVulnerabilityFunction:
+		return types.StringValue(policyAPI.PolicyContextFunction), types.StringValue(policyAPI.TypeVulnerability), diags
+	case policyAPI.PolicyTypeVulnerabilityCiFunction:
+		return types.StringValue(policyAPI.PolicyContextCiFunction), types.StringValue(policyAPI.TypeVulnerability), diags
 	default:
 		diags.AddError(
 			"Value Conversion Error", // TODO: probably need a better error type here
@@ -1473,8 +1481,12 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
 		"serverlessCompliance":   {"Containers", "Hosts", "Images", "AppIDs", "Namespaces", "Clusters"},
 		"ciServerlessCompliance": {"Containers", "Hosts", "Images", "AppIDs", "Namespaces", "AccountIDs", "Clusters"},
 		// "trust":  add rules for "trust" when implemented
-		"containerVulnerability": {"Functions"},
-		"ciImagesVulnerability": {"Containers", "Hosts", "AppIDs", "Functions", "Namespaces", "AccountIDs", "Clusters"},
+		"containerVulnerability":    {"Functions"},
+		"ciImagesVulnerability":     {"Containers", "Hosts", "AppIDs", "Functions", "Namespaces", "AccountIDs", "Clusters"},
+		"hostVulnerability":         {"Containers", "Images", "AppIDs", "Functions", "Namespaces"},
+		"vmVulnerability":           {"Containers", "Hosts", "AppIDs", "Functions", "Namespaces", "Clusters"},
+		"serverlessVulnerability":   {"Containers", "Hosts", "Images", "AppIDs", "Namespaces", "Clusters"},
+		"ciServerlessVulnerability": {"Containers", "Hosts", "Images", "AppIDs", "Namespaces", "AccountIDs", "Clusters"},
 	}
 
 	// Retrieve the validation fields for the given policyType
