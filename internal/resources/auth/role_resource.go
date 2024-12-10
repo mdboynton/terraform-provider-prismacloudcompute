@@ -6,6 +6,7 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/auth"
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/auth"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
     "github.com/hashicorp/terraform-plugin-framework/diag"
@@ -44,7 +45,7 @@ func (r *RoleResource) Configure(ctx context.Context, req resource.ConfigureRequ
 
 func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // Retrieve values from plan
-    var plan RoleResourceModel
+    var plan models.RoleResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -93,7 +94,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
     // Get current state
-    var state RoleResourceModel
+    var state models.RoleResourceModel
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -127,7 +128,7 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Retrieve values from plan
-    var plan RoleResourceModel
+    var plan models.RoleResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -185,7 +186,7 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 func (r *RoleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
-	var state RoleResourceModel
+	var state models.RoleResourceModel
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -211,7 +212,7 @@ func (r *RoleResource) ImportState(ctx context.Context, req resource.ImportState
 func (r *RoleResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "entering ModifyPlan")
     
-    //var plan *RoleResourceModel
+    //var plan *models.RoleResourceModel
     //diags := req.Plan.Get(ctx, &plan)
     //resp.Diagnostics.Append(diags...)
     //if resp.Diagnostics.HasError() {
@@ -223,7 +224,7 @@ func (r *RoleResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
     //}
 
     ////if plan.Permissions == nil {
-    ////    resp.Plan.SetAttribute(ctx, path.Root("permissions"), &[]RolePermissionResourceModel{})
+    ////    resp.Plan.SetAttribute(ctx, path.Root("permissions"), &[]models.RolePermissionResourceModel{})
     ////}
     
     //userPermissionExists := false
@@ -235,7 +236,7 @@ func (r *RoleResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
     //}
 
     //if !userPermissionExists {
-    //    *plan.Permissions = append(*plan.Permissions, RolePermissionResourceModel{
+    //    *plan.Permissions = append(*plan.Permissions, models.RolePermissionResourceModel{
     //        Name: types.StringValue("user"),
     //        ReadWrite: types.BoolValue(true),
     //    })
@@ -348,7 +349,7 @@ func getRoleToSchemaPermissionsMap() map[string]string {
     }
 }
 
-func schemaToRole(ctx context.Context, plan *RoleResourceModel, permissionsMap map[string]string) (auth.Role, diag.Diagnostics) {
+func schemaToRole(ctx context.Context, plan *models.RoleResourceModel, permissionsMap map[string]string) (auth.Role, diag.Diagnostics) {
     util.DLog(ctx, "entering schemaToRole")
 
     var diags diag.Diagnostics
@@ -360,7 +361,7 @@ func schemaToRole(ctx context.Context, plan *RoleResourceModel, permissionsMap m
     }
 
     permissions := []auth.RolePermission{
-        auth.RolePermission{
+        {
             Name: "user",
             ReadWrite: true,
         },
@@ -388,18 +389,18 @@ func schemaToRole(ctx context.Context, plan *RoleResourceModel, permissionsMap m
     return role, diags 
 }
 
-func roleToSchema(ctx context.Context, role auth.Role, permissionsMap map[string]string) (RoleResourceModel, diag.Diagnostics) {
+func roleToSchema(ctx context.Context, role auth.Role, permissionsMap map[string]string) (models.RoleResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "entering roleToSchema")
 
     var diags diag.Diagnostics
 
-    schema := RoleResourceModel{
+    schema := models.RoleResourceModel{
         Name: types.StringValue(role.Name),
         Description: types.StringValue(role.Description),
         System: types.BoolValue(role.System),
     }
 
-    permissions := []RolePermissionResourceModel{}
+    permissions := []models.RolePermissionResourceModel{}
 
     for _, schemaPermission := range role.Permissions {
         schemaPermissionName := schemaPermission.Name
@@ -409,7 +410,7 @@ func roleToSchema(ctx context.Context, role auth.Role, permissionsMap map[string
         }
 
         if permissionName, ok := permissionsMap[schemaPermissionName]; ok {
-            permission := RolePermissionResourceModel {
+            permission := models.RolePermissionResourceModel {
                 Name: types.StringValue(permissionName),
                 ReadWrite: types.BoolValue(schemaPermission.ReadWrite),
             }

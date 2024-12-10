@@ -6,6 +6,7 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/auth"
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/auth"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
     "github.com/hashicorp/terraform-plugin-framework/diag"
@@ -44,7 +45,7 @@ func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequ
 
 func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
     // Retrieve values from plan
-    var plan UserResourceModel
+    var plan models.UserResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -100,7 +101,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
     // Get current state
-    var state UserResourceModel
+    var state models.UserResourceModel
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -134,7 +135,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Retrieve values from plan
-    var plan UserResourceModel
+    var plan models.UserResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -192,7 +193,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
-	var state UserResourceModel
+	var state models.UserResourceModel
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -216,7 +217,7 @@ func (r *UserResource) ImportState(ctx context.Context, req resource.ImportState
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func schemaToUser(ctx context.Context, plan *UserResourceModel) (auth.User, diag.Diagnostics) {
+func schemaToUser(ctx context.Context, plan *models.UserResourceModel) (auth.User, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     user := auth.User{
@@ -245,10 +246,10 @@ func schemaToUser(ctx context.Context, plan *UserResourceModel) (auth.User, diag
 	return user, diags 
 }
 
-func userToSchema(ctx context.Context, user auth.User, plan UserResourceModel) (UserResourceModel, diag.Diagnostics) {
+func userToSchema(ctx context.Context, user auth.User, plan models.UserResourceModel) (models.UserResourceModel, diag.Diagnostics) {
     var diags diag.Diagnostics
 
-    schema := UserResourceModel{
+    schema := models.UserResourceModel{
         AuthenticationType: types.StringValue(user.AuthType),
         Username: types.StringValue(user.Username),
         //Password: types.StringValue(user.Password),
@@ -258,14 +259,14 @@ func userToSchema(ctx context.Context, user auth.User, plan UserResourceModel) (
     util.DLog(ctx, fmt.Sprintf("userToSchema() user value:\n\n %+v", user))
 
     if user.Permissions != nil {
-        permissions := []UserPermissionsResourceModel{}
+        permissions := []models.UserPermissionsResourceModel{}
         for _, permissionsObject := range user.Permissions {
             collections, diags := types.ListValueFrom(ctx, types.StringType, permissionsObject.Collections)
             if diags.HasError() {
                 return schema, diags
             }
 
-            permissions = append(permissions, UserPermissionsResourceModel{
+            permissions = append(permissions, models.UserPermissionsResourceModel{
                 Project: types.StringValue(permissionsObject.Project),
                 Collections: collections,
             })
