@@ -13,6 +13,7 @@ import (
 
 var _ resource.Resource = &CollectionResource{}
 var _ resource.ResourceWithImportState = &CollectionResource{}
+//var _ resource.ResourceWithModifyPlan = &CollectionResource{}
 
 func NewCollectionResource() resource.Resource {
     return &CollectionResource{}

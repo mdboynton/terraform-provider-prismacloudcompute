@@ -7,8 +7,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 )
 
-const CustomComplianceChecksEndpoint = "api/v1/custom-compliance"
-
 type CustomComplianceCheck struct {
 	Id              int    `json:"_id,omitempty"`
     Owner           string `json:"owner,omitempty"`

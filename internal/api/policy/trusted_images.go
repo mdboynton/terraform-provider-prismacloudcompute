@@ -8,8 +8,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 )
 
-const TrustedImagesEndpoint = "api/v1/trust/data"
-
 type TrustedImages struct {
     Groups  []TrustGroup        `json:"groups" tfsdk:"groups"`
     Policy  TrustedImagesPolicy `json:"policy" tfsdk:"policy"`

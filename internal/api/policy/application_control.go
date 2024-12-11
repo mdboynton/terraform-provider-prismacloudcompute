@@ -7,12 +7,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 )
 
-const ApplicationControlEndpoint = "api/v1/application-control/host"
-
-//type ApplicationControlPolicy struct {
-//    Rules   
-//}
-
 type ApplicationControlPolicyRule struct {
     Id              int                                         `json:"_id"`
     Applications    []ApplicationControlPolicyRuleApplication   `json:"applications"` 
@@ -30,10 +24,6 @@ type ApplicationControlPolicyRuleApplication struct {
     Name            string      `json:"name" tfsdk:"name"`
     AllowedVersions [][]string  `json:"allowedVersions" tfsdk:"allowed_versions"` 
 }
-
-//type ApplicationControlPolicyRuleApplicationStruct struct {
-//    AllowedVersions kj
-//}
 
 // Create/Update application control policy rule
 func UpsertApplicationControlPolicyRule(c api.PrismaCloudComputeAPIClient, policyRule ApplicationControlPolicyRule) error {
