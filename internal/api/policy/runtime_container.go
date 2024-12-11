@@ -8,8 +8,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 )
 
-const RuntimeContainerEndpoint = "api/v1/policies/runtime/container"
-
 type RuntimeContainerPolicy struct {
 	LearningDisabled bool                   `json:"learningDisabled,omitempty"`
 	Rules            []RuntimeContainerRule `json:"rules,omitempty"`

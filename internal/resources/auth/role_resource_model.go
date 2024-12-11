@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	//"github.com/hashicorp/terraform-plugin-framework/types"
 	//"github.com/hashicorp/terraform-plugin-framework/attr"
 	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -27,18 +27,6 @@ func NewRoleResource() resource.Resource {
 
 type RoleResource struct {
     client *api.PrismaCloudComputeAPIClient
-}
-
-type RoleResourceModel struct {
-    Name            types.String                    `tfsdk:"name"`
-    Description     types.String                    `tfsdk:"description"`
-    System          types.Bool                      `tfsdk:"system"`
-    Permissions     *[]RolePermissionResourceModel `tfsdk:"permissions"`
-}
-
-type RolePermissionResourceModel struct {
-    Name        types.String    `tfsdk:"name"`
-    ReadWrite   types.Bool      `tfsdk:"read_write"`
 }
 
 func (r *RoleResource) GetSchema() schema.Schema {

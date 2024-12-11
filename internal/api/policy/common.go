@@ -44,16 +44,6 @@ const (
 	PolicyTypeVulnerabilityFunctionFormatted      = "serverless vulnerability"
 	PolicyTypeVulnerabilityCiFunctionFormatted    = "CI serverless vulnerability"
 	// Policy Context
-	//PolicyContextComplianceContainer        = "container"
-	//PolicyContextComplianceCiFunction       = "ciServerless"
-	//PolicyContextComplianceCiImage          = "ciImages"
-	//PolicyContextComplianceFunction         = "serverless"
-	//PolicyContextComplianceHost             = "host"
-	//PolicyContextComplianceVmImage          = "vms"
-	//PolicyContextVulnerabilityDeployedImage = "images"
-	//PolicyContextVulnerabilityCiImage       = "ciImages"
-	//PolicyContextVulnerabilityHost          = "host"
-	//PolicyContextVulnerabilityVmImage       = "vms"
 	PolicyContextImage            = "images"
 	PolicyContextContainer        = "container"
 	PolicyContextCiFunction       = "ciServerless"
@@ -64,6 +54,31 @@ const (
 	// Type
 	TypeCompliance    = "compliance"
 	TypeVulnerability = "vulnerability"
+
+    BaseEndpoint                = "api/v1"
+)
+
+var (
+    // Compliance endpoints
+	ContainerComplianceEndpoint = fmt.Sprintf("%s/policies/compliance/container", BaseEndpoint)
+	CiImageComplianceEndpoint   = fmt.Sprintf("%s/policies/compliance/ci/images", BaseEndpoint)
+	HostComplianceEndpoint      = fmt.Sprintf("%s/policies/compliance/host", BaseEndpoint)
+	VmImageComplianceEndpoint   = fmt.Sprintf("%s/policies/compliance/vms", BaseEndpoint)
+    ApplicationControlEndpoint = fmt.Sprintf("%s/application-control/host", BaseEndpoint)
+    FunctionComplianceEndpoint  = fmt.Sprintf("%s/policies/compliance/serverless", BaseEndpoint)
+    CiFunctionComplianceEndpoint  = fmt.Sprintf("%s/policies/compliance/ci/serverless", BaseEndpoint)
+    TrustedImagesEndpoint = fmt.Sprintf("%s/trust/data", BaseEndpoint)
+    CustomComplianceChecksEndpoint = fmt.Sprintf("%s/custom-compliance", BaseEndpoint)
+    // Vulnerabilities endpoints
+	DeployedImageVulnerabilityEndpoint      = fmt.Sprintf("%s/policies/policies/vulnerability/images", BaseEndpoint)
+	CiImageVulnerabilityEndpoint            = fmt.Sprintf("%s/policies/policies/vulnerability/ci/images", BaseEndpoint)
+	HostVulnerabilityEndpoint               = fmt.Sprintf("%s/policies/vulnerability/host", BaseEndpoint)
+	VmImageVulnerabilityEndpoint            = fmt.Sprintf("%s/policies/vulnerability/vms", BaseEndpoint)
+	FunctionVulnerabilityEndpoint           = fmt.Sprintf("%s/policies/vulnerability/serverless", BaseEndpoint)
+	CiFunctionVulnerabilityEndpoint         = fmt.Sprintf("%s/policies/vulnerability/ci/serverless", BaseEndpoint)
+    // Runtime endpoints
+    RuntimeContainerEndpoint = fmt.Sprintf("%s/policies/runtime/container", BaseEndpoint)
+    RuntimeHostEndpoint = fmt.Sprintf("%s/policies/runtime/host", BaseEndpoint)
 )
 
 type Policy struct {

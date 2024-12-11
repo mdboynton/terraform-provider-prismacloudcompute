@@ -5,8 +5,10 @@ import (
     "fmt"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+    models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/system"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
+
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
     "github.com/hashicorp/terraform-plugin-framework/attr"
@@ -45,9 +47,9 @@ func (r *CollectionResource) Configure(ctx context.Context, req resource.Configu
 
 
 func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    util.DLog(ctx, "retrieving plan and serializing into CollectionResourceModel")
+    util.DLog(ctx, "retrieving plan and serializing into models.CollectionResourceModel")
     // Retrieve values from plan
-    var plan CollectionResourceModel
+    var plan models.CollectionResourceModel
     diags := req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -94,7 +96,7 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
 
 func (r *CollectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
     // Get current state
-    var state CollectionResourceModel 
+    var state models.CollectionResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -128,7 +130,7 @@ func (r *CollectionResource) Read(ctx context.Context, req resource.ReadRequest,
 
 func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
     // Get current state
-    var state CollectionResourceModel 
+    var state models.CollectionResourceModel 
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -136,7 +138,7 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
     }
 
     // Retrieve values from plan
-    var plan CollectionResourceModel
+    var plan models.CollectionResourceModel
     diags = req.Plan.Get(ctx, &plan)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -183,7 +185,7 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
 
 func (r *CollectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
     // Retrieve values from state
-	var state CollectionResourceModel
+	var state models.CollectionResourceModel
     diags := req.State.Get(ctx, &state)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
@@ -211,7 +213,7 @@ func GetAllCollectionSet() basetypes.SetValue {
     return types.SetValueMust(types.StringType, []attr.Value{ types.StringValue("All") })
 }
 
-func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {
+func schemaToCollection(ctx context.Context, plan *models.CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     collection := collectionAPI.Collection{
@@ -290,10 +292,10 @@ func schemaToCollection(ctx context.Context, plan *CollectionResourceModel) (col
 	return collection, diags 
 }
 
-func collectionToSchema(ctx context.Context, collection collectionAPI.Collection) (CollectionResourceModel, diag.Diagnostics) {
+func collectionToSchema(ctx context.Context, collection collectionAPI.Collection) (models.CollectionResourceModel, diag.Diagnostics) {
     var diags diag.Diagnostics
 
-    schema := CollectionResourceModel{
+    schema := models.CollectionResourceModel{
         Color: types.StringValue(collection.Color),
         Description: types.StringValue(collection.Description),
         //Modified: types.StringValue(collection.Modified),

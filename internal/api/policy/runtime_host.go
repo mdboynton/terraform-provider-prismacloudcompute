@@ -8,8 +8,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 )
 
-const RuntimeHostEndpoint = "api/v1/policies/runtime/host"
-
 type RuntimeHostPolicy struct {
 	Rules []RuntimeHostRule `json:"rules,omitempty"`
 }
