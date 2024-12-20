@@ -20,17 +20,12 @@ func (r *ContainerCompliancePolicyResource) Metadata(ctx context.Context, req re
 }
 
 func (r *ContainerCompliancePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+    util.DLog(ctx, "ContainerCompliancePolicyResource.Schema() called")
     resp.Schema = r.GetSchema(ctx)
-    //resp.Schema = policy.GetPolicySchema(
-    //    ctx,
-    //    policyAPI.PolicyTypeComplianceContainer, 
-    //    policyAPI.PolicyTypeComplianceContainerFormatted, 
-    //    policyAPI.PolicyContextComplianceContainer,
-    //    policyAPI.TypeCompliance,
-    //)
 }
 
 func (r *ContainerCompliancePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+    util.DLog(ctx, "ContainerCompliancePolicyResource.Configure() called")
     if req.ProviderData == nil {
         return
     }

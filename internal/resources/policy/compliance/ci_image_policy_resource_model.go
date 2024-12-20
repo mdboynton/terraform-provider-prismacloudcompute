@@ -5,7 +5,7 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
-	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,11 +24,13 @@ type CiImageCompliancePolicyResource struct {
 }
 
 func (r *CiImageCompliancePolicyResource) GetSchema(ctx context.Context) schema.Schema {
-    return models.GetPolicySchema(
+    policySchema, _ := policy.GetPolicySchema(
         ctx,
         policyAPI.PolicyTypeComplianceCiImage, 
         policyAPI.PolicyTypeComplianceCiImageFormatted, 
         policyAPI.PolicyContextCiImage,
         policyAPI.TypeCompliance,
     )
+
+    return policySchema
 }
