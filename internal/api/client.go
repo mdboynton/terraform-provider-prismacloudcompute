@@ -48,19 +48,6 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.JWT))
 	req.Header.Set("Content-Type", "application/json")
 
-	// TODO: simplify logic
-    //if c.Config.Project != "" {
-	//	queryParams := req.URL.Query()
-	//	//queryParams.Set("project", c.Config.Project)
-	//	if query != nil {
-	//		if queryMap, ok := query.(map[string]string); ok {
-	//			for key, val := range queryMap {
-	//				queryParams.Add(key, val)
-	//			}
-	//		}
-	//	}
-	//	req.URL.RawQuery = queryParams.Encode()
-	//} else if query != nil {
     if query != nil {
 		queryParams := req.URL.Query()
 		if queryMap, ok := query.(map[string]string); ok {
@@ -110,13 +97,6 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		if err = json.Unmarshal(body, response); err != nil {
 			return err
 		}
-        
-        //if endpoint != "/api/v1/authenticate" && endpoint != "api/v1/static/vulnerabilities" {
-        //    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-        //    fmt.Println("recieved response from endpoint: ")
-        //    fmt.Printf("%+v\n", response)
-        //    fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&")
-        //}
 	}
 
 	return nil
@@ -125,7 +105,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
 	res := AuthResponse{}
 	if err := c.Request(http.MethodPost, "api/v1/authenticate", nil, AuthRequest{*c.Config.Username, *c.Config.Password}, &res); err != nil {
-		return fmt.Errorf("error POSTing to authenticate endpoint: %v", err)
+		return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: %v", err)
 	}
 	c.JWT = res.Token
 

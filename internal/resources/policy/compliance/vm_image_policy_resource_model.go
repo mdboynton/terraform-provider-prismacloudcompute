@@ -24,11 +24,13 @@ type VmImageCompliancePolicyResource struct {
 }
 
 func (r *VmImageCompliancePolicyResource) GetSchema(ctx context.Context) schema.Schema {
-    return policy.GetPolicySchema(
+    policySchema, _ := policy.GetPolicySchema(
         ctx,
         policyAPI.PolicyTypeComplianceVmImage, 
         policyAPI.PolicyTypeComplianceVmImageFormatted, 
         policyAPI.PolicyContextVmImage,
         policyAPI.TypeCompliance,
     )
+
+    return policySchema
 }

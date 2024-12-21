@@ -24,11 +24,13 @@ type FunctionCompliancePolicyResource struct {
 }
 
 func (r *FunctionCompliancePolicyResource) GetSchema(ctx context.Context) schema.Schema {
-    return policy.GetPolicySchema(
+    policySchema, _ := policy.GetPolicySchema(
         ctx,
         policyAPI.PolicyTypeComplianceFunction, 
         policyAPI.PolicyTypeComplianceFunctionFormatted, 
         policyAPI.PolicyContextFunction,
         policyAPI.TypeCompliance,
     )
+
+    return policySchema
 }

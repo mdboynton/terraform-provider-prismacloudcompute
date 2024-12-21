@@ -13,6 +13,7 @@ import (
 	compliance "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/compliance"
 	vulnerability "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/vulnerability"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -117,6 +118,7 @@ func (p *PrismaCloudComputeProvider) DataSources(ctx context.Context) []func() d
 
 func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	tflog.Debug(ctx, "Provider configure start")
+	util.DLog(ctx, "Provider configure start")
 
 	var config api.PrismaCloudComputeAPIClientConfig
 	diags := req.Config.Get(ctx, &config)
@@ -142,6 +144,7 @@ func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider
 	}
 
 	tflog.Debug(ctx, "Provider initialized API client")
+	util.DLog(ctx, "Provider initialized API client")
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
