@@ -6,6 +6,8 @@ import (
     "sort"
     "strconv"
 
+    "github.com/hashicorp/terraform-plugin-framework/diag"
+
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 )
 
@@ -55,12 +57,16 @@ func GetVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulnerabilities, err
 	return vulns, nil
 }
 
-func GetComplianceVulnerabilitiesMap(c api.PrismaCloudComputeAPIClient) (map[string][]Vulnerability, error) {
+//func GetComplianceVulnerabilitiesMap(c api.PrismaCloudComputeAPIClient) (map[string][]Vulnerability, error) {
+func GetComplianceVulnerabilitiesMap(c api.PrismaCloudComputeAPIClient) (map[string][]Vulnerability, diag.Diagnostics) {
+    var diags diag.Diagnostics
+
     vulnsMap := make(map[string][]Vulnerability)
 
     vulns, err := GetVulnerabilities(c)
     if err != nil {
-        return vulnsMap, err
+        diags.AddError("API Request Error", fmt.Sprintf("Error occured while retrieving vulnerabilites from Prisma Cloud API: %s", err.Error()))
+        return vulnsMap, diags
     }
 
     for _, vuln := range vulns.ComplianceVulnerabilities {
@@ -71,16 +77,48 @@ func GetComplianceVulnerabilitiesMap(c api.PrismaCloudComputeAPIClient) (map[str
         }
     }
     
-    return vulnsMap, nil
+    return vulnsMap, diags 
 }
 
-func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType string) ([]Vulnerability, error) {
-    var complianceVulns []Vulnerability
-    var vulnTypes []string
+func GetComplianceVulnerabilitiesByPolicyType(c api.PrismaCloudComputeAPIClient, policyTypeFilter func (Vulnerability) bool) ([]Vulnerability, diag.Diagnostics) {
+    var diags diag.Diagnostics
 
-    vulnsMap, err := GetComplianceVulnerabilitiesMap(c)
+    vulnerabilities, err := GetVulnerabilities(c)
     if err != nil {
-		return complianceVulns, fmt.Errorf("error getting compliance vulnerabilities: %s", err)
+        diags.AddError("API Request Error", fmt.Sprintf("Error occured while retrieving vulnerabilites from Prisma Cloud API: %s", err.Error()))
+        return []Vulnerability{}, diags
+    }
+
+    filteredComplianceVulnerabilities := []Vulnerability{}
+    
+    for _, complianceVulnerability := range vulnerabilities.ComplianceVulnerabilities {
+        if policyTypeFilter(complianceVulnerability) {
+            filteredComplianceVulnerabilities = append(filteredComplianceVulnerabilities, complianceVulnerability)
+        }
+    }
+    
+    sort.Slice(filteredComplianceVulnerabilities, func(i, j int) bool {
+        val1 := strconv.Itoa(filteredComplianceVulnerabilities[i].Id)
+        val2 := strconv.Itoa(filteredComplianceVulnerabilities[j].Id)
+        return val1 < val2
+    })
+
+    return filteredComplianceVulnerabilities, diags
+}
+
+//func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType string) (*[]Vulnerability, error) {
+func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType string) (*[]Vulnerability, diag.Diagnostics) {
+    // TODO: clean up conditional logic here
+
+    var (
+        diags diag.Diagnostics
+        complianceVulns []Vulnerability
+        vulnTypes []string
+    )
+
+    vulnsMap, diags := GetComplianceVulnerabilitiesMap(c)
+    if diags.HasError() {
+		return &complianceVulns, diags
     }
 
     switch policyType {
@@ -97,7 +135,8 @@ func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType 
         case "ciServerlessCompliance":
             vulnTypes = []string{"serverless"}
         default:
-            return complianceVulns, fmt.Errorf("invalid compliance policy type supplied: \"%s\"", policyType)
+            diags.AddError("Value Error", fmt.Sprintf("Invalid compliance policy type specified: %s", policyType))
+            return &complianceVulns, diags
     }
 
     if policyType == "ciImagesCompliance" {
@@ -119,7 +158,7 @@ func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType 
         return val1 < val2
     })
 
-    return complianceVulns, nil
+    return &complianceVulns, diags 
 }
 
 func GetHighOrCriticalVulnerabilities(complianceVulnerabilities []Vulnerability) []Vulnerability {
@@ -153,7 +192,7 @@ func getHostComplianceVulnTypes() []string {
 func getContainerComplianceVulnTypes() []string {
     return []string{
         "container", 
-        "istio", 
+        //"istio", 
         "image",
     }
 }
