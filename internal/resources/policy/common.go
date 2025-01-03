@@ -1,44 +1,48 @@
 package policy
 
 import (
-    "context"
-    "fmt"
-    "errors"
-    "sort"
-    //"slices"
-    "strings"
-    //"cmp"
-    "time"
+	"context"
+	"errors"
+	"fmt"
+	"slices"
+	"sort"
+	"strings"
 
-    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-    //models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
-    collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
-    policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
-    systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
-    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
-    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
-    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
-    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
+	//"cmp"
+	"time"
 
-    "github.com/hashicorp/terraform-plugin-framework/attr"
-    "github.com/hashicorp/terraform-plugin-framework/diag"
-    "github.com/hashicorp/terraform-plugin-framework/path"
-    "github.com/hashicorp/terraform-plugin-framework/resource"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-    //"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-    "github.com/hashicorp/terraform-plugin-framework/tfsdk"
-    "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	//models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
+	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
+	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
+	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
 
-    //"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
-    //"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
-    "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-    "github.com/hashicorp/terraform-plugin-framework/schema/validator"
-    "github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	//"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+
+	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted string, policyContext string, metaType string) (schema.Schema, diag.Diagnostics) {
@@ -111,21 +115,6 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
                             MarkdownDescription: "TODO",
                             Optional:            true,
                             Computed:            true,
-                            //Default: objectdefault.StaticValue(
-                            //    types.ObjectValueMust(
-                            //        map[string]attr.Type{
-                            //            "threshold": types.StringType,
-                            //            "risk_factors": types.SetType{ ElemType: types.StringType },
-                            //        },
-                            //        map[string]attr.Value{
-                            //            "threshold": types.StringValue("off"),
-                            //            "risk_factors": types.SetValueMust(
-                            //                types.StringType,
-                            //                []attr.Value{},
-                            //            ),
-                            //        },
-                            //    ),
-                            //),
                             PlanModifiers: []planmodifier.Object{
                                 planmodifiers.SetThresholdByModuleType(metaType),
                             },
@@ -150,21 +139,6 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
                             MarkdownDescription: "TODO",
                             Optional:            true,
                             Computed:            true,
-                            //Default: objectdefault.StaticValue(
-                            //    types.ObjectValueMust(
-                            //        map[string]attr.Type{
-                            //            "threshold": types.StringType,
-                            //            "risk_factors": types.SetType{ ElemType: types.StringType },
-                            //        },
-                            //        map[string]attr.Value{
-                            //            "threshold": types.StringValue("off"),
-                            //            "risk_factors": types.SetValueMust(
-                            //                types.StringType,
-                            //                []attr.Value{},
-                            //            ),
-                            //        },
-                            //    ),
-                            //),
                             PlanModifiers: []planmodifier.Object{
                                 planmodifiers.SetThresholdByModuleType(metaType),
                             },
@@ -218,62 +192,41 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
                                 planmodifiers.UseEmptySetForUnknown(),
                             },
                         },
-                        "condition": schema.SingleNestedAttribute{
+                        "compliance_actions": schema.SingleNestedAttribute{
                             MarkdownDescription: "TODO",
                             Optional:            true,
-                            Computed:            true,
                             Attributes: map[string]schema.Attribute{
-                                "vulnerabilities": schema.ListNestedAttribute{
+                                "template": schema.StringAttribute{
                                     MarkdownDescription: "TODO",
                                     Optional:            true,
-                                    Computed:            true,
+                                },
+                                "types": schema.SetAttribute{
+                                    MarkdownDescription: "TODO",
+                                    Optional:            true,
+                                    ElementType: types.StringType,
+                                },
+                                "severities": schema.SetAttribute{
+                                    MarkdownDescription: "TODO",
+                                    Optional:            true,
+                                    ElementType: types.StringType,
+                                },
+                                "checks": schema.SetNestedAttribute{
+                                    MarkdownDescription: "TODO",
+                                    Optional:            true,
                                     NestedObject: schema.NestedAttributeObject{
                                         Attributes: map[string]schema.Attribute{
                                             "id": schema.Int32Attribute{
                                                 MarkdownDescription: "TODO",
                                                 Optional:            true,
-                                                Computed:            true,
                                             },
-                                            "block": schema.BoolAttribute{
+                                            "action": schema.StringAttribute{
+                                                // TODO: add validator
                                                 MarkdownDescription: "TODO",
                                                 Optional:            true,
-                                                Computed:            true,
                                             },
                                         },
                                     },
                                 },
-                            },
-                            //Validators: []validator.Object{
-                            //    validators.ConditionIsSupported(policyType),
-                            //},
-                            //Default: objectdefault.StaticValue(
-                            //    types.ObjectValueMust(
-                            //        map[string]attr.Type{
-                            //            "vulnerabilities": types.ListType{
-                            //                ElemType: types.ObjectType{
-                            //                    AttrTypes: map[string]attr.Type{
-                            //                        "id":    types.Int32Type,
-                            //                        "block": types.BoolType,
-                            //                    },
-                            //                },
-                            //            },
-                            //        },
-                            //        map[string]attr.Value{
-                            //            "vulnerabilities": types.ListValueMust(
-                            //                types.ObjectType{
-                            //                    AttrTypes: map[string]attr.Type{
-                            //                        "id":    types.Int32Type,
-                            //                        "block": types.BoolType,
-                            //                    },
-                            //                },
-                            //                []attr.Value{},
-                            //            ),
-                            //        },
-                            //    ),
-                            //),
-                            PlanModifiers: []planmodifier.Object{
-                                planmodifiers.SetConditionNullIfUnsupported(policyType),
-                                //planmodifiers.UseDefaultForUnknownCondition(),
                             },
                         },
                         "cve_rules": schema.SetNestedAttribute{
@@ -287,27 +240,6 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
                             PlanModifiers: []planmodifier.Set{
                                 planmodifiers.SetExceptionsNullIfUnsupported(policyType),
                             },
-                            //Computed: true,
-                            //Default: setdefault.StaticValue(
-                            //    types.SetValueMust(
-                            //        types.ObjectType{
-                            //            AttrTypes: map[string]attr.Type{
-                            //                "name": types.StringType,
-                            //                "effect": types.StringType,
-                            //                "id": types.StringType,
-                            //                "description": types.StringType,
-                            //                "type": types.StringType,
-                            //                "expiration": types.ObjectType{
-                            //                    AttrTypes: map[string]attr.Type{
-                            //                        "enabled": types.BoolType,
-                            //                        "date": types.StringType,
-                            //                    },
-                            //                },
-                            //            },
-                            //        },
-                            //        []attr.Value{},
-                            //    ),
-                            //),
                             NestedObject: schema.NestedAttributeObject{
                                 Attributes: map[string]schema.Attribute{
                                     //"name": schema.StringAttribute{
@@ -615,11 +547,22 @@ func PolicySchemaToTerraform(ctx context.Context, plan *models.PolicyResourceMod
 
     var (
         diags diag.Diagnostics
+        settings policyAPI.Settings
         rules []policyAPI.PolicyRule
     )
 
+    if plan.PolicyType.IsNull() || plan.PolicyType.IsUnknown() {
+        diags.AddError(
+            "Value Conversion Error",
+            "Encountered null or unknown policy type when converting policy schema to Terraform",
+        )
+        return policyAPI.Policy{}, diags
+    }
+
+    settings = policyAPI.SettingsMap[plan.PolicyType.ValueString()] 
+
     if plan.Rules != nil {
-        rules, diags = PolicyRulesSchemaToTerraform(ctx, plan.Type.ValueString(), *plan.Rules, client)
+        rules, diags = PolicyRulesSchemaToTerraform(ctx, settings, *plan.Rules, client)
         if diags.HasError() {
             return policyAPI.Policy{}, diags
         }
@@ -642,10 +585,17 @@ func PolicySchemaToTerraform(ctx context.Context, plan *models.PolicyResourceMod
     return tfPolicy, diags
 }
 
-func PolicyRulesSchemaToTerraform(ctx context.Context, moduleType string, schemaRules []models.PolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient) ([]policyAPI.PolicyRule, diag.Diagnostics) {
+func PolicyRulesSchemaToTerraform(ctx context.Context, settings policyAPI.Settings, schemaRules []models.PolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient) ([]policyAPI.PolicyRule, diag.Diagnostics) {
     util.DLog(ctx, "Executing PolicyRulesSchemaToTerraform")
 
-    var diags diag.Diagnostics
+    var (
+        diags diag.Diagnostics
+        complianceVulnerabilities []systemAPI.Vulnerability = []systemAPI.Vulnerability{} 
+    )
+    
+    if settings.Module == "compliance" {
+        complianceVulnerabilities, diags = systemAPI.GetComplianceVulnerabilitiesByPolicyType(*client, settings.IsApplicableVuln)
+    }
 
     rules := []policyAPI.PolicyRule{}
 
@@ -687,7 +637,7 @@ func PolicyRulesSchemaToTerraform(ctx context.Context, moduleType string, schema
         tags := []policyAPI.Exception{}
         riskFactorsEffects := []policyAPI.RiskFactorsEffect{}
 
-        if moduleType == "vulnerability" {
+        if settings.Module == "vulnerability" {
             tfAlertThreshold, tfAlertRiskFactorsEffects, diags := alertThresholdSchemaToTerraform(ctx, schemaRule.AlertThreshold)
             if diags.HasError() {
                 return rules, diags
@@ -703,13 +653,13 @@ func PolicyRulesSchemaToTerraform(ctx context.Context, moduleType string, schema
             riskFactorsEffects = append(riskFactorsEffects, tfBlockRiskFactorsEffects...)
         }
 
-        if schemaRule.Condition != nil {
-            condition, diags = conditionToTerraform(ctx, schemaRule.Condition)
+        if schemaRule.ComplianceActions != nil {
+            condition, diags = schemaToCondition(ctx, &complianceVulnerabilities, schemaRule.ComplianceActions, schemaRule.Effect.ValueString())
             if diags.HasError() {
                 return rules, diags
             }
         }
-
+        
         if schemaRule.GraceDaysPolicy != nil {
             graceDaysPolicy, diags = graceDaysPolicyToTerraform(ctx, *schemaRule.GraceDaysPolicy)
             if diags.HasError() {
@@ -776,18 +726,14 @@ func PolicyTerraformToSchema(ctx context.Context, policy policyAPI.Policy, plan 
     var diags diag.Diagnostics
 
     var (
+        settings      policyAPI.Settings
         rules         []models.PolicyRuleResourceModel
-        policyContext basetypes.StringValue
-        moduleType    basetypes.StringValue
     )
-
-    policyContext, moduleType, diags = getPolicyContextAndModuleType(policy.PolicyType)
-    if diags.HasError() {
-        return models.PolicyResourceModel{}, diags
-    }
+    
+    settings = policyAPI.SettingsMap[policy.PolicyType] 
 
     if policy.Rules != nil {
-        rules, diags = PolicyRulesTerraformToSchema(ctx, moduleType.ValueString(), *policy.Rules, plan.Rules)
+        rules, diags = PolicyRulesTerraformToSchema(ctx, settings.Module, *policy.Rules, plan.Rules)
         if diags.HasError() {
             return models.PolicyResourceModel{}, diags
         }
@@ -798,9 +744,9 @@ func PolicyTerraformToSchema(ctx context.Context, policy policyAPI.Policy, plan 
     schema := models.PolicyResourceModel{
         Id:            types.StringValue(policy.Id),
         PolicyType:    types.StringValue(policy.PolicyType),
-        PolicyContext: policyContext,
+        PolicyContext: types.StringValue(settings.Context),
+        Type:          types.StringValue(settings.Module),
         Rules:         &rules,
-        Type:          moduleType,
     }
 
     schema.SortRules(ctx, plan.Rules)
@@ -822,8 +768,22 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
     }
 
     for _, rule := range rules {
+        var (
+            planRule models.PolicyRuleResourceModel
+            alertThreshold *models.PolicyRuleThresholdResourceModel
+            blockThreshold *models.PolicyRuleThresholdResourceModel
+            complianceActions *models.PolicyRuleComplianceActionsResourceModel
+            reportAllPassedAndFailedChecks basetypes.BoolValue
+            onlyFixed basetypes.BoolValue
+            notes basetypes.StringValue
+            graceDays basetypes.Int32Value
+            excludeBaseImageVulns basetypes.BoolValue
+            pkgTypesThresholds *[]models.PolicyRulePkgTypesThresholdResourceModel
+            graceDaysPolicy *models.PolicyRuleGraceDaysPolicyResourceModel
+            blockMessage basetypes.StringValue
+        )
+
         // Find the matching plan rule
-        var planRule models.PolicyRuleResourceModel
         for idx, pRule := range *planRules {
             if pRule.Name.ValueString() == rule.Name {
                 planRule = (*planRules)[idx]
@@ -841,11 +801,6 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
             return []models.PolicyRuleResourceModel{}, diags
         }
 
-        var (
-            alertThreshold *models.PolicyRuleThresholdResourceModel
-            blockThreshold *models.PolicyRuleThresholdResourceModel
-        )
-
         if moduleType == "vulnerability" {
             alertThreshold, diags = alertThresholdTerraformToSchema(ctx, rule.AlertThreshold, planRule.AlertThreshold, rule.RiskFactorEffects)
             if diags.HasError() {
@@ -861,19 +816,14 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
             blockThreshold = nil
         }
 
-        var blockMessage basetypes.StringValue
         if planRule.BlockMessage.IsNull() {
             blockMessage = types.StringNull()
         } else {
             blockMessage = types.StringValue(rule.Notes)
         }
 
-        condition, diags := conditionToSchema(ctx, *rule.Condition)
-        if diags.HasError() {
-            return []models.PolicyRuleResourceModel{}, diags
-        }
+        complianceActions = planRule.ComplianceActions
 
-        var graceDaysPolicy *models.PolicyRuleGraceDaysPolicyResourceModel
         if planRule.GraceDaysPolicy == nil {
             graceDaysPolicy = nil
         } else {
@@ -884,7 +834,6 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
             graceDaysPolicy = &schemaGraceDaysPolicy
         }
 
-        var pkgTypesThresholds *[]models.PolicyRulePkgTypesThresholdResourceModel
         if planRule.PkgTypesThresholds == nil {
             pkgTypesThresholds = nil
         } else {
@@ -909,35 +858,30 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
         //    rule.Effect = "block"
         //}
 
-        var excludeBaseImageVulns basetypes.BoolValue
         if planRule.ExcludeBaseImageVulns.IsNull() {
             excludeBaseImageVulns = types.BoolNull()
         } else {
             excludeBaseImageVulns = types.BoolValue(rule.ExcludeBaseImageVulns)
         }
 
-        var graceDays basetypes.Int32Value
         if planRule.GraceDays.IsNull() {
             graceDays = types.Int32Null()
         } else {
             graceDays = types.Int32Value(int32(rule.GraceDays))
         }
 
-        var notes basetypes.StringValue
         if planRule.Notes.IsNull() {
             notes = types.StringNull()
         } else {
             notes = types.StringValue(rule.Notes)
         }
 
-        var onlyFixed basetypes.BoolValue
         if planRule.OnlyFixed.IsNull() {
             onlyFixed = types.BoolNull()
         } else {
             onlyFixed = types.BoolValue(rule.OnlyFixed)
         }
 
-        var reportAllPassedAndFailedChecks basetypes.BoolValue
         if planRule.ReportAllPassedAndFailedChecks.IsNull() {
             reportAllPassedAndFailedChecks = types.BoolNull()
         } else {
@@ -949,7 +893,7 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
             BlockMessage:                   blockMessage,
             BlockThreshold:                 blockThreshold,
             Collections:                    collections,
-            Condition:                      condition,
+            ComplianceActions:              complianceActions,
             CVERules:                       cveRules,
             Disabled:                       types.BoolValue(rule.Disabled),
             Effect:                         types.StringValue(rule.Effect),
@@ -973,43 +917,6 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
     util.DLog(ctx, "Finishing PolicyRulesTerraformToSchema exection")
 
     return schemaRules, diags
-}
-
-func getPolicyContextAndModuleType(policyType string) (basetypes.StringValue, basetypes.StringValue, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    switch policyType {
-    case policyAPI.PolicyTypeComplianceContainer:
-        return types.StringValue(policyAPI.PolicyContextContainer), types.StringValue(policyAPI.TypeCompliance), diags
-    case policyAPI.PolicyTypeComplianceCiImage:
-        return types.StringValue(policyAPI.PolicyContextCiImage), types.StringValue(policyAPI.TypeCompliance), diags
-    case policyAPI.PolicyTypeComplianceHost:
-        return types.StringValue(policyAPI.PolicyContextHost), types.StringValue(policyAPI.TypeCompliance), diags
-    case policyAPI.PolicyTypeComplianceVmImage:
-        return types.StringValue(policyAPI.PolicyContextVmImage), types.StringValue(policyAPI.TypeCompliance), diags
-    case policyAPI.PolicyTypeComplianceFunction:
-        return types.StringValue(policyAPI.PolicyContextFunction), types.StringValue(policyAPI.TypeCompliance), diags
-    case policyAPI.PolicyTypeComplianceCiFunction:
-        return types.StringValue(policyAPI.PolicyContextCiFunction), types.StringValue(policyAPI.TypeCompliance), diags
-    case policyAPI.PolicyTypeVulnerabilityDeployedImage:
-        return types.StringValue(policyAPI.PolicyContextImage), types.StringValue(policyAPI.TypeVulnerability), diags
-    case policyAPI.PolicyTypeVulnerabilityCiImage:
-        return types.StringValue(policyAPI.PolicyContextCiImage), types.StringValue(policyAPI.TypeVulnerability), diags
-    case policyAPI.PolicyTypeVulnerabilityHost:
-        return types.StringValue(policyAPI.PolicyContextHost), types.StringValue(policyAPI.TypeVulnerability), diags
-    case policyAPI.PolicyTypeVulnerabilityVmImage:
-        return types.StringValue(policyAPI.PolicyContextVmImage), types.StringValue(policyAPI.TypeVulnerability), diags
-    case policyAPI.PolicyTypeVulnerabilityFunction:
-        return types.StringValue(policyAPI.PolicyContextFunction), types.StringValue(policyAPI.TypeVulnerability), diags
-    case policyAPI.PolicyTypeVulnerabilityCiFunction:
-        return types.StringValue(policyAPI.PolicyContextCiFunction), types.StringValue(policyAPI.TypeVulnerability), diags
-    default:
-        diags.AddError(
-            "Value Conversion Error", // TODO: probably need a better error type here
-            fmt.Sprintf("unknown policy type value \"%s\"", policyType),
-        )
-        return types.StringNull(), types.StringNull(), diags
-    }
 }
 
 func thresholdValueToSchema(value int) (basetypes.StringValue, diag.Diagnostics) {
@@ -1208,46 +1115,106 @@ func blockThresholdSchemaToTerraform(ctx context.Context, schemaBlockThreshold *
     return blockThreshold, riskFactorsEffects, diags
 }
 
-func conditionToTerraform(ctx context.Context, schemaCondition *models.PolicyRuleConditionResourceModel) (policyAPI.Condition, diag.Diagnostics) {
-    var diags diag.Diagnostics
+func schemaToCondition(ctx context.Context, complianceVulnerabilities *[]systemAPI.Vulnerability, complianceActions *models.PolicyRuleComplianceActionsResourceModel, effect string) (policyAPI.Condition, diag.Diagnostics) {
+    // TODO: add logic to change "alert" to "alert, block" if one of the check filters creates a blocking condition in an alert rule
 
-    if schemaCondition == nil {
+    var (
+        diags diag.Diagnostics
+        types []string
+        severities []string
+    )
+
+    if complianceActions == nil {
         return policyAPI.Condition{
             Vulnerabilities: []policyAPI.Vulnerability{},
         }, diags
     }
 
-    tfConditionVulnerabilities := []policyAPI.Vulnerability{}
-    for _, schemaConditionVulnerability := range (*schemaCondition).Vulnerabilities {
-        tfConditionVulnerabilities = append(tfConditionVulnerabilities, policyAPI.Vulnerability{
-            Id:    int(schemaConditionVulnerability.Id.ValueInt32()),
-            Block: schemaConditionVulnerability.Block.ValueBool(),
-        })
+    conditionVulnerabilities := []policyAPI.Vulnerability{}
+
+    templateValue := complianceActions.Template
+    isFilteredByTemplate := (!templateValue.IsNull() && !templateValue.IsUnknown())
+    typesValue := complianceActions.Types
+    isFilteredByType := (!typesValue.IsNull() && !typesValue.IsUnknown()) 
+    severitiesValue := complianceActions.Severities
+    isFilteredBySeverity := (!severitiesValue.IsNull() && !severitiesValue.IsUnknown())
+    checks := complianceActions.Checks
+    isFilteredByCheck := checks != nil
+    checkFilterMap := map[int]string{}
+
+    // If the compliance actions configuration has no attributes defined, return empty condition
+    if !isFilteredByTemplate && !isFilteredByType && !isFilteredBySeverity && !isFilteredByCheck {
+        return policyAPI.Condition{
+            Vulnerabilities: []policyAPI.Vulnerability{},
+        }, diags
     }
 
-    tfCondition := policyAPI.Condition{
-        Vulnerabilities: tfConditionVulnerabilities,
+    // If defined, convert types and severities values to string slices
+    if isFilteredByType {
+        diags = typesValue.ElementsAs(ctx, &types, false)
+        if diags.HasError() {
+            return policyAPI.Condition{}, diags
+        }
     }
 
-    return tfCondition, diags
-}
-
-func conditionToSchema(ctx context.Context, tfCondition policyAPI.Condition) (*models.PolicyRuleConditionResourceModel, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    schemaConditionVulnerabilities := []models.PolicyRuleConditionVulnerabilityResourceModel{}
-    for _, tfConditionVulnerability := range tfCondition.Vulnerabilities {
-        schemaConditionVulnerabilities = append(schemaConditionVulnerabilities, models.PolicyRuleConditionVulnerabilityResourceModel{
-            Id:    types.Int32Value(int32(tfConditionVulnerability.Id)),
-            Block: types.BoolValue(tfConditionVulnerability.Block),
-        })
+    if isFilteredBySeverity {
+        diags = severitiesValue.ElementsAs(ctx, &severities, false)
+        if diags.HasError() {
+            return policyAPI.Condition{}, diags
+        }
     }
 
-    schemaCondition := models.PolicyRuleConditionResourceModel{
-        Vulnerabilities: schemaConditionVulnerabilities,
+    // If check attribute is defined, create a map of check IDs to action
+    if isFilteredByCheck {
+        for _, check := range checks {
+            checkFilterMap[int(check.Id.ValueInt32())] = check.Action.ValueString()
+        }
     }
 
-    return &schemaCondition, diags
+    // Skip processing of compliance vulnerabilities if the rule's effect is "ignore", as this default action
+    if effect != "ignore" {
+        // Find compliance vulnerabilites matched by the rule's compliance actions configuration.
+        // Compliance actions are filtered in order of template, type/severity, and individual checks.
+        vulnCount := 0
+        for _, complianceVuln := range *complianceVulnerabilities {
+            if isFilteredByCheck {
+                if action, ok := checkFilterMap[complianceVuln.Id]; ok {
+                    if action != "ignore" {
+                        conditionVulnerabilities = append(conditionVulnerabilities, policy.Vulnerability{
+                            Id: complianceVuln.Id,
+                            Block: action == "block",
+                        })
+                    }
+                    vulnCount = vulnCount + 1
+                    continue
+                }
+            }
+
+            isMatchedOnTemplate := (isFilteredByTemplate && complianceVuln.Templates != nil && slices.Contains(*complianceVuln.Templates, templateValue.ValueString()))
+            isMatchedOnType := (isFilteredByType && slices.Contains(types, complianceVuln.Type))
+            isMatchedOnSeverity := (isFilteredBySeverity && slices.Contains(severities, complianceVuln.Severity))
+
+            if (!isFilteredByTemplate || (isFilteredByTemplate && isMatchedOnTemplate)) {
+                if ((!isFilteredByType || (isFilteredByType && isMatchedOnType))) && 
+                    (!isFilteredBySeverity || (isFilteredBySeverity && isMatchedOnSeverity)) {
+                    conditionVulnerabilities = append(conditionVulnerabilities, policy.Vulnerability{
+                        Id: complianceVuln.Id,
+                        Block: effect == "block",
+                    })
+                    vulnCount = vulnCount + 1
+                }
+            }
+        }
+
+        util.DLog(ctx, fmt.Sprintf("matched %d vulnerabilities", vulnCount))
+
+    }
+
+    condition := policyAPI.Condition{
+        Vulnerabilities: conditionVulnerabilities,
+    }
+
+    return condition, diags
 }
 
 func graceDaysPolicyToTerraform(ctx context.Context, schemaGraceDaysPolicy models.PolicyRuleGraceDaysPolicyResourceModel) (policyAPI.GraceDaysPolicy, diag.Diagnostics) {
@@ -1623,176 +1590,19 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
     return diags
 }
 
-func generateConditionFromEffect(ctx context.Context, policyType string, name string, effect string, index int, plan tfsdk.Plan, complianceVulnerabilities []systemAPI.Vulnerability) (models.PolicyRuleConditionResourceModel, diag.Diagnostics) {
-    util.DLog(ctx, "Executing generateConditionFromEffect")
-    // TODO: fix modification from "effect = alert" to no effect not creating the right values (doesnt think any
-    // changes are needed since effect gets set to "alert" when initially creating a rule with no effect value)
-
-    // TODO: finish implementing this more compact implementation of this function
-    //      currently, the issue is that we're dealing with two different types of
-    //      vulnerability objects depending on whether we're taking the vulnerability
-    //      data from the TF resource configuration or from Prisma Cloud
-    //if effect != "ignore" {
-    //    if effect == "alert, block" {
-    //        //var ruleConditionVulns []policyAPI.HostCompliancePolicyRuleVulnerability
-
-    //        if rule.Condition.IsUnknown() {
-    //            diags.AddError(
-    //                "Missing condition from \"alert, block\" effect rule",
-    //                "Condition attribute must be defined for rules with effect \"alert, block\".",
-    //            )
-    //            return conditionObject, diags
-    //        }
-
-    //        ruleCondition := policyAPI.HostCompliancePolicyRuleCondition{}
-    //        diags = rule.Condition.As(ctx, &ruleCondition, basetypes.ObjectAsOptions{})
-    //        if diags.HasError() {
-    //            return conditionObject, diags
-    //        }
-
-    //        //ruleConditionVulns = ruleCondition.Vulnerabilities
-    //        //complianceVulnerabilities = ruleCondition.Vulnerabilities
-    //        vulnerabilities := ruleCondition.Vulnerabilities
-    //    } else if effect == "unknown" {
-    //        complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
-    //        vulnerabilities := complianceVulnerabilities
-    //    } else {
-    //        vulnerabilities := complianceVulnerabilities
-    //    }
-    //
-    //    //var block func(string, HostCompliancePolicyRuleVulnerabilityResourceModel) bool
-    //    var block func(string, interface{}) bool
-    //    //block = func(effect string, vuln HostCompliancePolicyRuleVulnerability) bool {
-    //    block = func(effect string, vuln interface{}) bool {
-    //        if effect == "alert, block" {
-    //            return vuln.Block
-    //        } else {
-    //            return (effect == "block") && !(vuln.Type == "windows")
-    //        }
-    //    }
-
-    //    //isBlockEffect := (effect == "block")
-    //    for _, vuln := range complianceVulnerabilities {
-    //        //if effect == "alert, block" {
-    //        //    block := vuln.Block
-    //        //} else {
-    //        //    block := (isBlockEffect && !(vuln.Type == "windows"))
-    //        //}
-
-    //        vulnerabilityObjectValue := types.ObjectValueMust(
-    //            vulnerabilitiesAttributeTypes,
-    //            map[string]attr.Value{
-    //                "id": types.Int32Value(int32(vuln.Id)),
-    //                //"block": types.BoolValue(block),
-    //                "block": types.BoolValue(block(effect, vuln)),
-    //            },
-    //        )
-    //
-    //        vulnerabilityObjectValues = append(vulnerabilityObjectValues, vulnerabilityObjectValue)
-    //    }
-    //}
-
-    var diags diag.Diagnostics
-
-    //settings := policyAPI.SettingsMap[policyType]
-
-    generatedCondition := models.PolicyRuleConditionResourceModel{}
-    conditionVulnerabilities := []models.PolicyRuleConditionVulnerabilityResourceModel{}
-
-    // TODO: add a check to see if we're configuring the condition instead of
-    // just checking to see if the effect is "alert, block"
-
-    if policyType == "serverlessCompliance" || policyType == "ciServerlessCompliance" {
-        var configCondition basetypes.ObjectValue
-        diags.Append(plan.GetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), &configCondition)...)
-        //if configCondition.IsUnknown() || configCondition.IsNull() {
-        //if effect == "alert, block"
-        if effect != "ignore" {
-            if effect == "default" {
-                complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
-            }
-            // If this block executes and effect is default, effect must be set to "alert"
-            for _, vuln := range complianceVulnerabilities {
-                conditionVulnerability := models.PolicyRuleConditionVulnerabilityResourceModel{
-                    Id:    types.Int32Value(int32(vuln.Id)),
-                    Block: types.BoolValue(false),
-                }
-                conditionVulnerabilities = append(conditionVulnerabilities, conditionVulnerability)
-            }
-        }
-        //}
-    } else {
-        // If the effect is "alert, block", create condition vulnerabilities object from plan
-        if effect == "alert, block" {
-            // TODO: add validator that ensures a condition is configured if the effect is set to "alert, block"
-            var configVulnerabilities []models.PolicyRuleConditionVulnerabilityResourceModel
-            diags.Append(plan.GetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition").AtName("vulnerabilities"), &configVulnerabilities)...)
-            if diags.HasError() {
-                return generatedCondition, diags
-            }
-            conditionVulnerabilities = configVulnerabilities
-            // Otherwise, if the rule effect is not "ignore", create condition vulnerabilities using Prisma Cloud vulnerability data
-        } else if effect != "ignore" {
-            if effect == "default" {
-                complianceVulnerabilities = systemAPI.GetHighOrCriticalVulnerabilities(complianceVulnerabilities)
-            }
-
-            isBlockEffect := (effect == "block")
-
-            var block bool
-            for _, vuln := range complianceVulnerabilities {
-                if policyType == "hostCompliance" {
-                    block = (isBlockEffect && !(vuln.Type == "windows"))
-                } else if policyType == "containerCompliance" {
-                    block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
-                } else if policyType == "ciImagesCompliance" {
-                    block = isBlockEffect
-                } else if policyType == "vmCompliance" {
-                    block = (isBlockEffect && !(vuln.Type == "istio" || vuln.Id == 58 || vuln.Id == 596 || vuln.Id == 598))
-                } else {
-                    //return conditionObject, diags
-                    diags.AddError(
-                        "Policy Rule Condition Conversion Error",
-                        //fmt.Sprintf("policy rule \"%s\" configured with unknown policy type \"%s\"", rule.Name.ValueString(), policyType),
-                        fmt.Sprintf("policy rule \"%s\" configured with unknown policy type \"%s\"", name, policyType),
-                    )
-                    return generatedCondition, diags
-                }
-
-                conditionVulnerability := models.PolicyRuleConditionVulnerabilityResourceModel{
-                    Id:    types.Int32Value(int32(vuln.Id)),
-                    Block: types.BoolValue(block),
-                }
-                conditionVulnerabilities = append(conditionVulnerabilities, conditionVulnerability)
-            }
-        }
-    }
-
-    generatedCondition.Vulnerabilities = conditionVulnerabilities
-
-    util.DLog(ctx, "Finishing generateConditionFromEffect execution")
-
-    return generatedCondition, diags
-}
-
 func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComputeAPIClient, plan tfsdk.Plan, resp *resource.ModifyPlanResponse) {
     util.DLog(ctx, "Executing ModifyPolicyResourcePlan")
 
     var (
-        diags                     diag.Diagnostics
         rules                     basetypes.ListValue
         policyTypeValue           basetypes.StringValue
         policyType                string
-        moduleTypeValue           basetypes.StringValue
-        moduleType                string
         nameValue                 basetypes.StringValue
         name                      string
         collectionNamesValue      basetypes.SetValue
         collectionNames           []string
         effectValue               basetypes.StringValue
         effect                    string
-        //complianceVulnerabilities *[]systemAPI.Vulnerability
-        complianceVulnerabilities []systemAPI.Vulnerability
         err                       error
     )
 
@@ -1811,34 +1621,6 @@ func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComput
         return
     }
     policyType = policyTypeValue.ValueString()
-
-    // Retrieve module type
-    resp.Diagnostics.Append(plan.GetAttribute(ctx, path.Root("type"), &moduleTypeValue)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-    moduleType = moduleTypeValue.ValueString()
-
-    util.DLog(ctx, "Retrieving vulnerability data")
-    if moduleType == "compliance" {
-        //complianceVulnerabilities, diags = systemAPI.GetComplianceVulnerabilities(*client, policyType)
-        settings := policyAPI.SettingsMap[policyType]
-        //_complianceVulnerabilities, diags := systemAPI.GetComplianceVulnerabilitiesByPolicyType(*client, settings.IsApplicableVuln)
-        //complianceVulnerabilities = &_complianceVulnerabilities
-        complianceVulnerabilities, diags = systemAPI.GetComplianceVulnerabilitiesByPolicyType(*client, settings.IsApplicableVuln)
-
-        //if err != nil {
-        if diags.HasError() {
-            resp.Diagnostics.AddError(
-                "Error modifying planned policy rules",
-                "Failed to retrieve compliance host vulnerabilities from Prisma Cloud while modifying plan rules: "+err.Error(),
-            )
-            return
-        }
-    } else {
-        //complianceVulnerabilities = &[]systemAPI.Vulnerability{}
-        complianceVulnerabilities = []systemAPI.Vulnerability{}
-    }
 
     util.DLog(ctx, "Retrieving collections")
     collections, err := collectionAPI.ListCollections(*client)
@@ -1881,24 +1663,11 @@ func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComput
             return
         }
 
-        //condition, diags := generateConditionFromEffect(ctx, policyType, name, effect, index, plan, *complianceVulnerabilities)
-        condition, diags := generateConditionFromEffect(ctx, policyType, name, effect, index, plan, complianceVulnerabilities)
-        resp.Diagnostics.Append(diags...)
-        if resp.Diagnostics.HasError() {
-            return
-        }
-
         if effect == "default" {
             resp.Diagnostics.Append(plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("effect"), "alert")...)
             if resp.Diagnostics.HasError() {
                 return
             }
-        }
-
-        // Set condition to generated value
-        resp.Diagnostics.Append(plan.SetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("condition"), condition)...)
-        if resp.Diagnostics.HasError() {
-            return
         }
 
         // Set effect to "alert" if its currently set to the placeholder value ("default")

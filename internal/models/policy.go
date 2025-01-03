@@ -26,7 +26,7 @@ type PolicyRuleResourceModel struct {
     BlockThreshold                  *PolicyRuleThresholdResourceModel `tfsdk:"block_threshold" json:"blockThreshold"`
     Collections                     types.Set `tfsdk:"collections"`
     CVERules                        *[]PolicyRuleExceptionResourceModel  `tfsdk:"cve_rules"`
-    Condition                       *PolicyRuleConditionResourceModel    `tfsdk:"condition"`
+    ComplianceActions *PolicyRuleComplianceActionsResourceModel    `tfsdk:"compliance_actions"`
     Disabled                        types.Bool      `tfsdk:"disabled"`
     Effect                          types.String    `tfsdk:"effect"`
     ExcludeBaseImageVulns           types.Bool      `tfsdk:"exclude_base_image_vulns"`
@@ -76,19 +76,36 @@ type PolicyRuleExceptionExpirationResourceModel struct {
     Date    types.String    `tfsdk:"date"`
 }
 
-type PolicyRuleConditionResourceModel struct {
-    Vulnerabilities []PolicyRuleConditionVulnerabilityResourceModel `tfsdk:"vulnerabilities"`
+type PolicyRuleComplianceActionsResourceModel struct {
+    Template    types.String        `tfsdk:"template"`
+    Types       types.Set           `tfsdk:"types"`
+    Severities  types.Set           `tfsdk:"severities"`
+    Checks      []PolicyRuleComplianceActionCheckResourceModel `tfsdk:"checks"`
 }
 
-type PolicyRuleConditionVulnerabilityResourceModel struct {
-    Block types.Bool `tfsdk:"block"`
-    Id types.Int32 `tfsdk:"id"`
+type PolicyRuleComplianceActionCheckResourceModel struct {
+    Id types.Int32      `tfsdk:"id"`
+    Action types.String `tfsdk:"action"`
 }
 
 func (m *PolicyResourceModel) SortRules(ctx context.Context, planRules *[]PolicyRuleResourceModel) {
     util.DLog(ctx, "Executing PolicyResourceModel.SortRules()")
 
     if m.Rules != nil && len(*m.Rules) > 0 {
+        // TODO: check for mismatched lengths and return diags with error
+        // (if there's additional rules added outside of terraform, they will be reflected in m.SortRules. therefore,
+        // if this happens, return a diag error with message suggesting they check those rules, until we can put in logic
+        // to be able to automatically handle that scenario)
+
+        //if len(*m.Rules) != len(*planRules) {
+        //}
+
+        if len(*m.Rules) == 1 && len(*planRules) == 1 {
+            (*m.Rules)[0].Order = (*planRules)[0].Order
+            return
+        }
+
+
         if planRules == nil {
             for i := 0; i < len(*m.Rules); i++ {
                 (*m.Rules)[i].Order = types.Int32Value(int32(i + 1))
