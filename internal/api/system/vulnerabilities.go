@@ -37,7 +37,7 @@ type Vulnerability struct {
     //PackageVersion
     //PackageType
     //LayerTime
-    //Templates
+    Templates *[]string `json:"templates"`
     Twistlock bool `json:"twistlock"`
     CRI bool `json:"cri"`
     //Published
@@ -57,7 +57,6 @@ func GetVulnerabilities(c api.PrismaCloudComputeAPIClient) (Vulnerabilities, err
 	return vulns, nil
 }
 
-//func GetComplianceVulnerabilitiesMap(c api.PrismaCloudComputeAPIClient) (map[string][]Vulnerability, error) {
 func GetComplianceVulnerabilitiesMap(c api.PrismaCloudComputeAPIClient) (map[string][]Vulnerability, diag.Diagnostics) {
     var diags diag.Diagnostics
 
@@ -106,61 +105,6 @@ func GetComplianceVulnerabilitiesByPolicyType(c api.PrismaCloudComputeAPIClient,
     return filteredComplianceVulnerabilities, diags
 }
 
-//func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType string) (*[]Vulnerability, error) {
-func GetComplianceVulnerabilities(c api.PrismaCloudComputeAPIClient, policyType string) (*[]Vulnerability, diag.Diagnostics) {
-    // TODO: clean up conditional logic here
-
-    var (
-        diags diag.Diagnostics
-        complianceVulns []Vulnerability
-        vulnTypes []string
-    )
-
-    vulnsMap, diags := GetComplianceVulnerabilitiesMap(c)
-    if diags.HasError() {
-		return &complianceVulns, diags
-    }
-
-    switch policyType {
-        case "hostCompliance":
-            vulnTypes = getHostComplianceVulnTypes()
-        case "containerCompliance":
-            vulnTypes = getContainerComplianceVulnTypes()
-        case "ciImagesCompliance":
-            break
-        case "vmCompliance":
-            vulnTypes = getVmImageComplianceVulnTypes()
-        case "serverlessCompliance":
-            fallthrough
-        case "ciServerlessCompliance":
-            vulnTypes = []string{"serverless"}
-        default:
-            diags.AddError("Value Error", fmt.Sprintf("Invalid compliance policy type specified: %s", policyType))
-            return &complianceVulns, diags
-    }
-
-    if policyType == "ciImagesCompliance" {
-        for _, vuln := range vulnsMap["image"] {
-            if vuln.Id == 406 || vuln.Id == 408 || vuln.Id == 41 || vuln.Id == 422 || vuln.Id == 424 ||
-                vuln.Id == 425 || vuln.Id == 426 || vuln.Id == 448 || vuln.Id == 5041 || vuln.Id == 5048 {
-                complianceVulns = append(complianceVulns, vuln)    
-            }
-        }
-    } else {
-        for _, vulnType := range vulnTypes {
-            complianceVulns = append(complianceVulns, vulnsMap[vulnType]...)
-        }
-    }
-
-    sort.Slice(complianceVulns, func(i, j int) bool {
-        val1 := strconv.Itoa(complianceVulns[i].Id)
-        val2 := strconv.Itoa(complianceVulns[j].Id)
-        return val1 < val2
-    })
-
-    return &complianceVulns, diags 
-}
-
 func GetHighOrCriticalVulnerabilities(complianceVulnerabilities []Vulnerability) []Vulnerability {
     var highOrCriticalVulns []Vulnerability 
     for _, vuln := range complianceVulnerabilities {
@@ -169,41 +113,4 @@ func GetHighOrCriticalVulnerabilities(complianceVulnerabilities []Vulnerability)
         }
     }
     return highOrCriticalVulns
-}
-
-func getHostComplianceVulnTypes() []string {
-    return []string{
-        "host_config", 
-        "daemon_config", 
-        "daemon_config_files", 
-        "security_operations", 
-        "linux", 
-        "windows", 
-        "k8s_worker",
-        "eks_worker",
-        "aks_worker",
-        "openshift_worker",
-        "k8s_master",
-        "openshift_master",
-        "k8s_federation",
-    }
-}
-
-func getContainerComplianceVulnTypes() []string {
-    return []string{
-        "container", 
-        //"istio", 
-        "image",
-    }
-}
-
-func getVmImageComplianceVulnTypes() []string {
-    return []string{
-        "host", 
-        "host_config", 
-        "daemon_config", 
-        "daemon_config_files", 
-        "security_operations", 
-        "linux",
-    }
 }

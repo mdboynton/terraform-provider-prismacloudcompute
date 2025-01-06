@@ -6,7 +6,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 	
     "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -25,11 +24,6 @@ type ContainerCompliancePolicyResource struct {
 }
 
 func (r *ContainerCompliancePolicyResource) GetSchema(ctx context.Context) schema.Schema {
-    util.DLog(ctx, "starting GetSchema for container compliance policy")
-    if r.client == nil {
-        util.DLog(ctx, "client is nil in GetSchema")
-    }
-
     policySchema, _ := models.GetPolicySchema(
         ctx,
         policyAPI.PolicyTypeComplianceContainer, 
