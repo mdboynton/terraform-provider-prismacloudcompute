@@ -6,7 +6,6 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
     models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/system"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 
     "github.com/hashicorp/terraform-plugin-framework/diag"
@@ -47,7 +46,6 @@ func (r *CollectionResource) Configure(ctx context.Context, req resource.Configu
 
 
 func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    util.DLog(ctx, "retrieving plan and serializing into models.CollectionResourceModel")
     // Retrieve values from plan
     var plan models.CollectionResourceModel
     diags := req.Plan.Get(ctx, &plan)
@@ -64,7 +62,6 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
     }
 
     // Create new collection 
-    util.DLog(ctx, fmt.Sprintf("creating collection resource with payload:\n\n %+v", collection))
     err := collectionAPI.CreateCollection(*r.client, collection)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -204,7 +201,6 @@ func (r *CollectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-// TODO: Define ImportState to work properly with this resource
 func (r *CollectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
@@ -216,78 +212,53 @@ func GetAllCollectionSet() basetypes.SetValue {
 func schemaToCollection(ctx context.Context, plan *models.CollectionResourceModel) (collectionAPI.Collection, diag.Diagnostics) {
     var diags diag.Diagnostics
 
+    accountIds := make([]string, 0, len(plan.AccountIDs.Elements()))
+    diags.Append(plan.AccountIDs.ElementsAs(ctx, &accountIds, false)...)
+
+    appIds := make([]string, 0, len(plan.AppIDs.Elements()))
+    diags.Append(plan.AppIDs.ElementsAs(ctx, &appIds, false)...)
+
+    clusters := make([]string, 0, len(plan.Clusters.Elements()))
+    diags.Append(plan.Clusters.ElementsAs(ctx, &clusters, false)...)
+
+    containers := make([]string, 0, len(plan.Containers.Elements()))
+    diags.Append(plan.Containers.ElementsAs(ctx, &containers, false)...)
+
+    functions := make([]string, 0, len(plan.Functions.Elements()))
+    diags.Append(plan.Functions.ElementsAs(ctx, &functions, false)...)
+
+    hosts := make([]string, 0, len(plan.Hosts.Elements()))
+    diags.Append(plan.Hosts.ElementsAs(ctx, &hosts, false)...)
+
+    images := make([]string, 0, len(plan.Images.Elements()))
+    diags.Append(plan.Images.ElementsAs(ctx, &images, false)...)
+
+    labels := make([]string, 0, len(plan.Labels.Elements()))
+    diags.Append(plan.Labels.ElementsAs(ctx, &labels, false)...)
+
+    namespaces := make([]string, 0, len(plan.Namespaces.Elements()))
+    diags.Append(plan.Namespaces.ElementsAs(ctx, &namespaces, false)...)
+
+    if diags.HasError() {   
+        return collectionAPI.Collection{}, diags
+    }
+
     collection := collectionAPI.Collection{
+        AccountIDs: accountIds,
+        AppIDs: appIds,
+        Clusters: clusters,
         Color: plan.Color.ValueString(),
+        Containers: containers,
         Description: plan.Description.ValueString(),
+        Functions: functions,
+        Hosts: hosts,
+        Images: images,
+        Labels: labels,
         Name: plan.Name.ValueString(),
-        //Modified: plan.Modified.ValueString(),
+        Namespaces: namespaces,
         Prisma: plan.Prisma.ValueBool(),
         System: plan.System.ValueBool(),
     }
-
-    accountIds := make([]string, 0, len(plan.AccountIDs.Elements()))
-    diags = plan.AccountIDs.ElementsAs(ctx, &accountIds, false)
-    if diags.HasError() {
-        return collection, diags
-    }
-    collection.AccountIDs = accountIds
-
-
-    appIds := make([]string, 0, len(plan.AppIDs.Elements()))
-    diags = plan.AppIDs.ElementsAs(ctx, &appIds, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.AppIDs = appIds 
-
-    clusters := make([]string, 0, len(plan.Clusters.Elements()))
-    diags = plan.Clusters.ElementsAs(ctx, &clusters, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.Clusters = clusters 
-
-    containers := make([]string, 0, len(plan.Containers.Elements()))
-    diags = plan.Containers.ElementsAs(ctx, &containers, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.Containers = containers 
-
-    functions := make([]string, 0, len(plan.Functions.Elements()))
-    diags = plan.Functions.ElementsAs(ctx, &functions, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.Functions = functions 
-
-    hosts := make([]string, 0, len(plan.Hosts.Elements()))
-    diags = plan.Hosts.ElementsAs(ctx, &hosts, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.Hosts = hosts 
-
-    images := make([]string, 0, len(plan.Images.Elements()))
-    diags = plan.Images.ElementsAs(ctx, &images, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.Images = images 
-
-    labels := make([]string, 0, len(plan.Labels.Elements()))
-    diags = plan.Labels.ElementsAs(ctx, &labels, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.Labels = labels 
-
-    namespaces := make([]string, 0, len(plan.Namespaces.Elements()))
-    diags = plan.Namespaces.ElementsAs(ctx, &namespaces, false)
-    if diags.HasError() {   
-        return collection, diags
-    }
-    collection.Namespaces = namespaces 
 
 	return collection, diags 
 }
@@ -295,100 +266,68 @@ func schemaToCollection(ctx context.Context, plan *models.CollectionResourceMode
 func collectionToSchema(ctx context.Context, collection collectionAPI.Collection) (models.CollectionResourceModel, diag.Diagnostics) {
     var diags diag.Diagnostics
 
+    accountIds, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    appIds, diags := types.SetValueFrom(ctx, types.StringType, collection.AppIDs)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    clusters, diags := types.SetValueFrom(ctx, types.StringType, collection.Clusters)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    containers, diags := types.SetValueFrom(ctx, types.StringType, collection.Containers)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    functions, diags := types.SetValueFrom(ctx, types.StringType, collection.Functions)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    hosts, diags := types.SetValueFrom(ctx, types.StringType, collection.Hosts)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    images, diags := types.SetValueFrom(ctx, types.StringType, collection.Images)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    labels, diags := types.SetValueFrom(ctx, types.StringType, collection.Labels)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
+    namespaces, diags := types.SetValueFrom(ctx, types.StringType, collection.Namespaces)
+    if diags.HasError() {
+        return models.CollectionResourceModel{}, diags
+    }
+
     schema := models.CollectionResourceModel{
+        AccountIDs: accountIds,
+        AppIDs: appIds,
+        Clusters: clusters,
         Color: types.StringValue(collection.Color),
+        Containers: containers,
         Description: types.StringValue(collection.Description),
-        //Modified: types.StringValue(collection.Modified),
+        Functions: functions,
+        Hosts: hosts,
+        Images: images,
+        Labels: labels,
+        Modified: types.StringValue(collection.Modified),
         Name: types.StringValue(collection.Name),
+        Namespaces: namespaces,
+        Owner: types.StringValue(collection.Owner),
         Prisma: types.BoolValue(collection.Prisma),
         System: types.BoolValue(collection.System),
-    }
-
-    //if collection.Modified != nil {
-    //    schema.Modified = collection.Modified
-    //}
-
-    // TODO: remove all these null checks 
-
-    if collection.AccountIDs != nil {
-        accountIds, diags := types.SetValueFrom(ctx, types.StringType, collection.AccountIDs)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.AccountIDs = accountIds
-    }
-
-    if collection.AppIDs != nil {
-        appIds, diags := types.SetValueFrom(ctx, types.StringType, collection.AppIDs)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.AppIDs = appIds
-    }
-
-    if collection.Clusters != nil {
-        clusters, diags := types.SetValueFrom(ctx, types.StringType, collection.Clusters)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.Clusters = clusters
-    }
-
-    if collection.Containers != nil {
-        containers, diags := types.SetValueFrom(ctx, types.StringType, collection.Containers)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.Containers = containers
-    }
-
-    if collection.Functions != nil {
-        functions, diags := types.SetValueFrom(ctx, types.StringType, collection.Functions)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.Functions = functions
-    }
-
-    if collection.Hosts != nil {
-        hosts, diags := types.SetValueFrom(ctx, types.StringType, collection.Hosts)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.Hosts = hosts
-    }
-
-    if collection.Images != nil {
-        images, diags := types.SetValueFrom(ctx, types.StringType, collection.Images)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.Images = images
-    }
-
-    if collection.Labels != nil {
-        labels, diags := types.SetValueFrom(ctx, types.StringType, collection.Labels)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.Labels = labels
-    }
-    
-    if collection.Namespaces != nil {
-        namespaces, diags := types.SetValueFrom(ctx, types.StringType, collection.Namespaces)
-        if diags.HasError() {
-            return schema, diags
-        }
-
-        schema.Namespaces = namespaces
     }
 
     return schema, diags
