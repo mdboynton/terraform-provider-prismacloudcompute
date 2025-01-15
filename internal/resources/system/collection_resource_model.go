@@ -2,6 +2,8 @@ package system
 
 import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
     "github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -9,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	//"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 )
 
 var _ resource.Resource = &CollectionResource{}
 var _ resource.ResourceWithImportState = &CollectionResource{}
-//var _ resource.ResourceWithModifyPlan = &CollectionResource{}
 
 func NewCollectionResource() resource.Resource {
     return &CollectionResource{}
@@ -25,7 +28,8 @@ type CollectionResource struct {
 
 func (r *CollectionResource) GetSchema() schema.Schema {
     return schema.Schema{
-        MarkdownDescription: "TODO",
+        //MarkdownDescription: "TODO",
+        Description: "Collections are predefined filters that let you group related resources together. They can be used to scope policy rules and segment data/views in the Console UI and the Prisma Cloud API.",
         Attributes: map[string]schema.Attribute{
             "account_ids": schema.SetAttribute{
                 Description: "List of account IDs.",
@@ -48,6 +52,9 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
+                Validators: []validator.Set{
+                    validators.AppIDsEndWithWildcard(),
+                },
                 Default: setdefault.StaticValue(
                     types.SetValueMust(
                         types.StringType,
