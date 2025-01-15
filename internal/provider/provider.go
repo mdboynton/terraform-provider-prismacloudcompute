@@ -91,6 +91,7 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
 		auth.NewUserResource,
 		auth.NewRoleResource,
 		system.NewCollectionResource,
+        system.NewGcpCloudAccountResource,
         // Compliance policy resources
 		compliance.NewHostCompliancePolicyResource,
 		compliance.NewContainerCompliancePolicyResource,
