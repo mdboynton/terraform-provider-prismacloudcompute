@@ -294,15 +294,11 @@ func collectionToSchema(ctx context.Context, collection collectionAPI.Collection
     schema := models.CollectionResourceModel{
         Color: types.StringValue(collection.Color),
         Description: types.StringValue(collection.Description),
-        //Modified: types.StringValue(collection.Modified),
+        Modified: types.StringValue(collection.Modified),
         Name: types.StringValue(collection.Name),
         Prisma: types.BoolValue(collection.Prisma),
         System: types.BoolValue(collection.System),
     }
-
-    //if collection.Modified != nil {
-    //    schema.Modified = collection.Modified
-    //}
 
     // TODO: remove all these null checks 
 

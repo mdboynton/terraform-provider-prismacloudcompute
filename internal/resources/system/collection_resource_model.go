@@ -164,7 +164,8 @@ func (r *CollectionResource) GetSchema() schema.Schema {
             "modified": schema.StringAttribute{
                 //MarkdownDescription: "TODO",
                 Description: "Date and time that the collection was last modified.",
-                Optional: true, // TODO: get rid of this and make it just Computed
+                //Optional: true, // TODO: get rid of this and make it just Computed
+                Computed: true,
             },
             "name": schema.StringAttribute{
                 //MarkdownDescription: "TODO",
