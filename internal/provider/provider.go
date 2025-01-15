@@ -13,7 +13,7 @@ import (
 	compliance "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/compliance"
 	vulnerability "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/vulnerability"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
