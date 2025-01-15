@@ -6,7 +6,6 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
     models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/system"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 
     "github.com/hashicorp/terraform-plugin-framework/diag"
@@ -47,7 +46,6 @@ func (r *CollectionResource) Configure(ctx context.Context, req resource.Configu
 
 
 func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    util.DLog(ctx, "retrieving plan and serializing into models.CollectionResourceModel")
     // Retrieve values from plan
     var plan models.CollectionResourceModel
     diags := req.Plan.Get(ctx, &plan)
@@ -64,7 +62,6 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
     }
 
     // Create new collection 
-    util.DLog(ctx, fmt.Sprintf("creating collection resource with payload:\n\n %+v", collection))
     err := collectionAPI.CreateCollection(*r.client, collection)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -204,7 +201,6 @@ func (r *CollectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-// TODO: Define ImportState to work properly with this resource
 func (r *CollectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

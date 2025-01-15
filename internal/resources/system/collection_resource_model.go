@@ -28,7 +28,8 @@ func (r *CollectionResource) GetSchema() schema.Schema {
         MarkdownDescription: "TODO",
         Attributes: map[string]schema.Attribute{
             "account_ids": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                Description: "List of account IDs.",
+                //MarkdownDescription: "TODO",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -42,7 +43,8 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "app_ids": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                Description: "List of application IDs.",
+                //MarkdownDescription: "TODO",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -56,7 +58,8 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "clusters": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                Description: "List of Kubernetes cluster names.",
+                //MarkdownDescription: "TODO",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -70,13 +73,15 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "color": schema.StringAttribute{
-                MarkdownDescription: "TODO",
+                Description: "Hexadecimal representation of the collection's color value.",
+                //MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
                 Default: stringdefault.StaticString("#3FA2F7"),
             },
             "containers": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                Description: "List of containers.",
+                //MarkdownDescription: "TODO",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -90,13 +95,15 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "description": schema.StringAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "Description of the collection.",
                 Optional: true,
                 Computed: true,
                 Default: stringdefault.StaticString(""),
             },
             "functions": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "List of serverless functions.",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -110,7 +117,8 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "hosts": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "List of hosts.",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -124,7 +132,8 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "images": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "List of images.",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -138,7 +147,8 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "labels": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "List of labels.",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -152,15 +162,18 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "modified": schema.StringAttribute{
-                MarkdownDescription: "TODO",
-                Optional: true,
+                //MarkdownDescription: "TODO",
+                Description: "Date and time that the collection was last modified.",
+                Optional: true, // TODO: get rid of this and make it just Computed
             },
             "name": schema.StringAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "Collection name. Must be unique.",
                 Required: true,
             },
             "namespaces": schema.SetAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "List of Kubernetes namespaces.",
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
@@ -174,16 +187,19 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ),
             },
             "owner": schema.StringAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "User who created or last modified the collection.",
                 Computed: true,
             },
             "prisma": schema.BoolAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "Indicates whether this collection originated from Prisma Cloud.",
                 Computed: true,
                 Default: booldefault.StaticBool(false),
             },
             "system": schema.BoolAttribute{
-                MarkdownDescription: "TODO",
+                //MarkdownDescription: "TODO",
+                Description: "Indicates whether this collection was created by a user (true) or the system (false).",
                 Computed: true,
                 Default: booldefault.StaticBool(false),
             },
