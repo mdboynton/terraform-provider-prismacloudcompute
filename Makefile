@@ -3,10 +3,10 @@ NAMESPACE = PaloAltoNetworks
 NAME = prismacloudcompute
 BINARY = terraform-provider-${NAME}
 
-VERSION ?= 0.0.0-testing
+VERSION ?= 0.0.0-dev
 OS_ARCH ?= darwin_amd64
 
-# For M1 Macbooks:
+# For Mac machines:
 #OS_ARCH ?= darwin_arm64 
 
 default: install
