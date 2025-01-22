@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.0-alpha - 2025-01-22
+### Changed
+- Migrated provider server logic from SDKv2 framework to Terraform Plugin Framework
+
 ## Version 0.5.0 - 2022-02-07
 #### Added
 - Code repo scanning policy support ([#45](https://github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/pull/45), @pnancarrow)
