@@ -35,10 +35,6 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 			return err
 		}
 
-        if endpoint == "api/v1/credentials" {
-            fmt.Printf("\n\n%s\n\n", string(data_json[:]))
-        }
-
 		buf = *bytes.NewBuffer(data_json)
 	}
 

@@ -27,6 +27,7 @@ type AgentlessScanningResourceModel struct {
     CustomLabels []CustomLabelResourceModel `tfsdk:"custom_labels"`
     MaxNumberOfScanners types.Int32 `tfsdk:"max_number_of_scanners"`
     EnforcePermissionsCheck types.Bool `tfsdk:"enforce_permissions_check"`
+    Regions types.Set `tfsdk:"regions"`
     ScanScope types.String `tfsdk:"scan_scope"`
     ScanNonRunningHosts types.Bool `tfsdk:"scan_non_running_hosts"`
     ScopeByLabels types.String `tfsdk:"scope_by_labels"`

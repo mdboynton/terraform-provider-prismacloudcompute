@@ -14,7 +14,6 @@ import (
 	//collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	authAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/auth"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
-
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -25,8 +24,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 )
@@ -52,8 +53,13 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
         MarkdownDescription: "TODO",
         Attributes: map[string]schema.Attribute{
             "account_name": schema.StringAttribute{
+                // TODO: when writing the description, make sure to warn users that changing this field will require the resource
+                // to be re-made
                 MarkdownDescription: "TODO",
                 Required: true,
+                PlanModifiers: []planmodifier.String{
+                    stringplanmodifier.RequiresReplace(),
+                },
             },
             "description": schema.StringAttribute{
                 MarkdownDescription: "TODO",
@@ -83,6 +89,7 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                 Required: true,
                 Validators: []validator.Object{
                     validators.HubAccountNotTrueIfHubCredentialIdSet(),
+                    validators.PermissionsCheckNotEnforcedIfScanningWithHub(),
                 },
                 Attributes: map[string]schema.Attribute{
                     "enabled": schema.BoolAttribute{
@@ -111,10 +118,14 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                     "proxy_address": schema.StringAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
+                        Computed: true,
+                        Default: stringdefault.StaticString(""),
                     },
                     "proxy_certificate": schema.StringAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
+                        Computed: true,
+                        Default: stringdefault.StaticString(""),
                     },
                     "auto_scale": schema.BoolAttribute{
                         MarkdownDescription: "TODO",
@@ -142,14 +153,20 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                         MarkdownDescription: "TODO",
                         Optional: true,
                         Computed: true,
-                        Default: int32default.StaticInt32(int32(1)),
-                        // TODO: validation
+                        Default: int32default.StaticInt32(int32(0)),
+                        // TODO: validation (this attribute cannot be set when creating a "scan with hub account" type account
                     },
                     "enforce_permissions_check": schema.BoolAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
                         Computed: true,
-                        Default: booldefault.StaticBool(true),
+                        //Default: booldefault.StaticBool(true),
+                    },
+                    "regions": schema.SetAttribute{
+                        MarkdownDescription: "TODO",
+                        Optional: true,
+                        ElementType: types.StringType,
+                        // TODO: validation
                     },
                     "scan_scope": schema.StringAttribute{
                         MarkdownDescription: "TODO",
@@ -158,6 +175,8 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                     "scan_non_running_hosts": schema.BoolAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
+                        Computed: true,
+                        Default: booldefault.StaticBool(false),
                     },
                     "scope_by_labels": schema.StringAttribute{
                         MarkdownDescription: "TODO",
@@ -166,6 +185,8 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                     "subnet": schema.StringAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
+                        Computed: true,
+                        Default: stringdefault.StaticString(""),
                     },
                 },
             },
@@ -186,7 +207,8 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
             "enable_cloud_discovery": schema.BoolAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
-                // TODO: default
+                Computed: true,
+                Default: booldefault.StaticBool(false),
             },
         },
     }
@@ -257,6 +279,16 @@ func (r *GcpCloudAccountResource) Create(ctx context.Context, req resource.Creat
             "Error creating Cloud Account resource", 
             "Failed to create cloud scan rule: " + err.Error(),
         )
+        
+        // Remove hanging credential
+        err = authAPI.DeleteCredential(*r.client, createdCredential.Id)
+        if err != nil {
+		    resp.Diagnostics.AddWarning(
+                "Error creating Cloud Account resource", 
+                "Failed to delete hanging credential created prior to cloud scan rule. Error: " + err.Error(),
+            )
+        }
+
         return
 	}
 
@@ -271,6 +303,10 @@ func (r *GcpCloudAccountResource) Create(ctx context.Context, req resource.Creat
 	}
     
     state, diags := terraformToCloudAccount(ctx, plan, createdCredential, createdCloudScanRule)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
     // Set state to collection data
     diags = resp.State.Set(ctx, state)
@@ -281,92 +317,136 @@ func (r *GcpCloudAccountResource) Create(ctx context.Context, req resource.Creat
 }
 
 func (r *GcpCloudAccountResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    //// Get current state
-    //var state models.GcpCloudAccountResourceModel 
-    //diags := req.State.Get(ctx, &state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Get current state
+    var state models.GcpCloudAccountResourceModel 
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Get collection value from Prisma Cloud
-    //collection, err := collectionAPI.GetCollection(*r.client, state.Name.ValueString())
-    //if err != nil {
-    //    resp.Diagnostics.AddError(
-    //        "Error reading Collection resource", 
-    //        "Failed to read collection name " + state.Name.ValueString()  + ": " + err.Error(),
-    //    )
-    //    return
-    //}
+    // Get values from Prisma Cloud
+    credential, err := authAPI.GetCredential(*r.client, state.AccountName.ValueString())
+    if err != nil {
+		resp.Diagnostics.AddError(
+            "Error reading Cloud Account resource", 
+            fmt.Sprintf("Failed to retrieve credential with ID \"%s\": ", state.AccountName.ValueString()) + err.Error(),
+        )
+        return
+    }
+
+    cloudScanRule, err := systemAPI.GetCloudScanRuleByCredentialId(*r.client, state.AccountName.ValueString())
+	if err != nil {
+	    resp.Diagnostics.AddError(
+            "Error reading Cloud Account resource", 
+            fmt.Sprintf("Failed to retrieve cloud scan rule with account name \"%s\": ", state.AccountName.ValueString()) + err.Error(),
+        )
+        return
+	}
   
-    //// Overwrite state values with Prisma Cloud data
-    //state, diags = collectionToSchema(ctx, *collection) 
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Convert values to schema model
+    state, diags = terraformToCloudAccount(ctx, state, credential, cloudScanRule)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Set refreshed state
-    //diags = resp.State.Set(ctx, &state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Set refreshed state
+    diags = resp.State.Set(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
 func (r *GcpCloudAccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-    //// Get current state
-    //var state models.GcpCloudAccountResourceModel 
-    //diags := req.State.Get(ctx, &state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Get current state
+    var state models.GcpCloudAccountResourceModel 
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Retrieve values from plan
-    //var plan models.GcpCloudAccountResourceModel
-    //diags = req.Plan.Get(ctx, &plan)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Retrieve values from plan
+    var plan models.GcpCloudAccountResourceModel
+    diags = req.Plan.Get(ctx, &plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Generate API request body from plan
-    //collection, diags := schemaToCollection(ctx, &plan)
+    // Generate API request body from plan
+    credential, cloudScanRule, diags := cloudAccountToTerraform(ctx, plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Update existing collection 
-	//err := collectionAPI.UpdateCollection(*r.client, state.Name.ValueString(), collection)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-    //        "Error updating Collection resource", 
-    //        "Failed to update collection: " + err.Error(),
-    //    )
-    //    return
-	//}
+    // Update credential 
+    err := authAPI.UpdateCredential(*r.client, credential)
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error creating Cloud Account resource", 
+            "Failed to create credential: " + err.Error(),
+        )
+        return
+	}
 
-    //// Fetch updated collection from Prisma Cloud
-    //updatedCollection, err := collectionAPI.GetCollection(*r.client, plan.Name.ValueString())
-    //if err != nil {
-    //    resp.Diagnostics.AddError(
-    //        "Error updating Collection resource", 
-    //        "Failed to read name" + plan.Name.ValueString()  + ": " + err.Error(),
-    //    )
-    //    return
-    //}
+    // Retrieve updated credential
+    updatedCredential, err := authAPI.GetCredential(*r.client, credential.Id)
+    if err != nil {
+		resp.Diagnostics.AddError(
+            "Error creating Cloud Account resource", 
+            fmt.Sprintf("Failed to retrieve created credential with ID \"%s\": ", credential.Id) + err.Error(),
+        )
+        return
+    }
 
-    //// Convert updated collection to schema
-    //plan, diags = collectionToSchema(ctx, *updatedCollection)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
-    //
-    //// Set updated state
-    //diags = resp.State.Set(ctx, plan)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Create new cloud scan rule
+    // TODO: update this func to accept a single CloudScanRule and do the encapsulation on the other end
+    err = systemAPI.UpdateCloudScanRule(*r.client, []systemAPI.CloudScanRule{ cloudScanRule })
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error creating Cloud Account resource", 
+            "Failed to create cloud scan rule: " + err.Error(),
+        )
+       
+        // TODO: Can we roll back the update to the credential in the event of an error at this step?
+        //err = authAPI.DeleteCredential(*r.client, createdCredential.Id)
+        //if err != nil {
+		//    resp.Diagnostics.AddWarning(
+        //        "Error creating Cloud Account resource", 
+        //        "Failed to delete hanging credential created prior to cloud scan rule. Error: " + err.Error(),
+        //    )
+        //}
+
+        return
+	}
+
+    // Retrieve newly created cloud scan rule 
+    updatedCloudScanRule, err := systemAPI.GetCloudScanRuleByCredentialId(*r.client, cloudScanRule.CredentialId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error creating Cloud Account resource", 
+            fmt.Sprintf("Failed to retrieve created cloud scan rule with credential ID \"%s\": ", cloudScanRule.CredentialId) + err.Error(),
+        )
+        return
+	}
+   
+    // Convert updated values to schema
+    schema, diags := terraformToCloudAccount(ctx, plan, updatedCredential, updatedCloudScanRule)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Set updated state
+    diags = resp.State.Set(ctx, schema)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
 func (r *GcpCloudAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -398,14 +478,6 @@ func (r *GcpCloudAccountResource) ImportState(ctx context.Context, req resource.
 func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAccountResourceModel) (authAPI.Credential, systemAPI.CloudScanRule, diag.Diagnostics) {
     var diags diag.Diagnostics
 
-    //if cloudAccount == nil {
-    //    diags.AddError(
-    //        "Value Conversion Error",
-    //        "Error occured while converting cloud account resource to Terraform types: null reference error",
-    //    )
-    //    return authAPI.Credential{}, systemAPI.CloudScanRule{}, diags
-    //}
-
     /*
         Configurable fields for agentless scanning when set to "scan as hub":
         - auto scale
@@ -434,6 +506,16 @@ func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAc
         //UseSTSRegionalEndpoint: 
     }
 
+    var regions []string
+    if (!cloudAccount.AgentlessScanning.Regions.IsNull() && !cloudAccount.AgentlessScanning.Regions.IsUnknown()) {
+        diags = cloudAccount.AgentlessScanning.Regions.ElementsAs(ctx, &regions, false)
+        if diags.HasError() {
+            return authAPI.Credential{}, systemAPI.CloudScanRule{}, diags
+        }
+    } else {
+        regions = []string{}
+    }
+
     // If the "Organization" setting is selected for scan scope, agentless scan spec must be "{}" 
     cloudScanRule := systemAPI.CloudScanRule{
         CredentialId: cloudAccount.AccountName.ValueString(),    
@@ -442,12 +524,13 @@ func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAc
         AgentlessScanSpec: systemAPI.AgentlessScanSpec{
             Enabled: cloudAccount.AgentlessScanning.Enabled.ValueBool(),
             HubAccount: cloudAccount.AgentlessScanning.IsHubAccount.ValueBool(),
-            HubCredentialID: cloudAccount.AgentlessScanning.HubAccountId.ValueString(),
+            //HubCredentialID: cloudAccount.AgentlessScanning.HubAccountId.ValueString(),
             ConsoleAddress: fmt.Sprintf("%s:%d", cloudAccount.AgentlessScanning.ConsoleURL.ValueString(), cloudAccount.AgentlessScanning.Port.ValueInt32()),
             //ProxyAddress
             //ProxyCA
             AutoScale: cloudAccount.AgentlessScanning.AutoScale.ValueBool(),
-            Scanners: int(cloudAccount.AgentlessScanning.MaxNumberOfScanners.ValueInt32()), // "Agentless target account with hub account scan cannot be configured to specify max scanners"
+            //Scanners: int(cloudAccount.AgentlessScanning.MaxNumberOfScanners.ValueInt32()), // "Agentless target account with hub account scan cannot be configured to specify max scanners"
+            Regions: regions,
             ScanNonRunning: cloudAccount.AgentlessScanning.ScanNonRunningHosts.ValueBool(),
             //SecurityGroup: cloudAccount.AgentlessScanning.SecurityGroup.ValueString(), // This might just be for AWS?
             SkipPermissionsCheck: !cloudAccount.AgentlessScanning.EnforcePermissionsCheck.ValueBool(),
@@ -456,32 +539,34 @@ func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAc
         ServerlessScanSpec: systemAPI.ServerlessScanSpec{},
     }
 
+    if !cloudAccount.AgentlessScanning.HubAccountId.IsNull() && !cloudAccount.AgentlessScanning.HubAccountId.IsUnknown() && cloudAccount.AgentlessScanning.HubAccountId.ValueString() != "" {
+        cloudScanRule.AgentlessScanSpec.HubCredentialID = cloudAccount.AgentlessScanning.HubAccountId.ValueString()
+    } else {
+        cloudScanRule.AgentlessScanSpec.Scanners = int(cloudAccount.AgentlessScanning.MaxNumberOfScanners.ValueInt32())
+    }
+
     return credential, cloudScanRule, diags
 }
 
 func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpCloudAccountResourceModel, credential *authAPI.Credential, cloudScanRule *systemAPI.CloudScanRule) (models.GcpCloudAccountResourceModel, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    //if planCloudAccount == nil {
-    //    diags.AddError(
-    //        "Value Conversion Error",
-    //        "Error while converting Cloud Account resource to schema type: nil value provided for planned value",
-    //    )
-    //    return models.GcpCloudAccountResourceModel{}, diags
-    //}
-
     var (
+        diags diag.Diagnostics
         consoleUrl string
         consolePort int
+        agentlessScanSpec systemAPI.AgentlessScanSpec = cloudScanRule.AgentlessScanSpec
     )
 
     // TODO: add validation to make sure the value of ConsoleAddress follows the format "https://example.com:1234"
-    splitConsoleAddress := strings.Split(cloudScanRule.AgentlessScanSpec.ConsoleAddress, ":")
+    splitConsoleAddress := strings.Split(agentlessScanSpec.ConsoleAddress, ":")
     consoleUrl = fmt.Sprintf("%s:%s", splitConsoleAddress[0], splitConsoleAddress[1])
-
     consolePort, err := strconv.Atoi(splitConsoleAddress[2])
     if err != nil {
         // TODO: add error to diags
+        return models.GcpCloudAccountResourceModel{}, diags
+    }
+
+    regions, diags := types.SetValueFrom(ctx, types.StringType, agentlessScanSpec.Regions)
+    if diags.HasError() {
         return models.GcpCloudAccountResourceModel{}, diags
     }
 
@@ -493,15 +578,18 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
         ApiToken: planCloudAccount.ApiToken, // Populate with planned value since API only returns encoded value
         AgentlessScanning: models.AgentlessScanningResourceModel{
             Enabled: types.BoolValue(true), // TODO: find out how to actually populate this
-            HubAccountId: types.StringValue(cloudScanRule.AgentlessScanSpec.HubCredentialID),
+            IsHubAccount: types.BoolValue(agentlessScanSpec.HubAccount),
+            HubAccountId: types.StringValue(agentlessScanSpec.HubCredentialID),
             ConsoleURL: types.StringValue(consoleUrl),
             Port: types.Int32Value(int32(consolePort)),
-            ProxyAddress: types.StringValue(cloudScanRule.AgentlessScanSpec.ProxyAddress),
-            ProxyCertificate: types.StringValue(cloudScanRule.AgentlessScanSpec.ProxyCA),
-            //Scanners
-            ScanNonRunningHosts: types.BoolValue(cloudScanRule.AgentlessScanSpec.ScanNonRunning),
-            //SkipPermissionsCheck: types.BoolValue(cloudScanRule.AgentlessScanSpec.SkipPermissionsCheck),
-            Subnet: types.StringValue(cloudScanRule.AgentlessScanSpec.Subnet),
+            Subnet: types.StringValue(agentlessScanSpec.Subnet),
+            ProxyAddress: types.StringValue(agentlessScanSpec.ProxyAddress),
+            ProxyCertificate: types.StringValue(agentlessScanSpec.ProxyCA),
+            Regions: regions,
+            AutoScale: types.BoolValue(agentlessScanSpec.AutoScale),
+            MaxNumberOfScanners: types.Int32Value(int32(agentlessScanSpec.Scanners)),
+            ScanNonRunningHosts: types.BoolValue(agentlessScanSpec.ScanNonRunning),
+            EnforcePermissionsCheck: types.BoolValue(!agentlessScanSpec.SkipPermissionsCheck),
         },
         ServerlessScanning: models.ServerlessScanningResourceModel{},
         EnableCloudDiscovery: types.BoolValue(cloudScanRule.DiscoveryEnabled),
