@@ -1,14 +1,12 @@
-# Terraform Provider for Prisma Cloud Compute
-[//]: # (You can find the Prisma Cloud Compute provider in the [Terraform Registry](https://registry.terraform.io/providers/PaloAltoNetworks/prismacloudcompute/latest).)
-
 ## Local Installation
 1. Install requirements
     - Go v1.23.0+
     - GNU Make
-2. Unzip provider files
-3. Navigate to provider files directory in terminal
+2. Clone this branch (or download the source as a zip and extract the contents)
+3. Navigate to the repo directory in your terminal
 4. Run `make` (this will run the `install` step by default)
-5. Populate provider data (see below) into `providers.tf`
+    - This assumes that Terraform will look in the default location for providers (`~/.terraform.d/plugins`)
+5. After the provider has been built and moved to the correct location, populate provider data (see below) into `providers.tf`
 6. Run `terraform init`
 
 ## Basic setup
@@ -32,8 +30,6 @@ provider "prismacloudcompute" {
   # config_file = "/path/to/config.json"
 }
 ```
-
-[//]: # (Complete documentation can be found in the [marketplace listing](https://registry.terraform.io/providers/PaloAltoNetworks/prismacloudcompute/latest/docs).)
 
 ## Contributing
 Contributions are welcome!
