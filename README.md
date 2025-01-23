@@ -1,4 +1,6 @@
 ## Local Installation
+
+### MacOS/Linux
 1. Install requirements
     - Go v1.23.0+
     - GNU Make
@@ -6,8 +8,18 @@
 3. Navigate to the repo directory in your terminal
 4. Run `make` (this will run the `install` step by default)
     - This assumes that Terraform will look in the default location for providers (`~/.terraform.d/plugins`)
-5. After the provider has been built and moved to the correct location, populate provider data (see below) into `providers.tf`
+5. After the provider has been built and moved to the correct location, populate provider data (see "Basic Setup" section below) into `providers.tf`
 6. Run `terraform init`
+
+### Windows [WIP]
+1. Install requirements
+    - Go v1.23.0+
+2. Clone this branch (or download the source as a zip and extract the contents)
+3. Navigate to the repo directory in cmd or PowerShell 
+4. Run `go build -o terraform-provider-prismacloudcompute` to compile the provider
+5. Move the resulting binary to the default provider location (`%APPDATA%\terraform.d\plugins`)
+6. Populate provider data (see "Basic Setup" section below) into `providers.tf`
+7. Run `terraform init`
 
 ## Basic setup
 ```terraform
