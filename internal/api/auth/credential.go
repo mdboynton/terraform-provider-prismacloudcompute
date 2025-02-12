@@ -19,6 +19,7 @@ type Credential struct {
 	Created                string           `json:"created,omitempty"`
 	Description            string           `json:"description,omitempty"`
 	External               bool             `json:"external,omitempty"`
+    Global                 bool             `json:"global,omitempty"`
 	LastModified           string           `json:"lastModified,omitempty"`
 	Owner                  string           `json:"owner,omitempty"`
 	RoleArn                string           `json:"roleArn,omitempty"`

@@ -69,8 +69,9 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
             "credential_level": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
+                Computed: true,
+                Default: stringdefault.StaticString("project"),
                 // TODO: validation
-                // TODO: default
             },
             "service_account_key": schema.StringAttribute{
                 MarkdownDescription: "TODO",
@@ -85,6 +86,7 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                 // TODO: validation
             },
             "agentless_scanning": schema.SingleNestedAttribute{
+                // TODO: this should be null (or at least "enabled" should be set to "false") when credential_level is set to "organization"
                 MarkdownDescription: "TODO",
                 Required: true,
                 Validators: []validator.Object{
@@ -159,7 +161,7 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                     "enforce_permissions_check": schema.BoolAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
-                        Computed: true,
+                        //Computed: true,
                         //Default: booldefault.StaticBool(true),
                     },
                     "regions": schema.SetAttribute{
@@ -450,24 +452,34 @@ func (r *GcpCloudAccountResource) Update(ctx context.Context, req resource.Updat
 }
 
 func (r *GcpCloudAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-    //// Retrieve values from state
-	//var state models.GcpCloudAccountResourceModel
-    //diags := req.State.Get(ctx, &state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
-    //
-    //// Delete existing collection 
-    //collection := state.Name.ValueString()
-    //err := collectionAPI.DeleteCollection(*r.client, collection)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-    //        "Error deleting Collection resource", 
-    //        "Failed to delete collection: " + err.Error(),
-    //    )
-    //    return
-	//}
+    // Retrieve values from state
+	var state models.GcpCloudAccountResourceModel
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Delete cloud scan rule
+    err := systemAPI.DeleteCloudScanRule(*r.client, state.AccountName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error deleting Cloud Account resource", 
+            "Failed to delete cloud scan rule: " + err.Error(),
+        )
+        return
+	}
+    
+    // Delete credential
+    // TODO: Print warning about dangling credential?
+    err = authAPI.DeleteCredential(*r.client, state.AccountName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error deleting Cloud Account resource", 
+            "Failed to delete credential: " + err.Error(),
+        )
+        return
+	}
 }
 
 // TODO: Define ImportState to work properly with this resource
@@ -504,6 +516,17 @@ func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAc
         Type: "gcp",
         //UseAWSRole: 
         //UseSTSRegionalEndpoint: 
+    }
+
+    if cloudAccount.CredentialLevel.ValueString() == "organization" {
+        credential.Global = true
+    } else if cloudAccount.CredentialLevel.ValueString() == "project" {
+        credential.Global = false
+    } else {
+        diags.AddError(
+            "Value Conversion Error",
+            fmt.Sprintf("Invalid value for credential_level: %s", cloudAccount.CredentialLevel),
+        )
     }
 
     var regions []string
@@ -551,10 +574,17 @@ func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAc
 func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpCloudAccountResourceModel, credential *authAPI.Credential, cloudScanRule *systemAPI.CloudScanRule) (models.GcpCloudAccountResourceModel, diag.Diagnostics) {
     var (
         diags diag.Diagnostics
+        credentialLevel string
         consoleUrl string
         consolePort int
         agentlessScanSpec systemAPI.AgentlessScanSpec = cloudScanRule.AgentlessScanSpec
     )
+
+    if credential.Global {
+        credentialLevel = "organization"
+    } else {
+        credentialLevel = "project"
+    }
 
     // TODO: add validation to make sure the value of ConsoleAddress follows the format "https://example.com:1234"
     splitConsoleAddress := strings.Split(agentlessScanSpec.ConsoleAddress, ":")
@@ -573,11 +603,11 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
     cloudAccount := models.GcpCloudAccountResourceModel{
         AccountName: types.StringValue(cloudScanRule.Credential.AccountName),
         Description: types.StringValue(cloudScanRule.Credential.Description),
-        CredentialLevel: types.StringValue("project"), // TODO: find out how to actually populate this
+        CredentialLevel: types.StringValue(credentialLevel),
         ServiceAccountKey: planCloudAccount.ServiceAccountKey, // Populate with planned value since API only returns encoded value
         ApiToken: planCloudAccount.ApiToken, // Populate with planned value since API only returns encoded value
         AgentlessScanning: models.AgentlessScanningResourceModel{
-            Enabled: types.BoolValue(true), // TODO: find out how to actually populate this
+            Enabled: types.BoolValue(agentlessScanSpec.Enabled),
             IsHubAccount: types.BoolValue(agentlessScanSpec.HubAccount),
             HubAccountId: types.StringValue(agentlessScanSpec.HubCredentialID),
             ConsoleURL: types.StringValue(consoleUrl),
