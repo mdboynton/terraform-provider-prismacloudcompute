@@ -1,17 +1,19 @@
 package auth
 
 import (
-	"context"
+	//"context"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-    //"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var _ resource.Resource = &UserResource{}
@@ -49,20 +51,19 @@ func (r *UserResource) GetSchema() schema.Schema {
                 MarkdownDescription: "TODO",
                 Required: true,
                 PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplaceIf(
-                        func(
-                            ctx context.Context,
-                            sr planmodifier.StringRequest,
-                            rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse,
-                        ) {
-                            rrifr.RequiresReplace = (sr.PlanValue.ValueString() != sr.StateValue.ValueString()) && (sr.PlanValue.ValueString() == "admin" || sr.PlanValue.ValueString() == "operator")
-                        },
-                        "TODO",
-                        "TODO",
-                    ),
+                    planmodifiers.ReplaceIfRoleNameChanged(),
                 },
             },
             "permissions": schema.SetNestedAttribute{
+                MarkdownDescription: "TODO",
+                Optional: true,
+                Computed: true,
+                Validators: []validator.Set{
+                    validators.UserPermissionsNotConfiguredWithAdminRoles(),
+                },
+                PlanModifiers: []planmodifier.Set{
+                    planmodifiers.UseDefaultForUnknownUserPermissions(),
+                },
                 NestedObject: schema.NestedAttributeObject {
                     Attributes: map[string]schema.Attribute{
                         "project": schema.StringAttribute{
@@ -76,7 +77,6 @@ func (r *UserResource) GetSchema() schema.Schema {
                         },
                     },
                 },
-                Optional: true,
             },
         },
     }
