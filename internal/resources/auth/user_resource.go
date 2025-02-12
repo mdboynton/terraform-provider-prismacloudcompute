@@ -7,13 +7,11 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/auth"
 	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/auth"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-    //"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -52,25 +50,6 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
         return
     }
 
-    // Handle state changes that would cause API errors
-    // TODO: move this to a validator
-    if (plan.Role.ValueString() == "admin" || plan.Role.ValueString() == "operator") && plan.Permissions != nil {
-        resp.Diagnostics.AddError(
-            "Invalid Resource Configuration",
-            "Users with role 'admin' or 'operator' cannot have assigned permissions",
-        )
-        return
-    }
-
-    // TODO: dont think we need this, since sending an empty array for permissions in this case seems to work 
-    //if (plan.Role.ValueString() != "admin" && plan.Role.ValueString() != "operator") && plan.Permissions == nil {
-    //    resp.Diagnostics.AddError(
-    //        "Invalid Resource Configuration",
-    //        "Users with role other than 'admin' or 'operator' must have assigned permissions",
-    //    )
-    //    return
-    //}
-
     // Generate API request body from plan
     user, diags := schemaToUser(ctx, &plan)
     resp.Diagnostics.Append(diags...)
@@ -82,17 +61,31 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
     _, err := auth.CreateUser(*r.client, user)
 	if err != nil {
 		resp.Diagnostics.AddError(
-            "Error retrieving created User resource", 
-            "Failed to retrieve created user: " + err.Error(),
+            "Error creating User resource", 
+            fmt.Sprintf("Failed to create user \"%s\": %s", user.Username, err.Error()),
         )
         return
 	}
 
-    // TODO: retrieve newly created resource and use that data to populate
-    //       state instead of using plan data (see below)
+    // Retrieve newly created user
+    createdUser, err := auth.GetUser(*r.client, user.Username)
+    if err != nil {
+		resp.Diagnostics.AddError(
+            "Error retrieving created User resource", 
+            fmt.Sprintf("Failed to retrieve created user \"%s\": %s", user.Username, err.Error()),
+        )
+        return
+    }
 
-    // Set state to plan data
-    diags = resp.State.Set(ctx, plan)
+    // Convert to schema
+    createdUserSchema, diags := userToSchema(ctx, *createdUser, plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Set state
+    diags = resp.State.Set(ctx, createdUserSchema)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -113,7 +106,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading User resource", 
-            "Failed to read username " + state.Username.ValueString()  + ": " + err.Error(),
+            fmt.Sprintf("Failed to read user \"%s\": %s", state.Username.ValueString(), err.Error()),
         )
         return
     }
@@ -149,8 +142,6 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
         return
     }
 
-    util.DLog(ctx, fmt.Sprintf("schemaToUser in Update() returned with value:\n\n %+v", plan))
-
     // Update existing user
 	err := auth.UpdateUser(*r.client, user)
 	if err != nil {
@@ -171,8 +162,6 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
         return
     }
 
-    util.DLog(ctx, fmt.Sprintf("updatedUser: \n\n %+v", updatedUser))
-
     // Convert updated user to schema
     plan, diags = userToSchema(ctx, *updatedUser, plan)
     resp.Diagnostics.Append(diags...)
@@ -180,9 +169,6 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
         return
     }
     
-    util.DLog(ctx, fmt.Sprintf("setting state from Update() with value:\n\n %+v", plan))
-    util.DLog(ctx, fmt.Sprintf("%+v", plan.Permissions))
-
     // Set updated state
     diags = resp.State.Set(ctx, plan)
     resp.Diagnostics.Append(diags...)
@@ -212,9 +198,8 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-// TODO: Define ImportState to work properly with this resource
 func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("username"), req, resp)
 }
 
 func schemaToUser(ctx context.Context, plan *models.UserResourceModel) (auth.User, diag.Diagnostics) {
@@ -227,7 +212,6 @@ func schemaToUser(ctx context.Context, plan *models.UserResourceModel) (auth.Use
         Role: plan.Role.ValueString(),
     }
 
-    if plan.Permissions != nil {
         permissions := []auth.UserPermission{}
         for _, permissionsObject := range *plan.Permissions {
             collections := make([]string, 0, len(permissionsObject.Collections.Elements()))
@@ -240,8 +224,10 @@ func schemaToUser(ctx context.Context, plan *models.UserResourceModel) (auth.Use
                 Collections: collections,
             })
         }
-        user.Permissions = permissions
-    }
+
+        if len(permissions) > 0 {
+            user.Permissions = permissions
+        }
 
 	return user, diags 
 }
@@ -252,12 +238,10 @@ func userToSchema(ctx context.Context, user auth.User, plan models.UserResourceM
     schema := models.UserResourceModel{
         AuthenticationType: types.StringValue(user.AuthType),
         Username: types.StringValue(user.Username),
-        //Password: types.StringValue(user.Password),
+        Password: plan.Password,
         Role: types.StringValue(user.Role),
     }
-    
-    util.DLog(ctx, fmt.Sprintf("userToSchema() user value:\n\n %+v", user))
-
+   
     if user.Permissions != nil {
         permissions := []models.UserPermissionsResourceModel{}
         for _, permissionsObject := range user.Permissions {
@@ -273,8 +257,6 @@ func userToSchema(ctx context.Context, user auth.User, plan models.UserResourceM
         }
         schema.Permissions = &permissions
     }
-
-    schema.Password = plan.Password
 
     return schema, diags
 }
