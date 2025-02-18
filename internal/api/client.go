@@ -24,7 +24,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		consoleUrl.Scheme = "https"
 	}
 
-    // Append endpoint to URL
+    // Append endpoint to URL"
 	consoleUrl.Path = path.Join(consoleUrl.Path, endpoint)
 
     // Marshal request payload into buffer, if not nil

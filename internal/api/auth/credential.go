@@ -11,6 +11,7 @@ const CredentialsEndpoint = "api/v1/credentials"
 
 type Credential struct {
 	Id                     string           `json:"_id,omitempty"`
+	AccountName            string           `json:"accountName,omitempty"`
 	AccountGUID            string           `json:"accountGUID,omitempty"`
 	AccountID              string           `json:"accountID,omitempty"`
 	ApiToken               Secret           `json:"apiToken,omitempty"`
@@ -18,6 +19,7 @@ type Credential struct {
 	Created                string           `json:"created,omitempty"`
 	Description            string           `json:"description,omitempty"`
 	External               bool             `json:"external,omitempty"`
+    Global                 bool             `json:"global,omitempty"`
 	LastModified           string           `json:"lastModified,omitempty"`
 	Owner                  string           `json:"owner,omitempty"`
 	RoleArn                string           `json:"roleArn,omitempty"`
@@ -43,7 +45,6 @@ type TemporaryToken struct {
 	Token              Secret `json:"token,omitempty"`
 }
 
-// Get all credentials.
 func ListCredentials(c api.PrismaCloudComputeAPIClient) ([]Credential, error) {
 	var ans []Credential
 	if err := c.Request(http.MethodGet, CredentialsEndpoint, nil, nil, &ans); err != nil {
@@ -52,7 +53,7 @@ func ListCredentials(c api.PrismaCloudComputeAPIClient) ([]Credential, error) {
 	return ans, nil
 }
 
-// Get a specific credential.
+// TODO: rename to GetCredentialByName
 func GetCredential(c api.PrismaCloudComputeAPIClient, name string) (*Credential, error) {
 	credentials, err := ListCredentials(c)
 	if err != nil {
@@ -66,12 +67,11 @@ func GetCredential(c api.PrismaCloudComputeAPIClient, name string) (*Credential,
 	return nil, fmt.Errorf("credential '%s' not found", name)
 }
 
-// Create a new or update an existing credential.
+// TODO: rename to AddCredential
 func UpdateCredential(c api.PrismaCloudComputeAPIClient, credential Credential) error {
 	return c.Request(http.MethodPost, CredentialsEndpoint, nil, credential, nil)
 }
 
-// Delete an existing credential.
 func DeleteCredential(c api.PrismaCloudComputeAPIClient, name string) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%s", CredentialsEndpoint, name), nil, nil, nil)
 }
