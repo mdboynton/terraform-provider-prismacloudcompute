@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -64,6 +64,8 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
             "description": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional: true,
+                Computed: true,
+                Default: stringdefault.StaticString(""),
                 // TODO: validation (cant be longer than 30 characters)
             },
             "credential_level": schema.StringAttribute{
@@ -155,14 +157,14 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                         MarkdownDescription: "TODO",
                         Optional: true,
                         Computed: true,
-                        Default: int32default.StaticInt32(int32(0)),
+                        Default: int32default.StaticInt32(int32(10)),
                         // TODO: validation (this attribute cannot be set when creating a "scan with hub account" type account
                     },
                     "enforce_permissions_check": schema.BoolAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
-                        //Computed: true,
-                        //Default: booldefault.StaticBool(true),
+                        Computed: true,
+                        Default: booldefault.StaticBool(false),
                     },
                     "regions": schema.SetAttribute{
                         MarkdownDescription: "TODO",
@@ -482,9 +484,9 @@ func (r *GcpCloudAccountResource) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-// TODO: Define ImportState to work properly with this resource
+// TODO: Ensure this works properly
 func (r *GcpCloudAccountResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("account_name"), req, resp)
 }
 
 func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAccountResourceModel) (authAPI.Credential, systemAPI.CloudScanRule, diag.Diagnostics) {
@@ -508,9 +510,8 @@ func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAc
             Plain: cloudAccount.ApiToken.ValueString(),
         },
         Secret: authAPI.Secret{
-            Encrypted: "", // TODO: do we need this?
+            Encrypted: "",
             Plain: cloudAccount.ServiceAccountKey.ValueString(),
-            //Plain: strings.Replace(cloudAccount.ServiceAccountKey.ValueString(), "\n", "", -1),
         },
         //SkipVerify:
         Type: "gcp",
@@ -523,6 +524,7 @@ func cloudAccountToTerraform(ctx context.Context, cloudAccount models.GcpCloudAc
     } else if cloudAccount.CredentialLevel.ValueString() == "project" {
         credential.Global = false
     } else {
+        // TODO: put this in a validator
         diags.AddError(
             "Value Conversion Error",
             fmt.Sprintf("Invalid value for credential_level: %s", cloudAccount.CredentialLevel),
@@ -577,6 +579,7 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
         credentialLevel string
         consoleUrl string
         consolePort int
+        hubAccountIdValue basetypes.StringValue
         agentlessScanSpec systemAPI.AgentlessScanSpec = cloudScanRule.AgentlessScanSpec
     )
 
@@ -600,6 +603,12 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
         return models.GcpCloudAccountResourceModel{}, diags
     }
 
+    if (!planCloudAccount.AgentlessScanning.HubAccountId.IsNull() && !planCloudAccount.AgentlessScanning.HubAccountId.IsUnknown()) {
+        hubAccountIdValue = types.StringValue(agentlessScanSpec.HubCredentialID)    
+    } else {
+        hubAccountIdValue = types.StringNull()
+    }
+
     cloudAccount := models.GcpCloudAccountResourceModel{
         AccountName: types.StringValue(cloudScanRule.Credential.AccountName),
         Description: types.StringValue(cloudScanRule.Credential.Description),
@@ -609,7 +618,7 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
         AgentlessScanning: models.AgentlessScanningResourceModel{
             Enabled: types.BoolValue(agentlessScanSpec.Enabled),
             IsHubAccount: types.BoolValue(agentlessScanSpec.HubAccount),
-            HubAccountId: types.StringValue(agentlessScanSpec.HubCredentialID),
+            HubAccountId: hubAccountIdValue,
             ConsoleURL: types.StringValue(consoleUrl),
             Port: types.Int32Value(int32(consolePort)),
             Subnet: types.StringValue(agentlessScanSpec.Subnet),
