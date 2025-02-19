@@ -111,6 +111,7 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                         Optional: true,
                         // TODO: validation
                     },
+                    // TODO: prevent the console_url attribute from being configured if its a hub account (consoleAddrwill appear as an empty string in API response)
                     "console_url": schema.StringAttribute{
                         MarkdownDescription: "TODO",
                         Optional: true,
@@ -158,6 +159,7 @@ func (r *GcpCloudAccountResource) Schema(ctx context.Context, req resource.Schem
                         Optional: true,
                         Computed: true,
                         Default: int32default.StaticInt32(int32(10)),
+                        // TODO: plan modification (if creating an account that will be scanned with a hub account, this value must match the value of the same attribute in the hub account resource)
                         // TODO: validation (this attribute cannot be set when creating a "scan with hub account" type account
                     },
                     "enforce_permissions_check": schema.BoolAttribute{
@@ -454,6 +456,10 @@ func (r *GcpCloudAccountResource) Update(ctx context.Context, req resource.Updat
 }
 
 func (r *GcpCloudAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+    // TODO: handle the case (or document steps to avoid the case) where a hub account and a cloud account tied to that
+    // hub account are being deleted and replaced at the same time, and the new cloud account is created and tied to the
+    // hub account before the hub account can be deleted and replaced
+
     // Retrieve values from state
 	var state models.GcpCloudAccountResourceModel
     diags := req.State.Get(ctx, &state)
@@ -577,8 +583,8 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
     var (
         diags diag.Diagnostics
         credentialLevel string
-        consoleUrl string
-        consolePort int
+        consoleUrl basetypes.StringValue
+        consolePort basetypes.Int32Value 
         hubAccountIdValue basetypes.StringValue
         agentlessScanSpec systemAPI.AgentlessScanSpec = cloudScanRule.AgentlessScanSpec
     )
@@ -589,13 +595,21 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
         credentialLevel = "project"
     }
 
-    // TODO: add validation to make sure the value of ConsoleAddress follows the format "https://example.com:1234"
-    splitConsoleAddress := strings.Split(agentlessScanSpec.ConsoleAddress, ":")
-    consoleUrl = fmt.Sprintf("%s:%s", splitConsoleAddress[0], splitConsoleAddress[1])
-    consolePort, err := strconv.Atoi(splitConsoleAddress[2])
-    if err != nil {
-        // TODO: add error to diags
-        return models.GcpCloudAccountResourceModel{}, diags
+    if agentlessScanSpec.ConsoleAddress != "" {
+        // TODO: add validation to make sure the value of ConsoleAddress follows the format "https://example.com:1234"
+        splitConsoleAddress := strings.Split(agentlessScanSpec.ConsoleAddress, ":")
+        consoleUrlString := fmt.Sprintf("%s:%s", splitConsoleAddress[0], splitConsoleAddress[1])
+        consolePortString := splitConsoleAddress[2]
+        consolePortInt, err := strconv.Atoi(consolePortString)
+        if err != nil {
+            // TODO: add error to diags
+            return models.GcpCloudAccountResourceModel{}, diags
+        }
+        consoleUrl = types.StringValue(consoleUrlString)
+        consolePort = types.Int32Value(int32(consolePortInt))
+    } else {
+        consoleUrl = types.StringNull()
+        consolePort = types.Int32Null()
     }
 
     regions, diags := types.SetValueFrom(ctx, types.StringType, agentlessScanSpec.Regions)
@@ -619,8 +633,8 @@ func terraformToCloudAccount(ctx context.Context, planCloudAccount models.GcpClo
             Enabled: types.BoolValue(agentlessScanSpec.Enabled),
             IsHubAccount: types.BoolValue(agentlessScanSpec.HubAccount),
             HubAccountId: hubAccountIdValue,
-            ConsoleURL: types.StringValue(consoleUrl),
-            Port: types.Int32Value(int32(consolePort)),
+            ConsoleURL: consoleUrl,
+            Port: consolePort,
             Subnet: types.StringValue(agentlessScanSpec.Subnet),
             ProxyAddress: types.StringValue(agentlessScanSpec.ProxyAddress),
             ProxyCertificate: types.StringValue(agentlessScanSpec.ProxyCA),
