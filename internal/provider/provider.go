@@ -12,6 +12,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/auth"
 	compliance "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/compliance"
 	vulnerability "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/vulnerability"
+	runtime "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/runtime"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
@@ -110,6 +111,8 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
         vulnerability.NewVmImageVulnerabilityPolicyResource,
         vulnerability.NewFunctionVulnerabilityPolicyResource,
         vulnerability.NewCiFunctionVulnerabilityPolicyResource,
+        // Runtime policy resources
+        runtime.NewHostRuntimePolicyResource,
 	}
 }
 
