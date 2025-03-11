@@ -87,7 +87,6 @@ func (r *HostRuntimePolicyResource) Create(ctx context.Context, req resource.Cre
         return
     }
 
-    //createdPolicy, diags := policy.PolicyTerraformToSchema(ctx, *response, plan)
     createdPolicy, diags := RuntimePolicyTerraformToSchema(ctx, response, plan)
     if diags.HasError() {
         return
@@ -102,126 +101,126 @@ func (r *HostRuntimePolicyResource) Create(ctx context.Context, req resource.Cre
 }
 
 func (r *HostRuntimePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    //// Get current state
-    //var state models.RuntimeHostPolicyResourceModel 
-    //diags := req.State.Get(ctx, &state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Get current state
+    var state models.RuntimeHostPolicyResourceModel 
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Get policy value from Prisma Cloud
-    //data, err := policyAPI.GetPolicy(*r.client, policyAPI.PolicyTypeComplianceVmImage)
-    //if err != nil {
-    //    resp.Diagnostics.AddError(
-    //        "Error reading Host Runtime Policy resource", 
-    //        "Failed to read host compliance Policy: " + err.Error(),
-    //    )
-    //    return
-    //}
+    // Get policy value from Prisma Cloud
+    data, err := policyAPI.GetRuntimeHost(*r.client)
+    if err != nil {
+		resp.Diagnostics.AddError(
+            "Error reading Host Runtime Policy resource", 
+            "Failed to read host runtime policy: " + err.Error(),
+        )
+        return
+    }
 
-    //// Overwrite state values with Prisma Cloud data
-    //policySchema, diags := policy.PolicyTerraformToSchema(ctx, *data, state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Overwrite state values with Prisma Cloud data
+    policySchema, diags := RuntimePolicyTerraformToSchema(ctx, data, state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Set refreshed state
-    //diags = resp.State.Set(ctx, &policySchema)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Set refreshed state
+    diags = resp.State.Set(ctx, &policySchema)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
 func (r *HostRuntimePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-    //// Get current state
-    //var state models.RuntimeHostPolicyResourceModel 
-    //diags := req.State.Get(ctx, &state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Get current state
+    var state models.RuntimeHostPolicyResourceModel 
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Retrieve values from plan
-    //var plan models.RuntimeHostPolicyResourceModel 
-    //diags = req.Plan.Get(ctx, &plan)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Retrieve values from plan
+    var plan models.RuntimeHostPolicyResourceModel 
+    diags = req.Plan.Get(ctx, &plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Generate API request body from plan
-    //planPolicy, diags := policy.RuntimePolicySchemaToTerraform(ctx, &plan, r.client)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Generate API request body from plan
+    planPolicy, diags := RuntimePolicySchemaToTerraform(ctx, &plan, r.client)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Update existing policy
-    //err := policyAPI.UpsertPolicy(*r.client, planPolicy)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-    //        "Error updating Host Runtime Policy resource", 
-    //        "Failed to update host runtime policy: " + err.Error(),
-    //    )
-    //    return
-	//}
+    // Update existing policy
+    err := policyAPI.UpsertRuntimeHost(*r.client, planPolicy)
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error updating Host Runtime Policy resource", 
+            "Failed to update host runtime policy: " + err.Error(),
+        )
+        return
+	}
 
-    //// Get updated policy value from Prisma Cloud
-    //updatedPolicy, err := policyAPI.GetPolicy(*r.client, policyAPI.PolicyTypeComplianceVmImage)
-    //if err != nil {
-    //    resp.Diagnostics.AddError(
-    //        "Error reading Host Runtime Policy resource", 
-    //        "Failed to read Host Runtime Policy: " + err.Error(),
-    //    )
-    //    return
-    //}
+    // Get updated policy value from Prisma Cloud
+    updatedPolicy, err := policyAPI.GetRuntimeHost(*r.client)
+    if err != nil {
+        resp.Diagnostics.AddError(
+            "Error reading Host Runtime Policy resource", 
+            "Failed to read Host Runtime Policy: " + err.Error(),
+        )
+        return
+    }
 
-    //// Convert updated policy into schema
-    //policySchema, diags := policy.PolicyTerraformToSchema(ctx, *updatedPolicy, plan)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Convert updated policy into schema
+    policySchema, diags := RuntimePolicyTerraformToSchema(ctx, updatedPolicy, plan)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Set updated state
-    //diags = resp.State.Set(ctx, policySchema)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Set updated state
+    diags = resp.State.Set(ctx, policySchema)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
 func (r *HostRuntimePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-    //// Retrieve values from state
-	//var state models.RuntimeHostPolicyResourceModel 
-    //diags := req.State.Get(ctx, &state)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+    // Retrieve values from state
+	var state models.RuntimeHostPolicyResourceModel 
+    diags := req.State.Get(ctx, &state)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    //// Clear policy rules
-    //state.Rules = &[]models.RuntimeHostPolicyRuleResourceModel{}
+    // Clear policy rules
+    state.Rules = &[]models.RuntimeHostPolicyRuleResourceModel{}
 
-    //// Generate API request body from plan
-    //updatedPlan, diags := policy.RuntimePolicySchemaToTerraform(ctx, &state, r.client)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
-    //
-    //// Delete existing policy 
-    //err := policyAPI.UpsertPolicy(*r.client, updatedPlan)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-    //        "Error deleting Host Runtime Policy resource", 
-    //        "Failed to delete host runtime policy: " + err.Error(),
-    //    )
-    //    return
-	//}
+    // Generate API request body from plan
+    updatedPlan, diags := RuntimePolicySchemaToTerraform(ctx, &state, r.client)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    
+    // Delete existing policy 
+    err := policyAPI.UpsertRuntimeHost(*r.client, updatedPlan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+            "Error deleting Host Runtime Policy resource", 
+            "Failed to delete host runtime policy: " + err.Error(),
+        )
+        return
+	}
 }
 
 func (r *HostRuntimePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

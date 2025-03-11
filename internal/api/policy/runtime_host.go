@@ -211,6 +211,9 @@ type PortRange struct {
 
 func (p *RuntimeHostPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeHostPolicyRuleResourceModel) {
 	//util.DLog(ctx, "Executing api.Policy.SortRules()")
+    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
+        return
+    }
 
 	rulesOrderMap := generateRuntimePolicyRulesOrderMap(*planRules)
 	sort.Slice((*p.Rules), func(i, j int) bool {
