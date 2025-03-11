@@ -207,23 +207,15 @@ type RuntimeHostPolicyResourceModel struct {
 }
 
 type RuntimeHostPolicyRuleResourceModel struct {
-	//AntiMalware       types.Object `tfsdk:"anti_malware"`
 	AntiMalware       *RuntimeHostPolicyAntiMalwareResourceModel `tfsdk:"anti_malware"`
 	Collections       types.Set `tfsdk:"collections"`
-	//CustomRules       types.List   `tfsdk:"custom_rules"`
 	CustomRules       *[]RuntimeHostPolicyCustomRuleResourceModel `tfsdk:"custom_rules"`
 	Disabled          types.Bool   `tfsdk:"disabled"`
-    //DNS               types.Object `tfsdk:"dns"`
-	//DNS               *RuntimeHostPolicyDNSResourceModel`tfsdk:"dns"`
-	//FileIntegrityRules types.List   `tfsdk:"file_integrity_rules"`
 	FileIntegrityRules *[]RuntimeHostPolicyFileIntegrityRuleResourceModel   `tfsdk:"file_integrity_rules"`
-	//Forensic          types.Object `tfsdk:"forensic"`
 	Activities        *RuntimeHostPolicyActivitiesResourceModel `tfsdk:"activities"`
-	//LogInspectionRules types.List   `tfsdk:"log_inspection_rules"`
 	LogInspectionRules *[]RuntimeHostPolicyLogInspectionRuleResourceModel `tfsdk:"log_inspection_rules"`
 	Modified          types.String `tfsdk:"modified"`
 	Name              types.String `tfsdk:"name"`
-	//Network           types.Object `tfsdk:"network"`
 	Networking        *RuntimeHostPolicyNetworkingResourceModel `tfsdk:"networking"`
 	Notes             types.String `tfsdk:"notes"`
     Order                           types.Int32     `tfsdk:"order"`
@@ -233,31 +225,18 @@ type RuntimeHostPolicyRuleResourceModel struct {
 
 type RuntimeHostPolicyAntiMalwareResourceModel struct {
 	AllowedProcesses          types.List   `tfsdk:"allowed_processes"`
-	//CryptoMiner               types.List   `tfsdk:"crypto_miner"`
 	CryptoMiners              types.String `tfsdk:"crypto_miners"`
-	//AlertProcesses           types.Object `tfsdk:"denied_processes"`
 	DeniedProcesses           *RuntimeHostPolicyDeniedProcessesResourceModel `tfsdk:"denied_processes"`
-	//DetectCompilerGeneratedBinary types.Bool   `tfsdk:"detect_compiler_generated_binary"`
 	SuppressCompilerGeneratedBinaries types.Bool   `tfsdk:"suppress_compiler_generated_binaries"`
 	EncryptedBinaries         types.String `tfsdk:"encrypted_binaries"`
-	//ExecutionFlowHijack       types.List   `tfsdk:"execution_flow_hijack"`
-	ExecutionFlowHijack       types.String `tfsdk:"execution_flow_hijack"`
-	//IntelligenceFeed          types.List   `tfsdk:"intelligence_feed"`
+	ExecutionFlowHijacking       types.String `tfsdk:"execution_flow_hijacking"`
 	MalwareFromAdvancedThreatProtection types.String `tfsdk:"malware_from_advanced_threat_protection"`
-	//CustomFeed                types.List   `tfsdk:"custom_feed"`
 	MalwareFromCustomFeed     types.String `tfsdk:"malware_from_custom_feed"`
-	//ReverseShell              types.List   `tfsdk:"reverse_shell"`
 	ReverseShell              types.String `tfsdk:"reverse_shell"`
-	//ServiceUnknownOriginBinary types.List   `tfsdk:"service_unknown_origin_binary"`
 	NonPackagedBinariesService types.String `tfsdk:"non_packaged_binaries_service"`
-	//UserUnknownOriginBinary   types.List   `tfsdk:"user_unknown_origin_binary"`
 	NonPackagedBinariesUser   types.String `tfsdk:"non_packaged_binaries_user"`
-	//SkipSSHTracking           types.Bool   `tfsdk:"skip_ssh_tracking"`
-	//SuspiciousELFHeaders      types.List   `tfsdk:"suspicious_elf_headers"`
 	SuspiciousELFHeaders      types.String `tfsdk:"suspicious_elf_headers"`
-	//TempFSProc                types.List   `tfsdk:"temp_fs_proc"`
 	ProcessesTemporaryStorage types.String `tfsdk:"processes_temporary_storage"`
-	//WebShell                  types.List   `tfsdk:"web_shell"`
 	WebShell                  types.String `tfsdk:"web_shell"`
 	WildFireAnalysis          types.String `tfsdk:"wild_fire_analysis"`
 }
@@ -278,12 +257,11 @@ type RuntimeHostPolicyFileIntegrityRuleResourceModel struct {
 	AllowedProcesses types.List `tfsdk:"allowed_processes"`
 	ExcludedFilePatterns types.List `tfsdk:"excluded_file_patterns"`
 	MonitorSubdirectories types.Bool   `tfsdk:"monitor_subdirectories"`
-	MonitorWriteOps   types.Bool   `tfsdk:"monitor_writeops"`
-	MonitorReadOps   types.Bool   `tfsdk:"monitor_readops"`
+	MonitorWriteOps   types.Bool   `tfsdk:"monitor_write_ops"`
+	MonitorReadOps   types.Bool   `tfsdk:"monitor_read_ops"`
 	MonitorMetadataChanges   types.Bool   `tfsdk:"monitor_metadata_changes"`
 }
 
-//type RuntimeHostPolicyForensicResourceModel struct {
 type RuntimeHostPolicyActivitiesResourceModel struct {
     HostActivityMonitoring  RuntimeHostPolicyActivityMonitoringResourceModel `tfsdk:"host_activity_monitoring"`
     TrackSshEvents          types.Bool                                       `tfsdk:"track_ssh_events"`
@@ -320,13 +298,6 @@ type RuntimeHostPolicyNetworkingResourceModel struct {
 	DeniedDnsDomainsEffect types.String `tfsdk:"denied_dns_domains_effect"`
 	SuspiciousDomainsAdvancedThreatProtectionEffect types.String`tfsdk:"suspicious_domains_advanced_threat_protection_effect"`
 }
-
-//type RuntimeHostPolicyDNSResourceModel struct {
-//	Allow            types.List   `tfsdk:"allow"`
-//	Deny             types.List   `tfsdk:"deny"`
-//	DenyListEffect   types.List   `tfsdk:"deny_list_effect"`
-//	IntelligenceFeed types.List   `tfsdk:"intelligence_feed"`
-//}
 
 type RuntimeHostPolicyPortRangeResourceModel struct {
 	Deny  types.Bool  `tfsdk:"deny"`

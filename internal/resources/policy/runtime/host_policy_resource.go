@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var _ resource.Resource = &HostRuntimePolicyResource{}
@@ -326,7 +327,6 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
             FileIntegrityRules: fileIntegrityRules,
             Forensic: activities,
             Disabled: schemaRule.Disabled.ValueBool(),
-            //Modified: schemaRule.Modified.ValueString(),
             Modified: time.Now().Format("2006-01-02T15:04:05.000Z"),
             Name: schemaRule.Name.ValueString(),
             Notes: schemaRule.Notes.ValueString(),
@@ -352,10 +352,9 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
 func RuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.RuntimeHostPolicy, plan models.RuntimeHostPolicyResourceModel) (models.RuntimeHostPolicyResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "Executing RuntimePolicyTerraformToSchema")
 
-    var diags diag.Diagnostics
-
     var (
-        rules         []models.RuntimeHostPolicyRuleResourceModel
+        diags diag.Diagnostics
+        rules []models.RuntimeHostPolicyRuleResourceModel
     )
     
     if policy.Rules != nil {
@@ -392,27 +391,21 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
     for _, rule := range rules {
 
         var (
-            //planRule models.RuntimeHostPolicyRuleResourceModel
-            //alertThreshold *models.PolicyRuleThresholdResourceModel
-            //blockThreshold *models.PolicyRuleThresholdResourceModel
-            //complianceActions *models.PolicyRuleComplianceActionsResourceModel
-            //reportAllPassedAndFailedChecks basetypes.BoolValue
-            //onlyFixed basetypes.BoolValue
-            //notes basetypes.StringValue
-            //graceDays basetypes.Int32Value
-            //excludeBaseImageVulns basetypes.BoolValue
-            //pkgTypesThresholds *[]models.PolicyRulePkgTypesThresholdResourceModel
-            //graceDaysPolicy *models.PolicyRuleGraceDaysPolicyResourceModel
-            //blockMessage basetypes.StringValue
+            planRule models.RuntimeHostPolicyRuleResourceModel
+            activities *models.RuntimeHostPolicyActivitiesResourceModel
+            fileIntegrityRules *[]models.RuntimeHostPolicyFileIntegrityRuleResourceModel
+            logInspectionRules *[]models.RuntimeHostPolicyLogInspectionRuleResourceModel
+            networking *models.RuntimeHostPolicyNetworkingResourceModel
+            notes basetypes.StringValue
         )
 
         // Find the matching plan rule
-        //for idx, pRule := range *planRules {
-        //    if pRule.Name.ValueString() == rule.Name {
-        //        planRule = (*planRules)[idx]
-        //        break
-        //    }
-        //}
+        for idx, pRule := range *planRules {
+            if pRule.Name.ValueString() == rule.Name {
+                planRule = (*planRules)[idx]
+                break
+            }
+        }
 
         collectionNames := []string{}
         for _, collection := range rule.Collections {
@@ -428,41 +421,70 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
         if diags.HasError() {
             return []models.RuntimeHostPolicyRuleResourceModel{}, diags
         }
+    
+        if planRule.Activities == nil {
+            activities = nil
+        } else {
+            activitesValue, diags := activitiesToSchema(ctx, rule.Forensic, skipSshTracking)
+            if diags.HasError() {
+                return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+            }
 
-        fileIntegrityRules, diags := fileIntegrityRulesToSchema(ctx, rule.FileIntegrityRules)
-        if diags.HasError() {
-            return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+            activities = &activitesValue
         }
 
-        activites, diags := activitiesToSchema(ctx, rule.Forensic, skipSshTracking)
-        if diags.HasError() {
-            return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+        if planRule.FileIntegrityRules == nil {
+            fileIntegrityRules = nil
+        } else {
+            fileIntegrityRulesValue, diags := fileIntegrityRulesToSchema(ctx, rule.FileIntegrityRules)
+            if diags.HasError() {
+                return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+            }
+
+            fileIntegrityRules = &fileIntegrityRulesValue
         }
 
-        logInspectionRules, diags := logInspectionRulesToSchema(ctx, rule.LogInspectionRules)
-        if diags.HasError() {
-            return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+        if planRule.LogInspectionRules == nil {
+            logInspectionRules = nil
+        } else {
+            logInspectionRulesValue, diags := logInspectionRulesToSchema(ctx, rule.LogInspectionRules)
+            if diags.HasError() {
+                return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+            }
+
+            logInspectionRules = &logInspectionRulesValue
         }
-        
-        networking, diags := networkingToSchema(ctx, rule.Network, rule.DNS)
-        if diags.HasError() {
-            return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+       
+        if planRule.Networking == nil {
+            networking = nil
+        } else {
+            networkingValue, diags := networkingToSchema(ctx, rule.Network, rule.DNS)
+            if diags.HasError() {
+                return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+            }
+
+            networking = &networkingValue
+        }
+
+        if planRule.Notes.IsNull() {
+            notes = types.StringNull()
+        } else {
+            notes = types.StringValue(rule.Notes)
         }
 
         schemaRule := models.RuntimeHostPolicyRuleResourceModel{
             AntiMalware: &antiMalware,
-            FileIntegrityRules: &fileIntegrityRules,
-            Activities: &activites,
-            LogInspectionRules: &logInspectionRules,
-            Networking: &networking,
+            FileIntegrityRules: fileIntegrityRules,
+            Activities: activities,
+            LogInspectionRules: logInspectionRules,
+            Networking: networking,
             Collections: collections,
             CustomRules: &[]models.RuntimeHostPolicyCustomRuleResourceModel{},
             Disabled: types.BoolValue(rule.Disabled),
-            //Modified: types.StringValue(rule.Modified),
             Modified: types.StringValue(""),
             Name: types.StringValue(rule.Name),
-            Notes: types.StringValue(rule.Notes),
-            //Order: planRule.Order,
+            Notes: notes,
+            Order: planRule.Order,
             Owner: types.StringValue(rule.Owner),
             PreviousName: types.StringValue(rule.PreviousName),
         }
@@ -470,7 +492,7 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
         schemaRules = append(schemaRules, schemaRule)
     }
 
-    util.DLog(ctx, "Finishing PolicyRulesTerraformToSchema exection")
+    util.DLog(ctx, "Finishing RuntimeHostPolicyRulesTerraformToSchema exection")
 
     return schemaRules, diags
 }
@@ -504,6 +526,8 @@ func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.Runti
         if diags.HasError() {
             return policyAPI.AntiMalware{}, diags
         }
+
+        deniedProcesses.Paths = deniedProcessPaths
     }
 
     return policyAPI.AntiMalware{
@@ -512,13 +536,12 @@ func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.Runti
         DeniedProcesses: deniedProcesses,
         DetectCompilerGeneratedBinary: schemaAntiMalware.SuppressCompilerGeneratedBinaries.ValueBool(),
         EncryptedBinaries: schemaAntiMalware.EncryptedBinaries.ValueString(),
-        ExecutionFlowHijack: schemaAntiMalware.ExecutionFlowHijack.ValueString(),
+        ExecutionFlowHijack: schemaAntiMalware.ExecutionFlowHijacking.ValueString(),
         IntelligenceFeed: schemaAntiMalware.MalwareFromAdvancedThreatProtection.ValueString(),
         CustomFeed: schemaAntiMalware.MalwareFromCustomFeed.ValueString(),
         ReverseShell: schemaAntiMalware.ReverseShell.ValueString(),
         ServiceUnknownOriginBinary: schemaAntiMalware.NonPackagedBinariesService.ValueString(),
-        UserUnknownOriginBinary: schemaAntiMalware.NonPackagedBinariesService.ValueString(),
-        //SkipSSHTracking: schemaAntiMalware.SkipSSHTracking.ValueBool(),
+        UserUnknownOriginBinary: schemaAntiMalware.NonPackagedBinariesUser.ValueString(),
         SkipSSHTracking: !trackSshEvents,
         SuspiciousELFHeaders: schemaAntiMalware.SuspiciousELFHeaders.ValueString(),
         TempFSProc: schemaAntiMalware.ProcessesTemporaryStorage.ValueString(),
@@ -540,21 +563,24 @@ func antiMalwareToSchema(ctx context.Context, tfAntiMalware policyAPI.AntiMalwar
         return models.RuntimeHostPolicyAntiMalwareResourceModel{}, false, diags
     }
 
+    deniedProcesses := models.RuntimeHostPolicyDeniedProcessesResourceModel{
+        Effect: types.StringValue(tfAntiMalware.DeniedProcesses.Effect),
+        Paths: deniedProcessPaths,
+    }
+
     return models.RuntimeHostPolicyAntiMalwareResourceModel{
         AllowedProcesses: allowedProcesses,
         CryptoMiners: types.StringValue(tfAntiMalware.CryptoMiner),
-        DeniedProcesses: &models.RuntimeHostPolicyDeniedProcessesResourceModel{
-            Effect: types.StringValue(tfAntiMalware.DeniedProcesses.Effect),
-            Paths: deniedProcessPaths,
-        },
+        DeniedProcesses: &deniedProcesses,
         SuppressCompilerGeneratedBinaries: types.BoolValue(tfAntiMalware.DetectCompilerGeneratedBinary),
         EncryptedBinaries: types.StringValue(tfAntiMalware.EncryptedBinaries),
-        ExecutionFlowHijack: types.StringValue(tfAntiMalware.ExecutionFlowHijack),
+        ExecutionFlowHijacking: types.StringValue(tfAntiMalware.ExecutionFlowHijack),
         MalwareFromAdvancedThreatProtection: types.StringValue(tfAntiMalware.IntelligenceFeed),
         MalwareFromCustomFeed: types.StringValue(tfAntiMalware.CustomFeed),
         ReverseShell: types.StringValue(tfAntiMalware.ReverseShell),
         NonPackagedBinariesService: types.StringValue(tfAntiMalware.ServiceUnknownOriginBinary),
         NonPackagedBinariesUser: types.StringValue(tfAntiMalware.UserUnknownOriginBinary),
+        SuspiciousELFHeaders: types.StringValue(tfAntiMalware.SuspiciousELFHeaders),
         //SkipSSHTracking: types.BoolValue(tfAntiMalware.SkipSSHTracking),
         ProcessesTemporaryStorage: types.StringValue(tfAntiMalware.TempFSProc),
         WebShell: types.StringValue(tfAntiMalware.WebShell),
@@ -769,10 +795,13 @@ func networkingToSchema(ctx context.Context, tfNetwork policyAPI.Network, tfDns 
     }
 
     for _, portRange := range tfNetwork.DeniedListeningPorts {
-        if portRange.Start == portRange.End {
-            deniedListeningPortsValues = append(deniedListeningPortsValues, string(portRange.Start))
+        start := strconv.Itoa(portRange.Start)
+        end := strconv.Itoa(portRange.End)
+
+        if start == end {
+            deniedListeningPortsValues = append(deniedListeningPortsValues, start)
         } else {
-            deniedListeningPortsValues = append(deniedListeningPortsValues, fmt.Sprintf("%d-%d", portRange.Start, portRange.End))
+            deniedListeningPortsValues = append(deniedListeningPortsValues, start + "-" + end)
         }
     }
 
@@ -782,10 +811,13 @@ func networkingToSchema(ctx context.Context, tfNetwork policyAPI.Network, tfDns 
     }
 
     for _, portRange := range tfNetwork.DeniedOutboundPorts {
-        if portRange.Start == portRange.End {
-            deniedOutboundPortsValues = append(deniedOutboundPortsValues, string(portRange.Start))
+        start := strconv.Itoa(portRange.Start)
+        end := strconv.Itoa(portRange.End)
+
+        if start == end {
+            deniedOutboundPortsValues = append(deniedOutboundPortsValues, start)
         } else {
-            deniedOutboundPortsValues = append(deniedOutboundPortsValues, fmt.Sprintf("%d-%d", portRange.Start, portRange.End))
+            deniedOutboundPortsValues = append(deniedOutboundPortsValues, start + "-" + end)
         }
     }
     
@@ -882,12 +914,12 @@ func fileIntegrityRulesToTerraform(ctx context.Context, schemaFileIntegrityRules
 
         fileIntegrityRules = append(fileIntegrityRules, policyAPI.FileIntegrityRule{
             Exclusions: exclusions,
-            Metadata: rule.MonitorMetadataChanges.ValueBool(),
             Path: rule.Path.ValueString(),
             ProcWhitelist: procWhitelist,
-            Read: rule.MonitorReadOps.ValueBool(),
             Recursive: rule.MonitorSubdirectories.ValueBool(),
+            Read: rule.MonitorReadOps.ValueBool(),
             Write: rule.MonitorWriteOps.ValueBool(),
+            Metadata: rule.MonitorMetadataChanges.ValueBool(),
         })
     }
 
