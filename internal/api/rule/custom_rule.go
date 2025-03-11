@@ -14,11 +14,13 @@ type CustomRule struct {
 	AttackTechniques []string `json:"attackTechniques,omitempty"`
 	Description      string   `json:"description,omitempty"`
 	Message          string   `json:"message,omitempty"`
+    Modified         int      `json:"modified,omitempty"`
 	MinVersion       string   `json:"minVersion,omitempty"`
 	Name             string   `json:"name,omitempty"`
 	Script           string   `json:"script,omitempty"`
 	Type             string   `json:"type,omitempty"`
 	VulnIDs          []string `json:"vulnIds,omitempty"`
+	Owner            string   `json:"owner,omitempty"`
 }
 
 // Get all custom rules.
