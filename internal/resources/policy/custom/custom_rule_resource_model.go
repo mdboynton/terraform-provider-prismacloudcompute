@@ -4,22 +4,15 @@ import (
     "context"
 
     "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-    //policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
-    //"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
-    //"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 
     "github.com/hashicorp/terraform-plugin-framework/resource"
     "github.com/hashicorp/terraform-plugin-framework/resource/schema"
-    //"github.com/hashicorp/terraform-plugin-framework/attr"
     "github.com/hashicorp/terraform-plugin-framework/types"
     "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-    //"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-    //"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 )
 
 var _ resource.Resource = &CustomRuntimeRuleResource{}
 var _ resource.ResourceWithImportState = &CustomRuntimeRuleResource{}
-//var _ resource.ResourceWithModifyPlan = &CustomRuntimeRuleResource{}
 
 func NewCustomRuntimeRuleResource() resource.Resource {
     return &CustomRuntimeRuleResource{}

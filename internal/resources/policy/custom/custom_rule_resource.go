@@ -5,23 +5,18 @@ import (
 	"fmt"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	//collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
-	//policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	ruleAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/rule"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var _ resource.Resource = &CustomRuntimeRuleResource{}
 var _ resource.ResourceWithImportState = &CustomRuntimeRuleResource{}
-//var _ resource.ResourceWithModifyPlan = &CustomRuntimeRuleResource{}
 
 func (r *CustomRuntimeRuleResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
     resp.TypeName = req.ProviderTypeName + "_custom_runtime_rule"
@@ -199,16 +194,6 @@ func (r *CustomRuntimeRuleResource) Delete(ctx context.Context, req resource.Del
     if resp.Diagnostics.HasError() {
         return
     }
-
-    //// Clear policy rules
-    //state.Rules = &[]models.CustomRuntimeRuleRuleResourceModel{}
-
-    //// Generate API request body from plan
-    //updatedPlan, diags := RuntimePolicySchemaToTerraform(ctx, &state, r.client)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
     
     // Delete existing policy 
     err := ruleAPI.DeleteCustomRule(*r.client, int(state.Id.ValueInt64()))
