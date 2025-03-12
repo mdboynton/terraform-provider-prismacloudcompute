@@ -307,8 +307,9 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        "file_integrity_rules": schema.ListNestedAttribute{
     			        	Optional:    true,
                             Description: "List of file integrity rules",
-                            // TODO: validation (see below)
-                            // TODO: ensure at least one monitor argument provided
+                            Validators: []validator.List{
+                                validators.FileIntegrityRulesAreValid(),
+                            },
                             NestedObject: schema.NestedAttributeObject{
                                 Attributes: map[string]schema.Attribute{
                                     "file_path": schema.StringAttribute{
@@ -325,16 +326,6 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         ElementType: types.StringType,
                                         Description: "File patterns to exclude.",
                                     },
-                                    /*
-                                        when monitor_subdirectories is enabled:
-                                            monitor_write_ops must be enabled?
-                                            monitor_read_ops is disabled
-                                            monitor_metadata_changes is disabled
-                                        when monitor_read_ops is enabled:
-                                            monitor_subdirectories is disabled
-                                        when monitor_metadata_changes is enabled:
-                                            monitor_subdirectories is disabled
-                                    */
                                     "monitor_subdirectories": schema.BoolAttribute{
                                         Optional:   true,
                                         Computed:   true,
