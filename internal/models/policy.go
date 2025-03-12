@@ -307,7 +307,7 @@ type RuntimeHostPolicyPortRangeResourceModel struct {
 }
 
 func (m *RuntimeHostPolicyResourceModel) SortRules(ctx context.Context, planRules *[]RuntimeHostPolicyRuleResourceModel) {
-    util.DLog(ctx, "Executing PolicyResourceModel.SortRules()")
+    util.DLog(ctx, "Executing RuntimeHostPolicyResourceModel.SortRules()")
 
     if m.Rules != nil && len(*m.Rules) > 0 {
         // TODO: check for mismatched lengths and return diags with error
@@ -354,7 +354,7 @@ func (m *RuntimeHostPolicyResourceModel) SortRules(ctx context.Context, planRule
         }
     }
     
-    util.DLog(ctx, "Finishing PolicyResourceModel.SortRules() execution")
+    util.DLog(ctx, "Finishing RuntimeHostPolicyResourceModel.SortRules() execution")
 }
 
 // Custom Runtime Rule Model

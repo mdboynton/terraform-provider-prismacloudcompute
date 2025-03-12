@@ -9,103 +9,8 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 )
-
-//type RuntimeHostPolicy struct {
-//	Rules []RuntimeHostRule `json:"rules,omitempty"`
-//}
-//
-//type RuntimeHostRule struct {
-//	AntiMalware        RuntimeHostAntiMalware         `json:"antiMalware,omitempty"`
-//	Collections        []collection.Collection        `json:"collections,omitempty"`
-//	CustomRules        []RuntimeHostCustomRule        `json:"customRules,omitempty"`
-//	Disabled           bool                           `json:"disabled"`
-//	Dns                RuntimeHostDns                 `json:"dns,omitempty"`
-//	FileIntegrityRules []RuntimeHostFileIntegrityRule `json:"fileIntegrityRules,omitempty"`
-//	Forensic           RuntimeHostForensic            `json:"forensic,omitempty"`
-//	LogInspectionRules []RuntimeHostLogInspectionRule `json:"logInspectionRules,omitempty"`
-//	Name               string                         `json:"name,omitempty"`
-//	Network            RuntimeHostNetwork             `json:"network,omitempty"`
-//	Notes              string                         `json:"notes,omitempty"`
-//}
-//
-//type RuntimeHostAntiMalware struct {
-//	AllowedProcesses              []string                   `json:"allowedProcesses,omitempty"`
-//	CryptoMiner                   string                     `json:"cryptoMiner,omitempty"`
-//	CustomFeed                    string                     `json:"customFeed,omitempty"`
-//	DeniedProcesses               RuntimeHostDeniedProcesses `json:"deniedProcesses,omitempty"`
-//	DetectCompilerGeneratedBinary bool                       `json:"detectCompilerGeneratedBinary"`
-//	EncryptedBinaries             string                     `json:"encryptedBinaries,omitempty"`
-//	ExecutionFlowHijack           string                     `json:"executionFlowHijack,omitempty"`
-//	IntelligenceFeed              string                     `json:"intelligenceFeed,omitempty"`
-//	ReverseShell                  string                     `json:"reverseShell,omitempty"`
-//	ServiceUnknownOriginBinary    string                     `json:"serviceUnknownOriginBinary,omitempty"`
-//	SkipSshTracking               bool                       `json:"skipSSHTracking,omitempty"`
-//	SuspiciousElfHeaders          string                     `json:"suspiciousELFHeaders,omitempty"`
-//	TempFsProcesses               string                     `json:"tempFSProc,omitempty"`
-//	UserUnknownOriginBinary       string                     `json:"userUnknownOriginBinary,omitempty"`
-//	WebShell                      string                     `json:"webShell,omitempty"`
-//	WildFireAnalysis              string                     `json:"wildFireAnalysis,omitempty"`
-//}
-//
-//type RuntimeHostCustomRule struct {
-//	Action string `json:"action,omitempty"`
-//	Effect string `json:"effect,omitempty"`
-//	Id     int    `json:"_id,omitempty"`
-//}
-//
-//type RuntimeHostDeniedProcesses struct {
-//	Effect string   `json:"effect,omitempty"`
-//	Paths  []string `json:"paths,omitempty"`
-//}
-//
-//type RuntimeHostDns struct {
-//	Allowed          []string `json:"allow,omitempty"`
-//	Denied           []string `json:"deny,omitempty"`
-//	DenyEffect       string   `json:"denyListEffect,omitempty"`
-//	IntelligenceFeed string   `json:"intelligenceFeed,omitempty"`
-//}
-//
-//type RuntimeHostFileIntegrityRule struct {
-//	AllowedProcesses []string `json:"procWhitelist,omitempty"`
-//	ExcludedFiles    []string `json:"exclusions,omitempty"`
-//	Metadata         bool     `json:"metadata"`
-//	Path             string   `json:"path,omitempty"`
-//	Read             bool     `json:"read"`
-//	Recursive        bool     `json:"recursive"`
-//	Write            bool     `json:"write"`
-//}
-//
-//type RuntimeHostForensic struct {
-//	ActivitiesDisabled       bool `json:"activitiesDisabled"`
-//	DockerEnabled            bool `json:"dockerEnabled"`
-//	ReadonlyDockerEnabled    bool `json:"readonlyDockerEnabled"`
-//	ServiceActivitiesEnabled bool `json:"serviceActivitiesEnabled"`
-//	SshdEnabled              bool `json:"sshdEnabled"`
-//	SudoEnabled              bool `json:"sudoEnabled"`
-//}
-//
-//type RuntimeHostLogInspectionRule struct {
-//	Path  string   `json:"path,omitempty"`
-//	Regex []string `json:"regex,omitempty"`
-//}
-//
-//type RuntimeHostNetwork struct {
-//	AllowedOutboundIps   []string          `json:"allowedOutboundIPs,omitempty"`
-//	CustomFeed           string            `json:"customFeed,omitempty"`
-//	DeniedListeningPorts []RuntimeHostPort `json:"deniedListeningPorts,omitempty"`
-//	DeniedOutboundIps    []string          `json:"deniedOutboundIPs,omitempty"`
-//	DeniedOutboundPorts  []RuntimeHostPort `json:"deniedOutboundPorts,omitempty"`
-//	DenyEffect           string            `json:"denyListEffect,omitempty"`
-//	IntelligenceFeed     string            `json:"intelligenceFeed,omitempty"`
-//}
-//
-//type RuntimeHostPort struct {
-//	Deny  bool `json:"deny"`
-//	End   int  `json:"end,omitempty"`
-//	Start int  `json:"start,omitempty"`
-//}
 
 type RuntimeHostPolicy struct {
     Id      string      `json:"_id"`
@@ -136,7 +41,7 @@ type AntiMalware struct {
 	CryptoMiner               string `json:"cryptoMiner"`
 	CustomFeed                string `json:"customFeed"`
 	DeniedProcesses           DeniedProcesses `json:"deniedProcesses"`
-	DetectCompilerGeneratedBinary bool     `json:"detectCompilerGeneratedBinary"` // suppress_compiler_generated_binaries
+	DetectCompilerGeneratedBinary bool     `json:"detectCompilerGeneratedBinary"`
 	EncryptedBinaries         string `json:"encryptedBinaries"`
 	ExecutionFlowHijack       string `json:"executionFlowHijack"`
 	IntelligenceFeed          string `json:"intelligenceFeed"`
@@ -157,8 +62,6 @@ type DeniedProcesses struct {
 
 type CustomRule struct {
 	ID     int      `json:"_id"`
-	//Action []string `json:"action"`
-	//Effect []string `json:"effect"`
 	Action string `json:"action"`
 	Effect string `json:"effect"`
 }
@@ -212,7 +115,7 @@ type PortRange struct {
 }
 
 func (p *RuntimeHostPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeHostPolicyRuleResourceModel) {
-	//util.DLog(ctx, "Executing api.Policy.SortRules()")
+	util.DLog(ctx, "Executing api.RuntimeHostPolicy.SortRules()")
     if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
         return
     }
@@ -222,7 +125,7 @@ func (p *RuntimeHostPolicy) SortRules(ctx context.Context, planRules *[]models.R
 		return rulesOrderMap[(*p.Rules)[i].Name] < rulesOrderMap[(*p.Rules)[j].Name]
 	})
 
-	//util.DLog(ctx, "Finishing api.Policy.SortRules() execution")
+	util.DLog(ctx, "Finishing api.RuntimeHostPolicy.SortRules() execution")
 }
 
 // TODO: remove this duplicate function when we can move the logic somewhere that can be used here
@@ -273,7 +176,6 @@ func GetRuntimeHost(c api.PrismaCloudComputeAPIClient) (RuntimeHostPolicy, error
 }
 
 // Update the current host runtime policy.
-//func UpdateRuntimeHost(c api.PrismaCloudComputeAPIClient, policy RuntimeHostPolicy) error {
 func UpsertRuntimeHost(c api.PrismaCloudComputeAPIClient, policy RuntimeHostPolicy) error {
     // TODO: error handling
 	return c.Request(http.MethodPut, RuntimeHostEndpoint, nil, policy, nil)
