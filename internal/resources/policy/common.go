@@ -595,6 +595,10 @@ func PolicyRulesSchemaToTerraform(ctx context.Context, settings policyAPI.Settin
     
     if settings.Module == "compliance" {
         complianceVulnerabilities, diags = systemAPI.GetComplianceVulnerabilitiesByPolicyType(*client, settings.IsApplicableVuln)
+
+        if diags.HasError() {
+            return []policyAPI.PolicyRule{}, diags
+        }
     }
 
     rules := []policyAPI.PolicyRule{}

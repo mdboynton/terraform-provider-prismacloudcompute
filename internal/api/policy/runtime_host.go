@@ -157,8 +157,10 @@ type DeniedProcesses struct {
 
 type CustomRule struct {
 	ID     int      `json:"_id"`
-	Action []string `json:"action"`
-	Effect []string `json:"effect"`
+	//Action []string `json:"action"`
+	//Effect []string `json:"effect"`
+	Action string `json:"action"`
+	Effect string `json:"effect"`
 }
 
 type DNS struct {

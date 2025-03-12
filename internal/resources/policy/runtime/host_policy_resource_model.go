@@ -167,21 +167,34 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        	ElementType: types.StringType,
     			        	Description: "List of collections.",
     			        },
-    			        "custom_rules": schema.ListAttribute{
-    			        	Optional:    true,
-    			        	ElementType: types.ObjectType{
-    			        		AttrTypes: map[string]attr.Type{
-    			        			"_id": types.Int32Type,
-    			        			"action": types.ListType{
-    			        				ElemType: types.StringType,
-    			        			},
-    			        			"effect": types.ListType{
-    			        				ElemType: types.StringType,
-    			        			},
-    			        		},
-    			        	},
-    			        	Description: "List of custom rules",
-    			        },
+    			        "custom_rules": schema.ListNestedAttribute{
+                            Optional: true,
+                            Description: "List of custom rules.",
+                            NestedObject: schema.NestedAttributeObject{
+                            // TODO: validation (cant have prevent effect with incident log_as)
+                            // TODO: validation (log_as cant be specified with allow effect)
+                                Attributes: map[string]schema.Attribute{
+                                    "id": schema.Int64Attribute{
+                                        Computed:   true,
+                                        Description: "",
+                                    },
+                                    "name": schema.StringAttribute{
+                                        Optional:   true,
+                                        Description: "",
+                                    },
+                                    "effect": schema.StringAttribute{
+                                        Required:   true,
+                                        Description: "",
+                                    },
+                                    "log_as": schema.StringAttribute{
+                                        Optional:   true,
+    			        			    Computed:   true,
+                                        Default:    stringdefault.StaticString(""),
+                                        Description: "",
+                                    },
+                                },
+                            },
+                        },
     			        "disabled": schema.BoolAttribute{
     			        	Optional:   true,
                             Computed:   true,

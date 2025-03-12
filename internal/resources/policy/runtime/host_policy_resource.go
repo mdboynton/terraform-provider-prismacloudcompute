@@ -10,6 +10,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
+	ruleAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/rule"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
@@ -87,7 +88,7 @@ func (r *HostRuntimePolicyResource) Create(ctx context.Context, req resource.Cre
         return
     }
 
-    createdPolicy, diags := RuntimePolicyTerraformToSchema(ctx, response, plan)
+    createdPolicy, diags := RuntimePolicyTerraformToSchema(ctx, response, plan, r.client)
     if diags.HasError() {
         return
     }
@@ -120,7 +121,7 @@ func (r *HostRuntimePolicyResource) Read(ctx context.Context, req resource.ReadR
     }
 
     // Overwrite state values with Prisma Cloud data
-    policySchema, diags := RuntimePolicyTerraformToSchema(ctx, data, state)
+    policySchema, diags := RuntimePolicyTerraformToSchema(ctx, data, state, r.client)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -179,7 +180,7 @@ func (r *HostRuntimePolicyResource) Update(ctx context.Context, req resource.Upd
     }
 
     // Convert updated policy into schema
-    policySchema, diags := RuntimePolicyTerraformToSchema(ctx, updatedPolicy, plan)
+    policySchema, diags := RuntimePolicyTerraformToSchema(ctx, updatedPolicy, plan, r.client)
     resp.Diagnostics.Append(diags...)
     if resp.Diagnostics.HasError() {
         return
@@ -244,7 +245,16 @@ func RuntimePolicySchemaToTerraform(ctx context.Context, plan *models.RuntimeHos
     )
 
     if plan.Rules != nil {
-        rules, diags = RuntimePolicyRulesSchemaToTerraform(ctx, *plan.Rules, client)
+        customRuleIdMap, err := ruleAPI.GetCustomRuleIdToNameMappings(*client) 
+        if err != nil {
+            diags.AddError(
+                "API Error",
+                "Error during retrieval of custom rules data: " + err.Error(),
+            )
+            return policyAPI.RuntimeHostPolicy{}, diags
+        }
+
+        rules, diags = RuntimePolicyRulesSchemaToTerraform(ctx, *plan.Rules, client, customRuleIdMap)
         if diags.HasError() {
             return policyAPI.RuntimeHostPolicy{}, diags
         }
@@ -265,7 +275,7 @@ func RuntimePolicySchemaToTerraform(ctx context.Context, plan *models.RuntimeHos
     return tfPolicy, diags
 }
 
-func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []models.RuntimeHostPolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient) ([]policyAPI.RuntimeHostPolicyRule, diag.Diagnostics) {
+func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []models.RuntimeHostPolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, customRuleIdMap map[string]int) ([]policyAPI.RuntimeHostPolicyRule, diag.Diagnostics) {
     util.DLog(ctx, "Executing RuntimePolicyRulesSchemaToTerraform")
 
     var (
@@ -316,10 +326,15 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
             return rules, diags
         }
 
+        customRules, diags := customRulesToTerraform(ctx, schemaRule.CustomRules, customRuleIdMap)
+        if diags.HasError() {
+            return rules, diags
+        }
+
         rule := policyAPI.RuntimeHostPolicyRule{
             AntiMalware: antiMalware,
             Collections: collections,
-            CustomRules: []policyAPI.CustomRule{},
+            CustomRules: customRules,
             DNS: dns,
             Network: network,
             LogInspectionRules: logInspectionRules,
@@ -333,12 +348,6 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
             PreviousName: schemaRule.PreviousName.ValueString(),
         }
 
-
-        // TODO: is this needed?
-        //for idx := range collections {
-        //    collections[idx].Modified = time.Now().Format("2006-01-02T15:04:05.000Z")
-        //}
-
         rules = append(rules, rule)
     }
 
@@ -348,7 +357,7 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
 }
 
 
-func RuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.RuntimeHostPolicy, plan models.RuntimeHostPolicyResourceModel) (models.RuntimeHostPolicyResourceModel, diag.Diagnostics) {
+func RuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.RuntimeHostPolicy, plan models.RuntimeHostPolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (models.RuntimeHostPolicyResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "Executing RuntimePolicyTerraformToSchema")
 
     var (
@@ -357,7 +366,16 @@ func RuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.Runtim
     )
     
     if policy.Rules != nil {
-        rules, diags = RuntimePolicyRulesTerraformToSchema(ctx, *policy.Rules, plan.Rules)
+        customRuleIdMap, err := ruleAPI.GetCustomRuleNameToIdMappings(*client) 
+        if err != nil {
+            diags.AddError(
+                "API Error",
+                "Error during retrieval of custom rules data: " + err.Error(),
+            )
+            return models.RuntimeHostPolicyResourceModel{}, diags
+        }
+
+        rules, diags = RuntimePolicyRulesTerraformToSchema(ctx, *policy.Rules, plan.Rules, customRuleIdMap)
         if diags.HasError() {
             return models.RuntimeHostPolicyResourceModel{}, diags
         }
@@ -376,7 +394,7 @@ func RuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.Runtim
     return schema, diags
 }
 
-func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.RuntimeHostPolicyRule, planRules *[]models.RuntimeHostPolicyRuleResourceModel) ([]models.RuntimeHostPolicyRuleResourceModel, diag.Diagnostics) {
+func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.RuntimeHostPolicyRule, planRules *[]models.RuntimeHostPolicyRuleResourceModel, customRuleIdMap map[int]string) ([]models.RuntimeHostPolicyRuleResourceModel, diag.Diagnostics) {
     util.DLog(ctx, "Executing RuntimeHostPolicyRulesTerraformToSchema")
 
     var diags diag.Diagnostics
@@ -388,9 +406,11 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
     }
 
     for _, rule := range rules {
-
         var (
             planRule models.RuntimeHostPolicyRuleResourceModel
+            antiMalware *models.RuntimeHostPolicyAntiMalwareResourceModel
+            skipSshTracking bool
+            customRules *[]models.RuntimeHostPolicyCustomRuleResourceModel
             activities *models.RuntimeHostPolicyActivitiesResourceModel
             fileIntegrityRules *[]models.RuntimeHostPolicyFileIntegrityRuleResourceModel
             logInspectionRules *[]models.RuntimeHostPolicyLogInspectionRuleResourceModel
@@ -416,9 +436,17 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
             return []models.RuntimeHostPolicyRuleResourceModel{}, diags
         }
 
-        antiMalware, skipSshTracking, diags := antiMalwareToSchema(ctx, rule.AntiMalware)
-        if diags.HasError() {
-            return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+        if planRule.AntiMalware == nil {
+            antiMalware = nil
+            skipSshTracking = true
+        } else {
+            antiMalwareValue, skipSshTrackingValue, diags := antiMalwareToSchema(ctx, rule.AntiMalware)
+            if diags.HasError() {
+                return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+            }
+
+            antiMalware = &antiMalwareValue
+            skipSshTracking = skipSshTrackingValue
         }
     
         if planRule.Activities == nil {
@@ -465,6 +493,17 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
             networking = &networkingValue
         }
 
+        if planRule.CustomRules == nil {
+            customRules = nil
+        } else {
+            customRulesValue, diags := customRulesToSchema(ctx, rule.CustomRules, customRuleIdMap)
+            if diags.HasError() {
+                return []models.RuntimeHostPolicyRuleResourceModel{}, diags
+            }
+
+            customRules = &customRulesValue
+        }
+
         if planRule.Notes.IsNull() {
             notes = types.StringNull()
         } else {
@@ -472,13 +511,13 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
         }
 
         schemaRule := models.RuntimeHostPolicyRuleResourceModel{
-            AntiMalware: &antiMalware,
+            AntiMalware: antiMalware,
             FileIntegrityRules: fileIntegrityRules,
             Activities: activities,
             LogInspectionRules: logInspectionRules,
             Networking: networking,
             Collections: collections,
-            CustomRules: &[]models.RuntimeHostPolicyCustomRuleResourceModel{},
+            CustomRules: customRules,
             Disabled: types.BoolValue(rule.Disabled),
             Modified: types.StringValue(""),
             Name: types.StringValue(rule.Name),
@@ -580,7 +619,6 @@ func antiMalwareToSchema(ctx context.Context, tfAntiMalware policyAPI.AntiMalwar
         NonPackagedBinariesService: types.StringValue(tfAntiMalware.ServiceUnknownOriginBinary),
         NonPackagedBinariesUser: types.StringValue(tfAntiMalware.UserUnknownOriginBinary),
         SuspiciousELFHeaders: types.StringValue(tfAntiMalware.SuspiciousELFHeaders),
-        //SkipSSHTracking: types.BoolValue(tfAntiMalware.SkipSSHTracking),
         ProcessesTemporaryStorage: types.StringValue(tfAntiMalware.TempFSProc),
         WebShell: types.StringValue(tfAntiMalware.WebShell),
         WildFireAnalysis: types.StringValue(tfAntiMalware.WildFireAnalysis),
@@ -972,9 +1010,7 @@ func activitiesToTerraform(ctx context.Context, schemaActivities *models.Runtime
 }
 
 func activitiesToSchema(ctx context.Context, tfActivities policyAPI.Forensic, skipSshTracking bool) (models.RuntimeHostPolicyActivitiesResourceModel, diag.Diagnostics) {
-    var (
-        diags diag.Diagnostics
-    )
+    var diags diag.Diagnostics
 
     return models.RuntimeHostPolicyActivitiesResourceModel{
         HostActivityMonitoring: models.RuntimeHostPolicyActivityMonitoringResourceModel{
@@ -989,4 +1025,61 @@ func activitiesToSchema(ctx context.Context, tfActivities policyAPI.Forensic, sk
         },
         TrackSshEvents: types.BoolValue(!skipSshTracking),
     }, diags
+}
+
+func customRulesToTerraform(ctx context.Context, schemaCustomRules *[]models.RuntimeHostPolicyCustomRuleResourceModel, customRuleIdMap map[string]int) ([]policyAPI.CustomRule, diag.Diagnostics) {
+    var diags diag.Diagnostics
+
+    if schemaCustomRules == nil {
+        return []policyAPI.CustomRule{}, diags
+    }
+
+    tfCustomRules := []policyAPI.CustomRule{}
+
+    for _, schemaCustomRule := range *schemaCustomRules {
+        customRuleId, ok := customRuleIdMap[schemaCustomRule.Name.ValueString()]
+        if !ok {
+            diags.AddError(
+                "Value Conversion Error",
+                fmt.Sprintf("No matching custom rule found for specified rule name \"%s\"", schemaCustomRule.Name.ValueString()),
+            )
+
+            return []policyAPI.CustomRule{}, diags
+        }
+
+        tfCustomRules = append(tfCustomRules, policyAPI.CustomRule{
+            ID: customRuleId,
+            Action: schemaCustomRule.LogAs.ValueString(),
+            Effect: schemaCustomRule.Effect.ValueString(),
+        })
+    }
+
+    return tfCustomRules, diags
+}
+
+func customRulesToSchema(ctx context.Context, tfCustomRules []policyAPI.CustomRule, customRuleIdMap map[int]string) ([]models.RuntimeHostPolicyCustomRuleResourceModel, diag.Diagnostics) {
+    var diags diag.Diagnostics
+
+    schemaCustomRules := []models.RuntimeHostPolicyCustomRuleResourceModel{}
+
+    for _, tfCustomRule := range tfCustomRules {
+        customRuleName, ok := customRuleIdMap[tfCustomRule.ID]
+        if !ok {
+            diags.AddError(
+                "Value Conversion Error",
+                fmt.Sprintf("No matching custom rule found for specified rule ID %d", tfCustomRule.ID), 
+            )
+
+            return []models.RuntimeHostPolicyCustomRuleResourceModel{}, diags
+        }
+
+        schemaCustomRules = append(schemaCustomRules, models.RuntimeHostPolicyCustomRuleResourceModel{
+            ID: types.Int64Value(int64(tfCustomRule.ID)),
+            Name: types.StringValue(customRuleName),
+            LogAs: types.StringValue(tfCustomRule.Action),
+            Effect: types.StringValue(tfCustomRule.Effect),
+        })
+    }
+
+    return schemaCustomRules, diags
 }

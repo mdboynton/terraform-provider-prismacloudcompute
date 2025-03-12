@@ -247,9 +247,10 @@ type RuntimeHostPolicyDeniedProcessesResourceModel struct {
 }
 
 type RuntimeHostPolicyCustomRuleResourceModel struct {
-    ID     types.Int64  `tfsdk:"_id"`
-    Action types.List   `tfsdk:"action"`
-    Effect types.List   `tfsdk:"effect"`
+    ID     types.Int64  `tfsdk:"id"`
+    Name     types.String `tfsdk:"name"`
+    LogAs  types.String `tfsdk:"log_as"`
+    Effect types.String `tfsdk:"effect"`
 }
 
 type RuntimeHostPolicyFileIntegrityRuleResourceModel struct {

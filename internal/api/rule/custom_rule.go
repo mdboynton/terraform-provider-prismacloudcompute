@@ -97,3 +97,31 @@ func UpdateCustomRule(c api.PrismaCloudComputeAPIClient, rule CustomRule) error 
 func DeleteCustomRule(c api.PrismaCloudComputeAPIClient, id int) error {
 	return c.Request(http.MethodDelete, fmt.Sprintf("%s/%d", CustomRulesEndpoint, id), nil, nil, nil)
 }
+
+func GetCustomRuleIdToNameMappings(c api.PrismaCloudComputeAPIClient) (map[string]int, error) {
+    customRules, err := ListCustomRules(c)
+	if err != nil {
+		return map[string]int{}, err
+	}
+
+    mapping := map[string]int{}
+    for _, customRule := range customRules {
+        mapping[customRule.Name] = customRule.Id
+    }
+
+    return mapping, nil
+}
+
+func GetCustomRuleNameToIdMappings(c api.PrismaCloudComputeAPIClient) (map[int]string, error) {
+    customRules, err := ListCustomRules(c)
+	if err != nil {
+		return map[int]string{}, err
+	}
+
+    mapping := map[int]string{}
+    for _, customRule := range customRules {
+        mapping[customRule.Id] = customRule.Name
+    }
+
+    return mapping, nil
+}
