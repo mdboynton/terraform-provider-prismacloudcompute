@@ -79,7 +79,6 @@ func (v logInspectionPathIsValid) ValidateList(ctx context.Context, req validato
                 "Invalid Argument Value", 
                 fmt.Sprintf("log_inspection_rule[%d] contains duplicate file path. File paths must be unique for each rule.", idx), 
             )
-            continue
         } else {
             pathValues = append(pathValues, pathValue)
         }

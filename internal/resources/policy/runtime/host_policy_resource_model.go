@@ -267,9 +267,10 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        "custom_rules": schema.ListNestedAttribute{
                             Optional: true,
                             Description: "List of custom rules.",
+                            Validators: []validator.List{
+                                validators.CustomRulesAreValid(),
+                            },
                             NestedObject: schema.NestedAttributeObject{
-                            // TODO: validation (cant have prevent effect with incident log_as)
-                            // TODO: validation (log_as cant be specified with allow effect)
                                 Attributes: map[string]schema.Attribute{
                                     "id": schema.Int64Attribute{
                                         Computed:   true,
@@ -446,7 +447,6 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			ElementType: types.StringType,
     			        			Description: "List of denied listening ports",
-                                    // TODO: change to list of ints
     			        		},
     			        		"denied_outbound_ips": schema.ListAttribute{
     			        			Optional:    true,
@@ -457,7 +457,6 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			ElementType: types.StringType,
     			        			Description: "List of denied outbound ports",
-                                    // TODO: change to list of ints
     			        		},
     			        		"denied_ips_ports_effect": schema.StringAttribute{
     			        			Optional:    true,
@@ -479,13 +478,13 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			ElementType: types.StringType,
     			        			Description: "List of allowed DNS domains.",
-                                    // TODO: validation
+                                    // TODO: validation (no duplicates)
     			        		},
     			        		"denied_dns_domains": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
     			        			Description: "List of denied DNS domains.",
-                                    // TODO: validation
+                                    // TODO: validation (no duplicates)
     			        		},
     			        		"denied_dns_domains_effect": schema.StringAttribute{
     			        			Optional:   true,
@@ -506,7 +505,6 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                     Default:    stringdefault.StaticString("disable"),
     			        			Description: "Effect for the intelligence feed",
                                     // TODO: description
-                                    // TODO: validation
     			        		},
     			        	},
                             Default: objectdefault.StaticValue(
