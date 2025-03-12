@@ -5,7 +5,7 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
-	//policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
+	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 
@@ -41,12 +41,10 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                 PlanModifiers: []planmodifier.List{
                     planmodifiers.UseIndexForUnknownOrder(""),
                 },
-                //Validators: []validator.List{
-                //    //validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeComplianceHostFormatted),
-                //    //validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeComplianceHostFormatted),
-                //    validators.PolicyRuleNameIsUnique(policyTypeFormatted),
-                //    validators.PolicyRuleOrderIsPositiveNonZero(policyTypeFormatted),
-                //},
+                Validators: []validator.List{
+                    validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeRuntimeHostFormatted),
+                    validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeRuntimeHostFormatted),
+                },
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
                         "order": schema.Int32Attribute{

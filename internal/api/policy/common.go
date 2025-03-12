@@ -223,6 +223,10 @@ const (
 	PolicyTypeVulnerabilityVmImageFormatted       = "VM vulnerability"
 	PolicyTypeVulnerabilityFunctionFormatted      = "serverless vulnerability"
 	PolicyTypeVulnerabilityCiFunctionFormatted    = "CI serverless vulnerability"
+	PolicyTypeRuntimeContainerFormatted           = "container runtime"
+	PolicyTypeRuntimeHostFormatted                = "host runtime"
+	PolicyTypeRuntimeServerlessFormatted          = "serverless runtime"
+	PolicyTypeRuntimeAppEmbeddedFormatted         = "app-embedded runtime"
 	// Policy Context
 	PolicyContextImage            = "images"
 	PolicyContextContainer        = "container"

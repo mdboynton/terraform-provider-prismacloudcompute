@@ -4,11 +4,18 @@ import (
     "context"
     "fmt"
 	
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+func PolicyRuleOrderIsPositiveNonZero(policyType string) policyRuleOrderIsPositiveNonZero {
+    return policyRuleOrderIsPositiveNonZero{
+        PolicyType: policyType,
+    }
+}
 
 type policyRuleOrderIsPositiveNonZero struct {
     PolicyType string
@@ -25,37 +32,31 @@ func (v policyRuleOrderIsPositiveNonZero) MarkdownDescription(ctx context.Contex
 func (v policyRuleOrderIsPositiveNonZero) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
     util.DLog(ctx, "Executing PolicyRuleOrderIsPositiveNonZero")
 
-    rules := []models.PolicyRuleResourceModel{}
-    resp.Diagnostics.Append(req.ConfigValue.ElementsAs(ctx, &rules, false)...)
-    if resp.Diagnostics.HasError() {
-        util.DLog(ctx, "conversion error")
-        return
-    }
+    var (
+        name basetypes.StringValue
+        order basetypes.Int32Value
+    )
 
-    for _, rule := range rules {
-        // Skip if null, as this will be set in the plan modifier
-        if rule.Order.IsNull() {
-            continue
+    for idx := range len(req.ConfigValue.Elements()) {
+        resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("rules").AtListIndex(idx).AtName("name"), &name)...)
+        if resp.Diagnostics.HasError() {
+            return
         }
 
-        name := rule.Name.ValueString()
-        order := rule.Order.ValueInt32()
+        resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("rules").AtListIndex(idx).AtName("order"), &order)...)
+        if resp.Diagnostics.HasError() {
+            return
+        }
 
-        if int(order) < 1 {
+        if !order.IsNull() && int(order.ValueInt32()) < 1 {
             resp.Diagnostics.AddError(
 		    	"Invalid Resource Configuration",
-		    	fmt.Sprintf("%s policy rule \"%s\" configured with a negative or non-zero order (%d)", v.PolicyType, name, order),
+                fmt.Sprintf("%s policy rule %s is configured with a negative or zero order value: %d", v.PolicyType, name, int(order.ValueInt32())),
             )
         }
     }
-    
+
     util.DLog(ctx, "Finishing PolicyRuleOrderIsPositiveNonZero execution")
 
     return
-}
-
-func PolicyRuleOrderIsPositiveNonZero(policyType string) policyRuleOrderIsPositiveNonZero {
-    return policyRuleOrderIsPositiveNonZero{
-        PolicyType: policyType,
-    }
 }
