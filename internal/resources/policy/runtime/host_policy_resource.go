@@ -12,7 +12,6 @@ import (
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	ruleAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/rule"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -24,7 +23,6 @@ import (
 
 var _ resource.Resource = &HostRuntimePolicyResource{}
 var _ resource.ResourceWithImportState = &HostRuntimePolicyResource{}
-//var _ resource.ResourceWithModifyPlan = &HostRuntimePolicyResource{}
 
 func (r *HostRuntimePolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
     resp.TypeName = req.ProviderTypeName + "_host_runtime_policy"
