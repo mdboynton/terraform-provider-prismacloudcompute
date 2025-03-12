@@ -120,6 +120,7 @@ func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPICli
 
 	if config.Insecure {
 		apiClient.HTTPClient = &http.Client{
+            Timeout: 60 * time.Second,
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: true,
@@ -127,7 +128,9 @@ func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPICli
 			},
 		}
 	} else {
-		apiClient.HTTPClient = &http.Client{}
+		apiClient.HTTPClient = &http.Client{
+            Timeout: 60 * time.Second,
+        }
 	}
 
 	if err := apiClient.Authenticate(); err != nil {
