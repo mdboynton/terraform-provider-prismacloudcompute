@@ -7,6 +7,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+    "strconv"
 
 	//"cmp"
 	"time"
@@ -1592,6 +1593,74 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
     }
 
     return diags
+}
+
+func PortRangesToTerraform(portRangeStrings []string) ([]policyAPI.PortRange, diag.Diagnostics) {
+    var diags diag.Diagnostics
+
+    portRanges := []policyAPI.PortRange{}
+    for _, port := range portRangeStrings {
+        if strings.ContainsAny(port, "-") {
+            splitPort := strings.Split(port, "-")
+
+            start, err := strconv.Atoi(splitPort[0])
+            if err != nil {
+                diags.AddError(
+                    "Value Conversion Error",
+                    err.Error(),
+                )
+                return []policyAPI.PortRange{}, diags
+            }
+
+            end, err := strconv.Atoi(splitPort[1])
+            if err != nil {
+                diags.AddError(
+                    "Value Conversion Error",
+                    err.Error(),
+                )
+                return []policyAPI.PortRange{}, diags
+            }
+
+            portRanges = append(portRanges, policyAPI.PortRange{
+                Start: start,
+                End: end,
+            })
+        } else {
+            portInt, err := strconv.Atoi(port)
+            if err != nil {
+                diags.AddError(
+                    "Value Conversion Error",
+                    err.Error(),
+                )
+                return []policyAPI.PortRange{}, diags
+            }
+
+            portRanges = append(portRanges, policyAPI.PortRange{
+                Start: portInt,
+                End: portInt,
+                Deny: false,
+            })
+        }
+    }
+
+    return portRanges, diags
+}
+
+func PortRangeToStringSlice(portRanges []policyAPI.PortRange) []string {
+    response := []string{} 
+
+    for _, portRange := range portRanges {
+        start := strconv.Itoa(portRange.Start)
+        end := strconv.Itoa(portRange.End)
+
+        if start == end {
+            response = append(response, start)
+        } else {
+            response = append(response, fmt.Sprintf("%s-%s", start, end))
+        }
+    }
+
+    return response
 }
 
 func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComputeAPIClient, plan tfsdk.Plan, resp *resource.ModifyPlanResponse) {

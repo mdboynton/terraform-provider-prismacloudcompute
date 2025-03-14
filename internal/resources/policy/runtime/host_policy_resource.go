@@ -309,7 +309,7 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
             return rules, diags
         }
 
-        network, dns, diags := networkingToTerraform(ctx, schemaRule.Networking)
+        network, dns, diags := runtimeHostNetworkingToTerraform(ctx, schemaRule.Networking)
         if diags.HasError() {
             return rules, diags
         }
@@ -483,7 +483,7 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
         if planRule.Networking == nil {
             networking = nil
         } else {
-            networkingValue, diags := networkingToSchema(ctx, rule.Network, rule.DNS)
+            networkingValue, diags := runtimeHostNetworkingToSchema(ctx, rule.Network, rule.DNS)
             if diags.HasError() {
                 return []models.RuntimeHostPolicyRuleResourceModel{}, diags
             }
@@ -533,7 +533,7 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
     return schemaRules, diags
 }
 
-func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.RuntimeHostPolicyAntiMalwareResourceModel, trackSshEvents bool) (policyAPI.AntiMalware, diag.Diagnostics) {
+func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.RuntimeHostPolicyAntiMalwareResourceModel, trackSshEvents bool) (policyAPI.RuntimeHostAntiMalware, diag.Diagnostics) {
     var (
         diags diag.Diagnostics
         allowedProcesses []string
@@ -542,7 +542,7 @@ func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.Runti
     )
 
     if schemaAntiMalware == nil {
-        return policyAPI.AntiMalware{}, diags
+        return policyAPI.RuntimeHostAntiMalware{}, diags
     }
 
     if schemaAntiMalware.AllowedProcesses.IsNull() {
@@ -550,7 +550,7 @@ func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.Runti
     } else {
         diags = schemaAntiMalware.AllowedProcesses.ElementsAs(ctx, &allowedProcesses, false)
         if diags.HasError() {
-            return policyAPI.AntiMalware{}, diags
+            return policyAPI.RuntimeHostAntiMalware{}, diags
         }
     }
 
@@ -560,13 +560,13 @@ func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.Runti
 
         diags = schemaAntiMalware.DeniedProcesses.Paths.ElementsAs(ctx, &deniedProcessPaths, false)
         if diags.HasError() {
-            return policyAPI.AntiMalware{}, diags
+            return policyAPI.RuntimeHostAntiMalware{}, diags
         }
 
         deniedProcesses.Paths = deniedProcessPaths
     }
 
-    return policyAPI.AntiMalware{
+    return policyAPI.RuntimeHostAntiMalware{
         AllowedProcesses: allowedProcesses,
         CryptoMiner: schemaAntiMalware.CryptoMiners.ValueString(),
         DeniedProcesses: deniedProcesses,
@@ -586,7 +586,7 @@ func antiMalwareToTerraform(ctx context.Context, schemaAntiMalware *models.Runti
     }, diags
 }
 
-func antiMalwareToSchema(ctx context.Context, tfAntiMalware policyAPI.AntiMalware) (models.RuntimeHostPolicyAntiMalwareResourceModel, bool, diag.Diagnostics) {
+func antiMalwareToSchema(ctx context.Context, tfAntiMalware policyAPI.RuntimeHostAntiMalware) (models.RuntimeHostPolicyAntiMalwareResourceModel, bool, diag.Diagnostics) {
     var diags diag.Diagnostics
 
     allowedProcesses, diags := types.ListValueFrom(ctx, types.StringType, tfAntiMalware.AllowedProcesses)
@@ -599,7 +599,7 @@ func antiMalwareToSchema(ctx context.Context, tfAntiMalware policyAPI.AntiMalwar
         return models.RuntimeHostPolicyAntiMalwareResourceModel{}, false, diags
     }
 
-    deniedProcesses := models.RuntimeHostPolicyDeniedProcessesResourceModel{
+    deniedProcesses := models.RuntimePolicyDeniedProcessesResourceModel{
         Effect: types.StringValue(tfAntiMalware.DeniedProcesses.Effect),
         Paths: deniedProcessPaths,
     }
@@ -623,7 +623,7 @@ func antiMalwareToSchema(ctx context.Context, tfAntiMalware policyAPI.AntiMalwar
     }, tfAntiMalware.SkipSSHTracking, diags
 }
 
-func networkingToTerraform(ctx context.Context, schemaNetworking *models.RuntimeHostPolicyNetworkingResourceModel) (policyAPI.Network, policyAPI.DNS, diag.Diagnostics) {
+func runtimeHostNetworkingToTerraform(ctx context.Context, schemaNetworking *models.RuntimeHostPolicyNetworkingResourceModel) (policyAPI.RuntimeHostNetwork, policyAPI.DNS, diag.Diagnostics) {
     var (
         diags diag.Diagnostics
         allowedOutboundIPs []string 
@@ -637,7 +637,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     )
 
     if schemaNetworking == nil {
-        return policyAPI.Network{}, policyAPI.DNS{}, diags
+        return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
     }
 
     if schemaNetworking.AllowedOutboundIPs.IsNull() {
@@ -645,7 +645,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     } else {
         diags = schemaNetworking.AllowedOutboundIPs.ElementsAs(ctx, &allowedOutboundIPs, false)
         if diags.HasError() {
-            return policyAPI.Network{}, policyAPI.DNS{}, diags
+            return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
         }
     }
 
@@ -654,7 +654,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     } else {
         diags = schemaNetworking.DeniedListeningPorts.ElementsAs(ctx, &deniedListeningPorts, false)
         if diags.HasError() {
-            return policyAPI.Network{}, policyAPI.DNS{}, diags
+            return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
         }
     }
 
@@ -663,7 +663,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     } else {
         diags = schemaNetworking.DeniedOutboundIPs.ElementsAs(ctx, &deniedOutboundIPs, false)
         if diags.HasError() {
-            return policyAPI.Network{}, policyAPI.DNS{}, diags
+            return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
         }
     }
 
@@ -672,7 +672,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     } else {
         diags = schemaNetworking.DeniedOutboundPorts.ElementsAs(ctx, &deniedOutboundPorts, false)
         if diags.HasError() {
-            return policyAPI.Network{}, policyAPI.DNS{}, diags
+            return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
         }
     }
 
@@ -681,7 +681,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     } else {
         diags = schemaNetworking.AllowedDnsDomains.ElementsAs(ctx, &allowedDnsDomains, false)
         if diags.HasError() {
-            return policyAPI.Network{}, policyAPI.DNS{}, diags
+            return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
         }
     }
 
@@ -690,7 +690,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     } else {
         diags = schemaNetworking.DeniedDnsDomains.ElementsAs(ctx, &deniedDnsDomains, false)
         if diags.HasError() {
-            return policyAPI.Network{}, policyAPI.DNS{}, diags
+            return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
         }
     }
 
@@ -705,7 +705,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
                     "Value Conversion Error",
                     err.Error(),
                 )
-                return policyAPI.Network{}, policyAPI.DNS{}, diags
+                return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
             }
 
             end, err := strconv.Atoi(splitPort[1])
@@ -714,7 +714,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
                     "Value Conversion Error",
                     err.Error(),
                 )
-                return policyAPI.Network{}, policyAPI.DNS{}, diags
+                return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
             }
 
             deniedListeningPortRanges = append(deniedListeningPortRanges, policyAPI.PortRange{
@@ -728,7 +728,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
                     "Value Conversion Error",
                     err.Error(),
                 )
-                return policyAPI.Network{}, policyAPI.DNS{}, diags
+                return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
             }
 
             deniedListeningPortRanges = append(deniedListeningPortRanges, policyAPI.PortRange{
@@ -749,7 +749,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
                     "Value Conversion Error",
                     err.Error(),
                 )
-                return policyAPI.Network{}, policyAPI.DNS{}, diags
+                return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
             }
 
             end, err := strconv.Atoi(splitPort[1])
@@ -758,7 +758,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
                     "Value Conversion Error",
                     err.Error(),
                 )
-                return policyAPI.Network{}, policyAPI.DNS{}, diags
+                return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
             }
 
             deniedOutboundPortRanges = append(deniedOutboundPortRanges, policyAPI.PortRange{
@@ -772,7 +772,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
                     "Value Conversion Error",
                     err.Error(),
                 )
-                return policyAPI.Network{}, policyAPI.DNS{}, diags
+                return policyAPI.RuntimeHostNetwork{}, policyAPI.DNS{}, diags
             }
 
             deniedOutboundPortRanges = append(deniedOutboundPortRanges, policyAPI.PortRange{
@@ -782,7 +782,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
         }
     }
 
-    network := policyAPI.Network{
+    network := policyAPI.RuntimeHostNetwork{
         AllowedOutboundIPs: allowedOutboundIPs,
         CustomFeed: schemaNetworking.SuspiciousIPsCustomFeed.ValueString(),
         DeniedListeningPorts: deniedListeningPortRanges,
@@ -802,7 +802,7 @@ func networkingToTerraform(ctx context.Context, schemaNetworking *models.Runtime
     return network, dns, diags
 }
 
-func networkingToSchema(ctx context.Context, tfNetwork policyAPI.Network, tfDns policyAPI.DNS) (models.RuntimeHostPolicyNetworkingResourceModel, diag.Diagnostics) {
+func runtimeHostNetworkingToSchema(ctx context.Context, tfNetwork policyAPI.RuntimeHostNetwork, tfDns policyAPI.DNS) (models.RuntimeHostPolicyNetworkingResourceModel, diag.Diagnostics) {
     var (
         diags diag.Diagnostics
         deniedListeningPortsValues = []string{}

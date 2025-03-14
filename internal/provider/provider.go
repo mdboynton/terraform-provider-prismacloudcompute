@@ -114,6 +114,7 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
         vulnerability.NewCiFunctionVulnerabilityPolicyResource,
         // Runtime policy resources
         runtime.NewHostRuntimePolicyResource,
+        runtime.NewContainerRuntimePolicyResource,
         // Custom rule resource
         custom.NewCustomRuntimeRuleResource,
 	}

@@ -487,6 +487,19 @@ type ExceptionExpiration struct {
 	Date    string `json:"date"`
 }
 
+type PortRange struct {
+    //Deny    string `json:"deny,omitempty"`
+    Deny    bool `json:"deny,omitempty"`
+    Start   int `json:"start,omitempty"`
+    End     int `json:"end,omitempty"`
+}
+
+type NetworkPorts struct {
+	Allowed []PortRange `json:"allowed,omitempty"`
+	Denied  []PortRange `json:"denied,omitempty"`
+	Effect  string                 `json:"effect,omitempty"`
+}
+
 func getEndpointAndPolicyName(policyType string) (string, string, error) {
 	switch policyType {
 	case "hostCompliance":

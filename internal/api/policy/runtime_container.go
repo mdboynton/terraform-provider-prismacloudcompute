@@ -1,23 +1,28 @@
 package policy
 
 import (
+    "context"
 	"fmt"
 	"net/http"
+    "sort"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
+	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 )
 
 type RuntimeContainerPolicy struct {
-	LearningDisabled bool                   `json:"learningDisabled,omitempty"`
-	Rules            []RuntimeContainerRule `json:"rules,omitempty"`
+    Id                  string                          `json:"_id"`
+	Rules               *[]RuntimeContainerPolicyRule    `json:"rules,omitempty"`
+	LearningDisabled    bool                            `json:"learningDisabled,omitempty"`
 }
 
-type RuntimeContainerRule struct {
+type RuntimeContainerPolicyRule struct {
 	AdvancedProtectionEffect       string                       `json:"advancedProtectionEffect"`
 	CloudMetadataEnforcementEffect string                       `json:"cloudMetadataEnforcementEffect"`
-	Collections                    []collection.Collection      `json:"collections,omitempty"`
-	CustomRules                    []RuntimeContainerCustomRule `json:"customRules,omitempty"`
+	Collections                    []collectionAPI.Collection      `json:"collections,omitempty"`
+	CustomRules                    []CustomRule `json:"customRules,omitempty"`
 	Disabled                       bool                         `json:"disabled"`
 	Dns                            RuntimeContainerDns          `json:"dns,omitempty"`
 	Filesystem                     RuntimeContainerFilesystem   `json:"filesystem,omitempty"`
@@ -25,16 +30,12 @@ type RuntimeContainerRule struct {
 	Name                           string                       `json:"name,omitempty"`
 	PreviousName                   string                       `json:"previousName,omitempty"`
 	SkipExecSessions               bool                         `json:"skipExecSessions,omitempty"`
+	Modified                       string                       `json:"modified"`
 	Network                        RuntimeContainerNetwork      `json:"network,omitempty"`
 	Notes                          string                       `json:"notes,omitempty"`
+	Owner                          string                       `json:"owner,omitempty"`
 	Processes                      RuntimeContainerProcesses    `json:"processes,omitempty"`
 	WildFireAnalysis               string                       `json:"wildFireAnalysis,omitempty"`
-}
-
-type RuntimeContainerCustomRule struct {
-	Action string `json:"action,omitempty"`
-	Effect string `json:"effect,omitempty"`
-	Id     int    `json:"_id,omitempty"`
 }
 
 type RuntimeContainerDns struct {
@@ -60,18 +61,13 @@ type RuntimeContainerNetwork struct {
 	DeniedIps          []string                     `json:"deniedIPs,omitempty"`
 	DeniedIpsEffect    string                       `json:"deniedIPsEffect,omitempty"`
 	Disabled           bool                         `json:"disabled,omitempty"`
-	ListeningPorts     RuntimeContainerNetworkPorts `json:"listeningPorts,omitempty"`
+	ListeningPorts     NetworkPorts                 `json:"listeningPorts,omitempty"`
 	ModifiedProcEffect string                       `json:"modifiedProcEffect,omitempty"`
-	OutboundPorts      RuntimeContainerNetworkPorts `json:"outboundPorts,omitempty"`
+	OutboundPorts      NetworkPorts                 `json:"outboundPorts,omitempty"`
 	PortScanEffect     string                       `json:"portScanEffect,omitempty"`
 	RawSocketsEffect   string                       `json:"rawSocketsEffect,omitempty"`
 }
 
-type RuntimeContainerNetworkPorts struct {
-	Allowed []RuntimeContainerPort `json:"allowed,omitempty"`
-	Denied  []RuntimeContainerPort `json:"denied,omitempty"`
-	Effect  string                 `json:"effect,omitempty"`
-}
 type RuntimeContainerDnsDomainList struct {
 	Allowed []string `json:"allowed,omitempty"`
 	Denied  []string `json:"denied,omitempty"`
@@ -102,6 +98,58 @@ type RuntimeContainerDeniedList struct {
 	Paths  []string `json:"paths,omitempty"`
 }
 
+func (p *RuntimeContainerPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeContainerPolicyRuleResourceModel) {
+	util.DLog(ctx, "Executing api.RuntimeContainerPolicy.SortRules()")
+    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
+        return
+    }
+
+	rulesOrderMap := generateRuntimeContainerPolicyRulesOrderMap(*planRules)
+	sort.Slice((*p.Rules), func(i, j int) bool {
+		return rulesOrderMap[(*p.Rules)[i].Name] < rulesOrderMap[(*p.Rules)[j].Name]
+	})
+
+	util.DLog(ctx, "Finishing api.RuntimeContainerPolicy.SortRules() execution")
+}
+
+// TODO: remove this duplicate function when we can move the logic somewhere that can be used here
+// and by internal/resources/policy/common.go
+func generateRuntimeContainerPolicyRulesOrderMap(rules []models.RuntimeContainerPolicyRuleResourceModel) map[string]int {
+	orderedRulesMap := make(map[int][]string)
+
+	for _, rule := range rules {
+		order := int(rule.Order.ValueInt32())
+		if _, exists := orderedRulesMap[order]; exists {
+			orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
+		} else {
+			orderedRulesMap[order] = []string{rule.Name.ValueString()}
+		}
+	}
+
+	sortedKeys := make([]int, 0, len(orderedRulesMap))
+	for key := range orderedRulesMap {
+		sortedKeys = append(sortedKeys, key)
+	}
+	sort.Ints(sortedKeys)
+
+	ruleOrders := make(map[string]int)
+	lastOrderValue := -1
+	for _, key := range sortedKeys {
+		offset := 0
+		if lastOrderValue != -1 && lastOrderValue >= key {
+			offset = lastOrderValue - key + 1
+		}
+
+		for sliceIndex, ruleName := range orderedRulesMap[key] {
+			orderValue := key + sliceIndex + offset
+			ruleOrders[ruleName] = orderValue
+			lastOrderValue = orderValue
+		}
+	}
+
+	return ruleOrders
+}
+
 // Get the current container runtime policy.
 func GetRuntimeContainer(c api.PrismaCloudComputeAPIClient) (RuntimeContainerPolicy, error) {
 	var ans RuntimeContainerPolicy
@@ -112,19 +160,6 @@ func GetRuntimeContainer(c api.PrismaCloudComputeAPIClient) (RuntimeContainerPol
 }
 
 // Update the current container runtime policy.
-func UpdateRuntimeContainer(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy) error {
+func UpsertRuntimeContainer(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy) error {
 	return c.Request(http.MethodPut, RuntimeContainerEndpoint, nil, policy, nil)
-}
-
-// Add new container runtime policy rule
-func SetRuntimeContainerRule(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy) error {
-	var err error
-	for _, val := range policy.Rules {
-		err = c.Request(http.MethodPost, RuntimeContainerEndpoint, nil, val, nil)
-
-		if err != nil {
-			return fmt.Errorf("error creating container runtime policy rule: %s", err)
-		}
-	}
-	return nil
 }
