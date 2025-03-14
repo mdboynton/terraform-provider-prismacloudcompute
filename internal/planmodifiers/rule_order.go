@@ -52,5 +52,7 @@ func (m useIndexForUnknownOrder) PlanModifyList(ctx context.Context, req planmod
 
     diags = req.Plan.GetAttribute(ctx, path.Root("rules"), &resp.PlanValue)
 
+    util.DLog(ctx, "Finishing UseIndexForUnknownOrder execution")
+
     return
 }

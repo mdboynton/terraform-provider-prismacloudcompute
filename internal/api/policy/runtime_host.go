@@ -15,11 +15,11 @@ import (
 type RuntimeHostPolicy struct {
     Id      string      `json:"_id"`
     Owner   string      `json:"owner"`
-    Rules *[]RuntimeHostPolicyRule
+    Rules *[]RuntimeHostPolicyRule `json:"rules"`
 }
 
 type RuntimeHostPolicyRule struct {
-	AntiMalware       AntiMalware     `json:"antiMalware"`
+	AntiMalware       RuntimeHostAntiMalware     `json:"antiMalware"`
 	Collections       []collectionAPI.Collection    `json:"collections"`
 	CustomRules       []CustomRule    `json:"customRules"`
 	Disabled          bool            `json:"disabled"`
@@ -29,14 +29,14 @@ type RuntimeHostPolicyRule struct {
 	LogInspectionRules []LogInspectionRule `json:"logInspectionRules"`
 	Modified          string          `json:"modified"`
 	Name              string          `json:"name"`
-	Network           Network         `json:"network"`
+	Network           RuntimeHostNetwork         `json:"network"`
 	Notes             string          `json:"notes"`
 	//Order                          int                     `json:"order"`
 	Owner             string          `json:"owner"`
 	PreviousName      string          `json:"previousName"`
 }
 
-type AntiMalware struct {
+type RuntimeHostAntiMalware struct {
 	AllowedProcesses          []string `json:"allowedProcesses"`
 	CryptoMiner               string `json:"cryptoMiner"`
 	CustomFeed                string `json:"customFeed"`
@@ -98,7 +98,7 @@ type LogInspectionRule struct {
 	Regex []string `json:"regex"`
 }
 
-type Network struct {
+type RuntimeHostNetwork struct {
 	AllowedOutboundIPs []string      `json:"allowedOutboundIPs"`
 	CustomFeed         string      `json:"customFeed"`
 	DeniedListeningPorts []PortRange   `json:"deniedListeningPorts"`
@@ -108,11 +108,11 @@ type Network struct {
 	IntelligenceFeed   string      `json:"intelligenceFeed"`
 }
 
-type PortRange struct {
-	Deny  bool `json:"deny"`
-	End   int  `json:"end"`
-	Start int  `json:"start"`
-}
+//type PortRange struct {
+//	Deny  bool `json:"deny"`
+//	End   int  `json:"end"`
+//	Start int  `json:"start"`
+//}
 
 func (p *RuntimeHostPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeHostPolicyRuleResourceModel) {
 	util.DLog(ctx, "Executing api.RuntimeHostPolicy.SortRules()")
