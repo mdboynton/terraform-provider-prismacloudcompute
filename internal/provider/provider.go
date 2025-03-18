@@ -116,6 +116,7 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
         runtime.NewHostRuntimePolicyResource,
         runtime.NewContainerRuntimePolicyResource,
         runtime.NewServerlessRuntimePolicyResource,
+        runtime.NewAppEmbeddedRuntimePolicyResource,
         // Custom rule resource
         custom.NewCustomRuntimeRuleResource,
 	}

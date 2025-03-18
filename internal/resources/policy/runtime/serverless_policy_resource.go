@@ -242,16 +242,7 @@ func ServerlessRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.
     )
 
     if plan.Rules != nil {
-        customRuleIdMap, err := ruleAPI.GetCustomRuleIdToNameMappings(*client) 
-        if err != nil {
-            diags.AddError(
-                "API Error",
-                "Error during retrieval of custom rules data: " + err.Error(),
-            )
-            return policyAPI.RuntimeServerlessPolicy{}, diags
-        }
-
-        rules, diags = ServerlessRuntimePolicyRulesSchemaToTerraform(ctx, *plan.Rules, client, customRuleIdMap)
+        rules, diags = ServerlessRuntimePolicyRulesSchemaToTerraform(ctx, *plan.Rules, client)
         if diags.HasError() {
             return policyAPI.RuntimeServerlessPolicy{}, diags
         }
@@ -272,7 +263,7 @@ func ServerlessRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.
     return tfPolicy, diags
 }
 
-func ServerlessRuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []models.RuntimeServerlessPolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, customRuleIdMap map[string]int) ([]policyAPI.RuntimeServerlessPolicyRule, diag.Diagnostics) {
+func ServerlessRuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []models.RuntimeServerlessPolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient) ([]policyAPI.RuntimeServerlessPolicyRule, diag.Diagnostics) {
     util.DLog(ctx, "Executing ServerlessRuntimePolicyRulesSchemaToTerraform")
 
     var (
