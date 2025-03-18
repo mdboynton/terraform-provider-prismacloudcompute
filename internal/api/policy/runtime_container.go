@@ -41,7 +41,7 @@ type RuntimeContainerPolicyRule struct {
 type RuntimeContainerDns struct {
 	DefaultEffect string                        `json:"defaultEffect,omitempty"`
 	Disabled      bool                          `json:"disabled,omitempty"`
-	DomainList    RuntimeContainerDnsDomainList `json:"domainList,omitempty"`
+	DomainList    DnsDomainList                 `json:"domainList,omitempty"`
 }
 
 type RuntimeContainerFilesystem struct {
@@ -66,12 +66,6 @@ type RuntimeContainerNetwork struct {
 	OutboundPorts      NetworkPorts                 `json:"outboundPorts,omitempty"`
 	PortScanEffect     string                       `json:"portScanEffect,omitempty"`
 	RawSocketsEffect   string                       `json:"rawSocketsEffect,omitempty"`
-}
-
-type RuntimeContainerDnsDomainList struct {
-	Allowed []string `json:"allowed,omitempty"`
-	Denied  []string `json:"denied,omitempty"`
-	Effect  string   `json:"effect,omitempty"`
 }
 
 type RuntimeContainerPort struct {

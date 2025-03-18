@@ -719,7 +719,7 @@ func containerRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworking
     dns := policyAPI.RuntimeContainerDns{
         Disabled: !schemaNetworking.DnsEnabled.ValueBool(),
         DefaultEffect: schemaNetworking.AllOtherDomainsEffect.ValueString(),
-        DomainList: policyAPI.RuntimeContainerDnsDomainList{
+        DomainList: policyAPI.DnsDomainList{
             Allowed: allowedDnsDomains,
             Denied: deniedDnsDomains,
             Effect: schemaNetworking.DeniedDnsDomainsEffect.ValueString(), 

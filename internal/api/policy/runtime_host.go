@@ -23,7 +23,7 @@ type RuntimeHostPolicyRule struct {
 	Collections       []collectionAPI.Collection    `json:"collections"`
 	CustomRules       []CustomRule    `json:"customRules"`
 	Disabled          bool            `json:"disabled"`
-	DNS               DNS             `json:"dns"`
+	DNS               RuntimeHostDns             `json:"dns"`
 	FileIntegrityRules []FileIntegrityRule `json:"fileIntegrityRules"`
 	Forensic          Forensic        `json:"forensic"`
 	LogInspectionRules []LogInspectionRule `json:"logInspectionRules"`
@@ -55,18 +55,7 @@ type RuntimeHostAntiMalware struct {
 	WildFireAnalysis          string `json:"wildFireAnalysis"`
 }
 
-type DeniedProcesses struct {
-	Effect string `json:"effect"`
-	Paths  []string `json:"paths"`
-}
-
-type CustomRule struct {
-	ID     int      `json:"_id"`
-	Action string `json:"action"`
-	Effect string `json:"effect"`
-}
-
-type DNS struct {
+type RuntimeHostDns struct {
 	Allow            []string `json:"allow"`
 	Deny             []string `json:"deny"`
 	DenyListEffect   string `json:"denyListEffect"`

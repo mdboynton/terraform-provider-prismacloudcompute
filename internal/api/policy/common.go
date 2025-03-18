@@ -374,6 +374,68 @@ func (p *Policy) SortRules(ctx context.Context, planRules *[]models.PolicyRuleRe
 	util.DLog(ctx, "Finishing api.Policy.SortRules() execution")
 }
 
+func (p *Policy) EndpointUrl() string {
+	switch p.PolicyType {
+	    case PolicyTypeComplianceHost:
+		    return HostComplianceEndpoint
+	    case PolicyTypeComplianceContainer:
+	    	return ContainerComplianceEndpoint
+        case PolicyTypeComplianceCiImage:
+	    	return CiImageComplianceEndpoint
+        case PolicyTypeComplianceVmImage:
+	    	return VmImageComplianceEndpoint
+        case PolicyTypeComplianceFunction:
+	    	return FunctionComplianceEndpoint
+        case PolicyTypeComplianceCiFunction:
+	    	return CiFunctionComplianceEndpoint
+        case PolicyTypeVulnerabilityDeployedImage: 
+	    	return DeployedImageVulnerabilityEndpoint
+        case PolicyTypeVulnerabilityCiImage:
+	    	return CiImageVulnerabilityEndpoint
+        case PolicyTypeVulnerabilityHost:
+	    	return HostVulnerabilityEndpoint
+        case PolicyTypeVulnerabilityVmImage:
+	    	return VmImageVulnerabilityEndpoint
+        case PolicyTypeVulnerabilityFunction:
+	    	return FunctionVulnerabilityEndpoint
+        case PolicyTypeVulnerabilityCiFunction:
+	    	return CiFunctionVulnerabilityEndpoint
+	    default:
+	    	return ""
+	}
+}
+
+func (p *Policy) FormattedType() string {
+	switch p.PolicyType {
+	    case PolicyTypeComplianceHost:
+		    return PolicyTypeComplianceHostFormatted
+	    case PolicyTypeComplianceContainer:
+	    	return PolicyTypeComplianceContainerFormatted 
+        case PolicyTypeComplianceCiImage:
+	    	return PolicyTypeComplianceCiImageFormatted
+        case PolicyTypeComplianceVmImage:
+	    	return PolicyTypeComplianceVmImageFormatted
+        case PolicyTypeComplianceFunction:
+	    	return PolicyTypeComplianceFunctionFormatted
+        case PolicyTypeComplianceCiFunction:
+	    	return PolicyTypeComplianceCiFunctionFormatted
+        case PolicyTypeVulnerabilityDeployedImage: 
+	    	return PolicyTypeVulnerabilityDeployedImageFormatted
+        case PolicyTypeVulnerabilityCiImage:
+	    	return PolicyTypeVulnerabilityCiImageFormatted
+        case PolicyTypeVulnerabilityHost:
+	    	return PolicyTypeVulnerabilityHostFormatted
+        case PolicyTypeVulnerabilityVmImage:
+	    	return PolicyTypeVulnerabilityVmImageFormatted
+        case PolicyTypeVulnerabilityFunction:
+	    	return PolicyTypeVulnerabilityFunctionFormatted
+        case PolicyTypeVulnerabilityCiFunction:
+	    	return PolicyTypeVulnerabilityCiFunctionFormatted
+	    default:
+	    	return ""
+	}
+}
+
 // TODO: remove this duplicate function when we can move the logic somewhere that can be used here
 // and by internal/resources/policy/common.go
 func generatePolicyRulesOrderMap(rules []models.PolicyRuleResourceModel) map[string]int {
@@ -490,7 +552,6 @@ type ExceptionExpiration struct {
 }
 
 type PortRange struct {
-    //Deny    string `json:"deny,omitempty"`
     Deny    bool `json:"deny,omitempty"`
     Start   int `json:"start,omitempty"`
     End     int `json:"end,omitempty"`
@@ -501,6 +562,24 @@ type NetworkPorts struct {
 	Denied  []PortRange `json:"denied,omitempty"`
 	Effect  string                 `json:"effect,omitempty"`
 }
+
+type DeniedProcesses struct {
+	Effect string `json:"effect"`
+	Paths  []string `json:"paths"`
+}
+
+type CustomRule struct {
+	ID     int      `json:"_id"`
+	Action string `json:"action"`
+	Effect string `json:"effect"`
+}
+
+type DnsDomainList struct {
+	Allowed []string `json:"allowed,omitempty"`
+	Denied  []string `json:"denied,omitempty"`
+	Effect  string   `json:"effect,omitempty"`
+}
+
 
 func getEndpointAndPolicyName(policyType string) (string, string, error) {
 	switch policyType {
@@ -534,13 +613,8 @@ func getEndpointAndPolicyName(policyType string) (string, string, error) {
 }
 
 func UpsertPolicy(c api.PrismaCloudComputeAPIClient, policy Policy) error {
-	endpoint, policyName, err := getEndpointAndPolicyName(policy.PolicyType)
-	if err != nil {
-		return err
-	}
-
-	if err := c.Request(http.MethodPut, endpoint, nil, policy, nil); err != nil {
-		return fmt.Errorf("error upserting %s policy: %s", policyName, err)
+	if err := c.Request(http.MethodPut, policy.EndpointUrl(), nil, policy, nil); err != nil {
+		return fmt.Errorf("Error occured while attempting to upsert %s policy: %s", policy.FormattedType(), err)
 	}
 
 	return nil
