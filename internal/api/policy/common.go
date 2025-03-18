@@ -263,6 +263,8 @@ var (
     // Runtime endpoints
     RuntimeContainerEndpoint = fmt.Sprintf("%s/policies/runtime/container", BaseEndpoint)
     RuntimeHostEndpoint = fmt.Sprintf("%s/policies/runtime/host", BaseEndpoint)
+    RuntimeServerlessEndpoint = fmt.Sprintf("%s/policies/runtime/serverless", BaseEndpoint)
+    RuntimeAppEmbeddedEndpoint = fmt.Sprintf("%s/policies/runtime/app-embedded", BaseEndpoint)
 
     IsAttributeSupported = map[string]map[string]bool{
         "block_message": {
