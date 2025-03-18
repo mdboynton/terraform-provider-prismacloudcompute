@@ -253,7 +253,7 @@ func ServerlessRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.
     tfPolicy := policyAPI.RuntimeServerlessPolicy{
         Id:         "serverlessRuntime",
         Rules:      &rules,
-        LearningDisabled: !plan.AutomaticRuntimeLearning.ValueBool(), 
+        LearningDisabled: false, 
     }
 
     tfPolicy.SortRules(ctx, plan.Rules)
@@ -355,7 +355,6 @@ func ServerlessRuntimePolicyTerraformToSchema(ctx context.Context, policy policy
 
     schema := models.RuntimeServerlessPolicyResourceModel{
         Rules:         &rules,
-        AutomaticRuntimeLearning: types.BoolValue(!policy.LearningDisabled),
     }
 
     schema.SortRules(ctx, plan.Rules)

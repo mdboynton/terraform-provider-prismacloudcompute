@@ -490,7 +490,6 @@ func (m *RuntimeContainerPolicyResourceModel) SortRules(ctx context.Context, pla
 
 type RuntimeServerlessPolicyResourceModel struct {
     // TODO: remove AutomaticRuntimeLearning
-    AutomaticRuntimeLearning types.Bool `tfsdk:"automatic_runtime_learning"`
     Rules  *[]RuntimeServerlessPolicyRuleResourceModel `tfsdk:"rules"`
 }
 
