@@ -70,7 +70,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.malware_from_advanced_threat_protection", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -79,7 +79,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.kubernetes_attacks", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("disable"),
                                     Description: "TODO",
@@ -88,7 +88,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.suspicious_cloud_provider_api_queries", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("disable"),
                                     Description: "TODO",
@@ -97,7 +97,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.wild_fire_analysis", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for WildFire analysis. WildFire must be enabled for runtime protection under Manage > System > WildFire.",
@@ -148,7 +148,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     "effect": schema.StringAttribute{
                                         Required:   true,
                                         Validators: []validator.String{
-                                            validators.PolicyEffectIsValid("custom_rules.effect", []string{"allow", "alert", "prevent", "block"}),
+                                            validators.PolicyEffectIsValid([]string{"allow", "alert", "prevent", "block"}),
                                         },
                                         Description: "TODO",
                                     },
@@ -156,7 +156,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                         Optional:   true,
     			        			    Computed:   true,
                                         Validators: []validator.String{
-                                            validators.PolicyEffectIsValid("custom_rules.log_as", []string{"audit", "incident"}),
+                                            validators.PolicyEffectIsValid([]string{"audit", "incident"}),
                                         },
                                         Default:    stringdefault.StaticString(""),
                                         Description: "TODO",
@@ -193,7 +193,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.changes_to_binaries", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -202,7 +202,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.detection_of_encrypted_binaries", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -211,7 +211,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.changes_to_ssh_admin_account_config_files", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -220,7 +220,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.suspicious_elf_headers", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -238,7 +238,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.denied_paths_effect", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("disable"),
                                     Description: "TODO",
@@ -247,7 +247,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.denied_paths_effect", []string{"alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -319,7 +319,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.processes_from_modified_binaries", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -328,7 +328,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.crypto_miners", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -337,7 +337,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.reverse_shell", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -346,7 +346,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.lateral_movement_processes", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -355,7 +355,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.processes_started_with_suid", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("disable"),
                                     Description: "TODO",
@@ -369,7 +369,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        					Optional:    true,
     			        					Description: "Effect for denied processes",
                                             Validators: []validator.String{
-                                                validators.PolicyEffectIsValid("processes.denied_processes.effect", []string{"disable", "alert", "prevent", "block"}),
+                                                validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                             },
     			        				},
     			        				"paths": schema.ListAttribute{
@@ -387,7 +387,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.all_other_processes_effect", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -499,7 +499,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.network_activity_from_modified_binaries", []string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
                                     },
     			        			Description: "",
     			        		},
@@ -508,7 +508,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.port_scanning", []string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
                                     },
     			        			Description: "",
     			        		},
@@ -517,7 +517,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.raw_sockets", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
     			        			Description: "",
     			        		},
@@ -535,7 +535,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_listening_ports_effect", []string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
                                     },
     			        			Description: "",
     			        		},
@@ -553,7 +553,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_outbound_internet_ports_effect", []string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
                                     },
     			        			Description: "",
     			        		},
@@ -571,7 +571,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_outbound_ips_effect", []string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
                                     },
     			        			Description: "",
     			        		},
@@ -580,7 +580,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.all_other_activity_effect", []string{"alert", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "block"}),
                                     },
     			        			Description: "",
     			        		},
@@ -613,7 +613,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_dns_domains_effect", []string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                     },
     			        			Description: "",
     			        		},
@@ -622,7 +622,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.all_other_domains_effect", []string{"alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent", "block"}),
                                     },
     			        			Description: "",
     			        		},

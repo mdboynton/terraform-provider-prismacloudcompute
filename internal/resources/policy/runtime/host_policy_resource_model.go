@@ -65,7 +65,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.crypto_miners", []string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        			Description: "Effect for crypto miner detection",
@@ -78,7 +78,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        					Optional:    true,
     			        					Description: "Effect for denied processes",
                                             Validators: []validator.String{
-                                                validators.PolicyEffectIsValid("anti_malware.denied_processes.effect", []string{"alert", "prevent"}),
+                                                validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                             },
     			        				},
     			        				"paths": schema.ListAttribute{
@@ -93,7 +93,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.encrypted_binaries", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for encrypted/packed binaries.",
@@ -102,7 +102,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.execution_flow_hijacking", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for execution flow hijacking.",
@@ -111,7 +111,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.malware_from_advanced_threat_protection", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "Effect for intelligence feed.",
@@ -120,7 +120,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.malware_from_custom_feed", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for malware based on custom feed",
@@ -129,7 +129,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.non_packaged_binaries_service", []string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for service unknown origin binary.",
@@ -139,7 +139,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.non_packaged_binaries_user", []string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for user unknown origin binary.",
@@ -148,7 +148,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.processes_temporary_storage", []string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for processes running from temporary storage.",
@@ -157,7 +157,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.reverse_shell", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for reverse shell attacks.",
@@ -174,7 +174,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.suspicious_elf_headers", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for binaries with suspicious ELF headers.",
@@ -183,7 +183,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.web_shell", []string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for web shell attacks. Note that when setting this effect to \"Prevent\", the \"Prevent\" effect will only apply to file execution. Alerts will be generated on file creation.",
@@ -192,7 +192,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("anti_malware.wild_fire_analysis", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for WildFire analysis. WildFire must be enabled for runtime protection under Manage > System > WildFire.",
@@ -281,7 +281,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                     "effect": schema.StringAttribute{
                                         Required:   true,
                                         Validators: []validator.String{
-                                            validators.PolicyEffectIsValid("custom_rules.effect", []string{"allow", "alert", "prevent"}),
+                                            validators.PolicyEffectIsValid([]string{"allow", "alert", "prevent"}),
                                         },
                                         Description: "",
                                     },
@@ -289,7 +289,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         Optional:   true,
     			        			    Computed:   true,
                                         Validators: []validator.String{
-                                            validators.PolicyEffectIsValid("custom_rules.log_as", []string{"audit", "incident"}),
+                                            validators.PolicyEffectIsValid([]string{"audit", "incident"}),
                                         },
                                         Default:    stringdefault.StaticString(""),
                                         Description: "",
@@ -436,7 +436,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		"suspicious_ips_custom_feed": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.suspicious_ips_custom_feed", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
     			        			Description: "Effect for custom feed",
                                     // TODO: description
@@ -459,7 +459,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		"denied_ips_ports_effect": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_ips_ports_effect", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
     			        			Description: "Effect for the IP/ports deny list",
                                     // TODO: description
@@ -467,7 +467,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		"suspicious_ips_advanced_threat_protection_effect": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.suspicious_ips_advanced_threat_protection_effect", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
     			        			Description: "Effect for intelligence feed",
                                     // TODO: description
@@ -488,7 +488,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
                                     Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_dns_domains_effect", []string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("disable"),
     			        			Description: "Effect for the DNS deny list.",
@@ -498,7 +498,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
                                     Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.suspicious_domains_advanced_threat_protection_effect", []string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("disable"),
     			        			Description: "Effect for the intelligence feed",

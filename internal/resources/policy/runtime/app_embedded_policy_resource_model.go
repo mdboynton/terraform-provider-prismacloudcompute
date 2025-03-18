@@ -82,7 +82,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     "effect": schema.StringAttribute{
                                         Required:   true,
                                         Validators: []validator.String{
-                                            validators.PolicyEffectIsValid("custom_rules.effect", []string{"allow", "alert", "prevent", "block"}),
+                                            validators.PolicyEffectIsValid([]string{"allow", "alert", "prevent", "block"}),
                                         },
                                         Description: "TODO",
                                     },
@@ -90,7 +90,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                         Optional:   true,
     			        			    Computed:   true,
                                         Validators: []validator.String{
-                                            validators.PolicyEffectIsValid("custom_rules.log_as", []string{"audit", "incident"}),
+                                            validators.PolicyEffectIsValid([]string{"audit", "incident"}),
                                         },
                                         Default:    stringdefault.StaticString(""),
                                         Description: "TODO",
@@ -107,6 +107,9 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        "file_system": schema.SingleNestedAttribute{
     			        	Optional: true,
                             Computed: true,
+                            Validators: []validator.Object{
+                                validators.ErrorIfBothListsConfigured("allowed_paths", "denied_paths"),
+                            },
     			        	Attributes: map[string]schema.Attribute{
                                 "enabled": schema.BoolAttribute{
                                     Optional: true,
@@ -114,7 +117,6 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Default: booldefault.StaticBool(true),
                                     Description: "TODO.",
                                 },
-                                // TODO: allowed_paths cannot be set if denied_paths is set
     			        		"allowed_paths": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -124,7 +126,6 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     ),
     			        			Description: "TODO",
     			        		},
-                                // TODO: denied_paths cannot be set if allowed_paths is set
     			        		"denied_paths": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -138,7 +139,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.denied_paths_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -177,7 +178,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.wild_fire_analysis", []string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -219,6 +220,9 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        "processes": schema.SingleNestedAttribute{
     			        	Optional: true,
                             Computed: true,
+                            Validators: []validator.Object{
+                                validators.ErrorIfBothListsConfigured("allowed_processes", "denied_processes"),
+                            },
     			        	Attributes: map[string]schema.Attribute{
                                 "enabled": schema.BoolAttribute{
                                     Optional: true,
@@ -226,7 +230,6 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Default: booldefault.StaticBool(true),
                                     Description: "TODO.",
                                 },
-                                // TODO: allowed_processes cannot be set if denied_processes is set and vis versa
     			        		"allowed_processes": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -250,7 +253,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.denied_processes_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
     			        			Description: "",
     			        		},
@@ -307,6 +310,11 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        "networking": schema.SingleNestedAttribute{
     			        	Optional:    true,
     			        	Computed:    true,
+                            Validators: []validator.Object{
+                                validators.ErrorIfBothListsConfigured("allowed_listening_ports", "denied_listening_ports"),
+                                validators.ErrorIfBothListsConfigured("allowed_outbound_internet_ports", "denied_outbound_internet_ports"),
+                                validators.ErrorIfBothListsConfigured("allowed_outbound_ips", "denied_outbound_ips"),
+                            },
     			        	Attributes: map[string]schema.Attribute{
                                 "ip_connectivity_enabled": schema.BoolAttribute{
                                     Optional: true,
@@ -314,7 +322,6 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Default: booldefault.StaticBool(true),
                                     Description: "TODO",
                                 },
-                                // TODO: allowed_listening_ports cannot be set if denied_listening_ports is set and vis versa
     			        		"allowed_listening_ports": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -324,7 +331,6 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     ),
     			        			Description: "TODO",
     			        		},
-                                // TODO: allowed_outbound_internet_ports cannot be set if denied_outbound_internet_ports is set and vis versa
     			        		"allowed_outbound_internet_ports": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -334,7 +340,6 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     ),
     			        			Description: "TODO",
     			        		},
-                                // TODO: allowed_outbound_ips cannot be set if denied_outbound_internet_ports is set and vis versa
     			        		"allowed_outbound_ips": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -349,7 +354,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_ips_ports_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
     			        			Description: "",
     			        		},
@@ -400,7 +405,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_dns_domains_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
     			        			Description: "",
     			        		},

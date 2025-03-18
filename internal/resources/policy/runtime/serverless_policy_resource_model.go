@@ -112,7 +112,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("file_system.denied_paths_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "TODO",
@@ -164,7 +164,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("processes.denied_processes_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
     			        			Description: "",
     			        		},
@@ -256,7 +256,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Computed:    true,
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_ips_ports_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
     			        			Description: "",
     			        		},
@@ -280,7 +280,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid("networking.denied_dns_domains_effect", []string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                     },
     			        			Description: "",
     			        		},

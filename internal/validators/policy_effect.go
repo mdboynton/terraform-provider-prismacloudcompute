@@ -9,15 +9,13 @@ import (
     "github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-func PolicyEffectIsValid(attributeName string, validEffects []string) policyEffectIsValid {
+func PolicyEffectIsValid(validEffects []string) policyEffectIsValid {
     return policyEffectIsValid{
-        AttributeName: attributeName,
         ValidEffects: validEffects,
     }
 }
 
 type policyEffectIsValid struct {
-    AttributeName string
     ValidEffects []string
 }
 
@@ -38,7 +36,7 @@ func (v policyEffectIsValid) ValidateString(ctx context.Context, req validator.S
         resp.Diagnostics.AddAttributeError(
             req.Path, 
             "Invalid Argument Value", 
-            fmt.Sprintf("Invalid value \"%s\" provided for argument \"%s\". Must be one of the following: %s", req.ConfigValue.ValueString(), v.AttributeName, strings.Join(v.ValidEffects[:], ", ")),
+            fmt.Sprintf("Invalid value \"%s\" specified for attribute %s.\nMust be one of the following: %s", req.ConfigValue.ValueString(), req.Path.String(), strings.Join(v.ValidEffects[:], ", ")),
         )
     }
 
