@@ -14,7 +14,8 @@ import (
 	vulnerability "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/vulnerability"
 	runtime "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/runtime"
 	custom "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/custom"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
+	systemResource "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
+	systemDataSource "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/data_sources/system"
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -92,8 +93,8 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
 	return []func() resource.Resource{
 		auth.NewUserResource,
 		auth.NewRoleResource,
-		system.NewCollectionResource,
-        system.NewGcpCloudAccountResource,
+		systemResource.NewCollectionResource,
+        systemResource.NewGcpCloudAccountResource,
         // Compliance policy resources
 		compliance.NewHostCompliancePolicyResource,
 		compliance.NewContainerCompliancePolicyResource,
@@ -123,7 +124,9 @@ func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() res
 }
 
 func (p *PrismaCloudComputeProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+        systemDataSource.NewCollectionDataSource, 
+    }
 }
 
 func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {

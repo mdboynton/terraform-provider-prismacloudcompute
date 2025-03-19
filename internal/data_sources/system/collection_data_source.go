@@ -1,32 +1,35 @@
-package system
+package data_sources
 
 import (
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
+	"context"
+	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-    "github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
+	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/system"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
-var _ resource.Resource = &CollectionResource{}
-var _ resource.ResourceWithImportState = &CollectionResource{}
+var _ datasource.DataSource = &CollectionDataSource{}
 
-func NewCollectionResource() resource.Resource {
-    return &CollectionResource{}
+func NewCollectionDataSource() datasource.DataSource {
+    return &CollectionDataSource{}
 }
 
-type CollectionResource struct {
+type CollectionDataSource struct {
     client *api.PrismaCloudComputeAPIClient
 }
 
-func (r *CollectionResource) GetSchema() schema.Schema {
-    return schema.Schema{
+func (d *CollectionDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+    resp.TypeName = req.ProviderTypeName + "_collection"
+}
+
+func (d *CollectionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+    resp.Schema = schema.Schema{
         //MarkdownDescription: "TODO",
         Description: "Collections are predefined filters that let you group related resources together. They can be used to scope policy rules and segment data/views in the Console UI and the Prisma Cloud API.",
         Attributes: map[string]schema.Attribute{
@@ -36,14 +39,6 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "app_ids": schema.SetAttribute{
                 Description: "List of application IDs.",
@@ -51,17 +46,6 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Validators: []validator.Set{
-                    validators.AppIDsEndWithWildcard(),
-                },
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "clusters": schema.SetAttribute{
                 Description: "List of Kubernetes cluster names.",
@@ -69,21 +53,12 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "color": schema.StringAttribute{
                 Description: "Hexadecimal representation of the collection's color value.",
                 //MarkdownDescription: "TODO",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString("#3FA2F7"),
             },
             "containers": schema.SetAttribute{
                 Description: "List of containers.",
@@ -91,21 +66,12 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "description": schema.StringAttribute{
                 //MarkdownDescription: "TODO",
                 Description: "Description of the collection.",
                 Optional: true,
                 Computed: true,
-                Default: stringdefault.StaticString(""),
             },
             "functions": schema.SetAttribute{
                 //MarkdownDescription: "TODO",
@@ -113,14 +79,6 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "hosts": schema.SetAttribute{
                 //MarkdownDescription: "TODO",
@@ -128,14 +86,6 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "images": schema.SetAttribute{
                 //MarkdownDescription: "TODO",
@@ -143,14 +93,6 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "labels": schema.SetAttribute{
                 //MarkdownDescription: "TODO",
@@ -158,19 +100,11 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "modified": schema.StringAttribute{
                 //MarkdownDescription: "TODO",
                 Description: "Date and time that the collection was last modified.",
-                //Optional: true, // TODO: get rid of this and make it just Computed
+                //Optional: true, // TODO: get rid of thi)s and make it just Computed
                 Computed: true,
             },
             "name": schema.StringAttribute{
@@ -184,14 +118,6 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 ElementType: types.StringType,
                 Optional: true,
                 Computed: true,
-                Default: setdefault.StaticValue(
-                    types.SetValueMust(
-                        types.StringType,
-                        []attr.Value{
-                            types.StringValue("*"),
-                        },
-                    ),
-                ),
             },
             "owner": schema.StringAttribute{
                 //MarkdownDescription: "TODO",
@@ -202,14 +128,63 @@ func (r *CollectionResource) GetSchema() schema.Schema {
                 //MarkdownDescription: "TODO",
                 Description: "Indicates whether this collection originated from Prisma Cloud.",
                 Computed: true,
-                Default: booldefault.StaticBool(false),
             },
             "system": schema.BoolAttribute{
                 //MarkdownDescription: "TODO",
                 Description: "Indicates whether this collection was created by a user (true) or the system (false).",
                 Computed: true,
-                Default: booldefault.StaticBool(false),
             },
         },
     }
+}
+
+func (d *CollectionDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+    if req.ProviderData == nil {
+        return
+    }
+
+    client, ok := req.ProviderData.(*api.PrismaCloudComputeAPIClient)
+
+    if !ok {
+        resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+        return
+    }
+
+    d.client = client
+}
+
+func (d *CollectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+    var (
+        data models.CollectionDataSourceModel
+        diags diag.Diagnostics
+    )
+
+    // Read Terraform configuration data into the model
+    resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Read the data from the API
+    collection, err := collectionAPI.GetCollection(*d.client, data.Name.ValueString())
+    if err != nil {
+        resp.Diagnostics.AddError(
+            fmt.Sprintf("Error fetching Collection data source with name: %s", data.Name.ValueString()),
+            fmt.Sprintf("Error message: %s", err.Error()),
+        )
+        return
+    }
+
+    data, diags = data.RefreshPropertyValues(ctx, collection)
+    resp.Diagnostics.Append(diags...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    // Save data into Terraform state
+    resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

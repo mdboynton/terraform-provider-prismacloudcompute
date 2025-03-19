@@ -46,10 +46,10 @@ func (r *CollectionResource) Configure(ctx context.Context, req resource.Configu
 
 
 func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    // Retrieve values from plan
     var plan models.CollectionResourceModel
-    diags := req.Plan.Get(ctx, &plan)
-    resp.Diagnostics.Append(diags...)
+
+    // Retrieve values from plan
+    resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
     if resp.Diagnostics.HasError() {
         return
     }
