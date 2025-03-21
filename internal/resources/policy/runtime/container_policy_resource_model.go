@@ -699,15 +699,15 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        },
     			        "notes": schema.StringAttribute{
     			        	Optional:    true,
-    			        	Description: "Notes for the resource",
+    			        	Description: "Notes for the policy rule.",
     			        },
     			        "owner": schema.StringAttribute{
                             Computed: true,
-    			        	Description: "Owner of the resource",
+    			        	Description: "Owner of the policy rule.",
     			        },
     			        "previous_name": schema.StringAttribute{
                             Computed: true,
-    			        	Description: "Previous name of the resource",
+    			        	Description: "Previous name of the policy rule.",
     			        },
                     },
                 },
