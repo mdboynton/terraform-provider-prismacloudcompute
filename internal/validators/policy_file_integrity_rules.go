@@ -86,7 +86,7 @@ func (v fileIntegrityRulesAreValid) ValidateList(ctx context.Context, req valida
             resp.Diagnostics.AddAttributeError(
                 req.Path, 
                 "Invalid Resource Configuration", 
-                fmt.Sprintf("file_integrity_rule[%d] has a duplicate file path. File paths must be unique for each rule.", idx), 
+                fmt.Sprintf("file_integrity_rule[%d] has a duplicate file/directory path. Paths values must be unique.", idx), 
             )
         } else {
             filePaths = append(filePaths, filePath)

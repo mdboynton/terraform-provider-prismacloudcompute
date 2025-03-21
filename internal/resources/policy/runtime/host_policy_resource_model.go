@@ -48,18 +48,20 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                 NestedObject: schema.NestedAttributeObject{
                     Attributes: map[string]schema.Attribute{
                         "order": schema.Int32Attribute{
-                            MarkdownDescription: "TODO",
+                            //MarkdownDescription: "TODO",
+                            Description: "Order in which the rule will be evaluated. Rules are evaluated from the lowest order value to the highest. When a match is found, the subsequent rules are skipped.",
                             Optional:            true,
                             Computed:            true,
                         },
     			        "anti_malware": schema.SingleNestedAttribute{
     			        	Optional: true,
                             Computed: true,
+                            Description: "Configuration for malware monitoring.",
     			        	Attributes: map[string]schema.Attribute{
     			        		"allowed_processes": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
-    			        			Description: "List of allowed processes",
+    			        			Description: "Processes marked as safe to use based on the process name or full path of the binary from which the process is executed. Processes added to this list will not be alerted on or prevented by any of the malware runtime capabilities.",
     			        		},
     			        		"crypto_miners": schema.StringAttribute{
     			        			Optional:    true,
@@ -68,15 +70,15 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
-    			        			Description: "Effect for crypto miner detection",
+                                    Description: "Effect for detected crypto miners. Must be one of \"disable\", \"alert\", or \"prevent\". Note that when setting to \"prevent\", only some detected use cases will be prevented. Others will only generate an alert.",
     			        		},
     			        		"denied_processes": schema.SingleNestedAttribute{
     			        			Optional:    true,
-    			        			Description: "Denied Processes configuration",
+    			        			Description: "Processes to alert on or prevent execution of based on the process name or full path of the binary from which the process is executed.",
     			        			Attributes: map[string]schema.Attribute{
     			        				"effect": schema.StringAttribute{
     			        					Optional:    true,
-    			        					Description: "Effect for denied processes",
+    			        					Description: "Effect for denied processes. Must be either \"alert\" or \"prevent\".",
                                             Validators: []validator.String{
                                                 validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
                                             },
@@ -84,8 +86,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        				"paths": schema.ListAttribute{
     			        					Optional:    true,
     			        					ElementType: types.StringType,
-    			        					Description: "List of paths for denied processes",
-                                            // TODO: validation
+    			        			        Description: "List of names or full paths of denied processes.",
     			        				},
     			        			},
     			        		},
@@ -96,7 +97,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for encrypted/packed binaries.",
+                                    Description: "Effect for detected encrypted/packed binaries. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"execution_flow_hijacking": schema.StringAttribute{
     			        			Optional:   true,
@@ -105,7 +106,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for execution flow hijacking.",
+                                    Description: "Effect for detected execution flow hijack attempts. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"malware_from_advanced_threat_protection": schema.StringAttribute{
     			        			Optional:    true,
@@ -114,7 +115,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default: stringdefault.StaticString("alert"),
-                                    Description: "Effect for intelligence feed.",
+                                    Description: "Effect for detected files classified as malware by Prisma Cloud Advanced Threat Protection. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"malware_from_custom_feed": schema.StringAttribute{
     			        			Optional:    true,
@@ -123,7 +124,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for malware based on custom feed",
+                                    Description: "Effect for detected files classified as malware by the presence of their MD5 hash in the custom malware signature feed. Must be either \"disable\" or \"alert\". Custom malware signatures can be configured in the console by navigating to Manage > System > Custom feeds > Malware signatures.",
     			        		},
     			        		"non_packaged_binaries_service": schema.StringAttribute{
     			        			Optional:   true,
@@ -132,8 +133,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for service unknown origin binary.",
-                                    // TODO: description
+                                    Description: "Effect for detected binaries created or executed by a service without a package manager. Must be one of \"disable\", \"alert\", or \"prevent\". Defender must be running when a file is written to detect its source. Note that when setting to \"prevent\", only file execution will be prevented, while alerts will be generated on file creation.",
     			        		},
     			        		"non_packaged_binaries_user": schema.StringAttribute{
     			        			Optional:    true,
@@ -142,7 +142,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for user unknown origin binary.",
+                                    Description: "Effect for detected binaries created or executed by a user without a package manager. Must be one of \"disable\", \"alert\", or \"prevent\". Defender must be running when a file is written to detect its source. Note that when setting to \"prevent\", only file execution will be prevented, while alerts will be generated on file creation.",
     			        		},
     			        		"processes_temporary_storage": schema.StringAttribute{
     			        			Optional:    true,
@@ -151,7 +151,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for processes running from temporary storage.",
+                                    Description: "Effect for detected processes executed from temporary storage. Must be one of \"disable\", \"alert\", or \"prevent\".",
     			        		},
     			        		"reverse_shell": schema.StringAttribute{
     			        			Optional:    true,
@@ -160,14 +160,13 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for reverse shell attacks.",
+                                    Description: "Effect for detected reverse shell attacks. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"suppress_compiler_generated_binaries": schema.BoolAttribute{
     			        			Optional:   true,
                                     Computed:   true,
                                     Default:    booldefault.StaticBool(false),
-    			        			Description: "Detect compiler generated binary.",
-                                    // TODO: update Description
+                                    Description: "Toggle suppression of alerts created by detected non-packaged binaries executed by compiler services. This setting has no effect if non_packaged_binaries_service is set to \"disable\".",
                                     // TODO: do not allow if non_packaged_binaries_run_by_service is set to "disable"
     			        		},
     			        		"suspicious_elf_headers": schema.StringAttribute{
@@ -177,7 +176,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for binaries with suspicious ELF headers.",
+                                    Description: "Effect for detected suspicious ELF headers. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"web_shell": schema.StringAttribute{
     			        			Optional:    true,
@@ -186,7 +185,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for web shell attacks. Note that when setting this effect to \"Prevent\", the \"Prevent\" effect will only apply to file execution. Alerts will be generated on file creation.",
+    			        			Description: "Effect for detected web shell attacks. Must be one of \"disable\", \"alert\" or \"prevent\". Note that when setting to \"prevent\", only Linux command line tool execution will be prevented. Alerts will be generated on web shell creation.",
     			        		},
     			        		"wild_fire_analysis": schema.StringAttribute{
     			        			Optional:    true,
@@ -195,7 +194,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
-    			        			Description: "Effect for WildFire analysis. WildFire must be enabled for runtime protection under Manage > System > WildFire.",
+    			        			Description: "Effect for detected files classified as malware by WildFire, Palo Alto Networks' malware analysis engine. Must be either \"disable\" or \"alert\". WildFire must be enabled for runtime protection under Manage > System > WildFire.",
     			        		},
     			        	},
                             Default: objectdefault.StaticValue(
@@ -260,11 +259,11 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        "collections": schema.SetAttribute{
     			        	Optional:    true,
     			        	ElementType: types.StringType,
-    			        	Description: "List of collections.",
+                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.",
     			        },
     			        "custom_rules": schema.ListNestedAttribute{
                             Optional: true,
-                            Description: "List of custom rules.",
+                            Description: "List of custom runtime rules.",
                             Validators: []validator.List{
                                 validators.CustomRulesAreValid(),
                             },
@@ -272,27 +271,27 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                 Attributes: map[string]schema.Attribute{
                                     "id": schema.Int64Attribute{
                                         Computed:   true,
-                                        Description: "",
+                                        Description: "Custom rule ID.",
                                     },
                                     "name": schema.StringAttribute{
                                         Optional:   true,
-                                        Description: "",
+                                        Description: "Name of the custom rule.",
                                     },
                                     "effect": schema.StringAttribute{
                                         Required:   true,
                                         Validators: []validator.String{
                                             validators.PolicyEffectIsValid([]string{"allow", "alert", "prevent"}),
                                         },
-                                        Description: "",
+                                        Description: "Effect for the custom rule. Must be one of \"allow\", \"alert\" or \"prevent\". Note that if set to \"allow\", the value of log_as will not have any effect.",
                                     },
                                     "log_as": schema.StringAttribute{
                                         Optional:   true,
     			        			    Computed:   true,
+                                        Description: "How violations of this custom rule will be logged. Must be \"audit\" or \"incident\".",
                                         Validators: []validator.String{
                                             validators.PolicyEffectIsValid([]string{"audit", "incident"}),
                                         },
                                         Default:    stringdefault.StaticString(""),
-                                        Description: "",
                                     },
                                 },
                             },
@@ -301,53 +300,55 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        	Optional:   true,
                             Computed:   true,
                             Default: booldefault.StaticBool(false),
-    			        	Description: "Disable the rule.",
+    			        	Description: "Indicates whether to disable the rule.",
     			        },
     			        "file_integrity_rules": schema.ListNestedAttribute{
     			        	Optional:    true,
-                            Description: "List of file integrity rules",
+                            Description: "List of file integrity rules. Each rule must have at least one of the monitoring options enabled.",
                             Validators: []validator.List{
                                 validators.FileIntegrityRulesAreValid(),
                             },
                             NestedObject: schema.NestedAttributeObject{
                                 Attributes: map[string]schema.Attribute{
+                                    // TODO: add logic to set "dir" to "true" in API call if the provided file_path value is a directory
+                                    // TODO: update FileIntegrityRulesAreValid to only apply the validation rules if the specified path is a directory
                                     "file_path": schema.StringAttribute{
                                         Optional:   true,
-                                        Description: "File path.",
+                                        Description: "File/directory path to monitor. Values must be unique.",
                                     },
                                     "allowed_processes": schema.ListAttribute{
                                         Optional:   true,
                                         ElementType: types.StringType,
-                                        Description: "Process names to be whitelisted.",
+                                        Description: "List of process names to be whitelisted.",
                                     },
                                     "excluded_file_patterns": schema.ListAttribute{
                                         Optional:   true,
                                         ElementType: types.StringType,
-                                        Description: "File patterns to exclude.",
+                                        Description: "Filename patterns to exclude from monitoring. The wildcard character \"*\" can be used in the filename only (e.g. \"foo*.log\", \"*.cache\").",
                                     },
                                     "monitor_subdirectories": schema.BoolAttribute{
                                         Optional:   true,
                                         Computed:   true,
                                         Default: booldefault.StaticBool(false),
-                                        Description: "TODO",
+                                        Description: "Enables monitoring of subdirectories. If enabled for a directory, monitor_write_ops must also be set to true and both monitor_read_ops and monitor_metadata_changes must be set to false.",
                                     },
                                     "monitor_write_ops": schema.BoolAttribute{
                                         Optional:   true,
                                         Computed:   true,
                                         Default: booldefault.StaticBool(false),
-                                        Description: "TODO",
+                                        Description: "Enables monitoring of write operations.",
                                     },
                                     "monitor_read_ops": schema.BoolAttribute{
                                         Optional:   true,
                                         Computed:   true,
                                         Default: booldefault.StaticBool(false),
-                                        Description: "TODO",
+                                        Description: "Enables monitoring of read operations.",
                                     },
                                     "monitor_metadata_changes": schema.BoolAttribute{
                                         Optional:   true,
                                         Computed:   true,
                                         Default: booldefault.StaticBool(false),
-                                        Description: "TODO",
+                                        Description: "Enables monitoring of metadata changes (e.g. chmod, chown).",
                                     },
                                 },
                             },
@@ -360,32 +361,32 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                     Attributes: map[string]schema.Attribute{
                                         "enabled": schema.BoolAttribute{
                                             Optional: true,
-                                            Description: "Enables host activity monitoring.",
+                                            Description: "Enables host activity collection/monitoring.",
                                         },
                                         "docker_commands": schema.SingleNestedAttribute{
                                             Optional: true,
                                             Attributes: map[string]schema.Attribute{
                                                 "enabled": schema.BoolAttribute{
                                                     Optional: true,
-                                                    Description: "Collect data from docker commands.",
+                                                    Description: "Enables monitoring of docker commands.",
                                                 },
                                                 "include_read_only_events": schema.BoolAttribute{
                                                     Optional: true,
-                                                    Description: "Toggle collection of read-only Docker events.",
+                                                    Description: "Enables monitoring of read-only Docker events.",
                                                 },
                                             },
                                         },
                                         "sshd_sessions": schema.BoolAttribute{
                                             Optional: true,
-                                            Description: "Collect activity data from new sessions spawned by sshd.",
+                                            Description: "Enables monitoring of activity data from new sessions spawned by sshd.",
                                         },
                                         "sudo_commands": schema.BoolAttribute{
                                             Optional: true,
-                                            Description: "Collect activity data from commands executed with sudo or su.",
+                                            Description: "Enables monitoring of activity data from commands executed with sudo or su.",
                                         },
                                         "log_background_apps": schema.BoolAttribute{
                                             Optional: true,
-                                            Description: "Collect activity data from background applications. Note that this will result in additional performance overhead and significant data being logged.",
+                                            Description: "Enables monitoring of activity data from background applications. Note that this will result in additional performance overhead and significant data being logged.",
                                         },
                                     },
                                 },
@@ -393,7 +394,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                     Optional: true,
                                     Computed:   true,
                                     Default: booldefault.StaticBool(false),
-                                    Description: "Enables host activity monitoring.",
+                                    Description: "Enables monitoring of SSH events.",
                                 },
     			        	},
     			        },
@@ -422,66 +423,65 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        },
     			        "name": schema.StringAttribute{
     			        	Required:    true,
-    			        	Description: "Name of the resource",
+    			        	Description: "Name of the policy rule.",
     			        },
     			        "networking": schema.SingleNestedAttribute{
     			        	Optional:    true,
     			        	Computed:    true,
+                            Description: "Configuration for network monitoring.",
     			        	Attributes: map[string]schema.Attribute{
     			        		"allowed_outbound_ips": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
-    			        			Description: "List of allowed outbound IPs.",
+    			        			Description: "List of allowed outbound IPs which will not generate alerts.",
     			        		},
     			        		"suspicious_ips_custom_feed": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
-    			        			Description: "Effect for custom feed",
-                                    // TODO: description
+    			        			Description: "Effect for detected IPs from the list of suspicious or high risk IPs under Manage > System > Custom feeds > IP Reputation lists. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"denied_listening_ports": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
-    			        			Description: "List of denied listening ports",
+    			        			Description: "List of listening ports for which accessing will generate alerts.",
     			        		},
     			        		"denied_outbound_ips": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
-    			        			Description: "List of denied outbound IPs",
+    			        			Description: "List of outbound IPs for which accessing will generate alerts.",
     			        		},
     			        		"denied_outbound_ports": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
-    			        			Description: "List of denied outbound ports",
+    			        			Description: "List of outbound ports for which accessing will generate alerts.",
     			        		},
     			        		"denied_ips_ports_effect": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
-    			        			Description: "Effect for the IP/ports deny list",
-                                    // TODO: description
+    			        			Description: "Effect for denied IP/ports. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"suspicious_ips_advanced_threat_protection_effect": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
                                     },
-    			        			Description: "Effect for intelligence feed",
+    			        			Description: "Effect for detected malicious IPs based on the Prisma Cloud advanced threat protection intelligence stream.",
                                     // TODO: description
     			        		},
     			        		"allowed_dns_domains": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
-    			        			Description: "List of allowed DNS domains.",
+    			        			Description: "List of DNS domains which will not generate alerts.",
                                     // TODO: validation (no duplicates)
     			        		},
     			        		"denied_dns_domains": schema.ListAttribute{
     			        			Optional:    true,
     			        			ElementType: types.StringType,
-    			        			Description: "List of denied DNS domains.",
+                                    Description: "List of DNS domains for which access will generate an alert or be prevented.",
                                     // TODO: validation (no duplicates)
     			        		},
     			        		"denied_dns_domains_effect": schema.StringAttribute{
@@ -491,8 +491,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("disable"),
-    			        			Description: "Effect for the DNS deny list.",
-                                    // TODO: description
+    			        			Description: "Effect for denied DNS domains. Must be one of \"disable\", \"alert\" or \"prevent\".",
     			        		},
     			        		"suspicious_domains_advanced_threat_protection_effect": schema.StringAttribute{
     			        			Optional:   true,
@@ -501,8 +500,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
                                         validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
                                     },
                                     Default:    stringdefault.StaticString("disable"),
-    			        			Description: "Effect for the intelligence feed",
-                                    // TODO: description
+    			        			Description: "Effect for detected malicious domains based on the Prisma Cloud advanced threat protection intelligence stream.",
     			        		},
     			        	},
                             Default: objectdefault.StaticValue(
@@ -550,15 +548,15 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        },
     			        "notes": schema.StringAttribute{
     			        	Optional:    true,
-    			        	Description: "Notes for the resource",
+    			        	Description: "Notes for the policy rule.",
     			        },
     			        "owner": schema.StringAttribute{
                             Computed: true,
-    			        	Description: "Owner of the resource",
+    			        	Description: "Owner of the policy rule.",
     			        },
     			        "previous_name": schema.StringAttribute{
                             Computed: true,
-    			        	Description: "Previous name of the resource",
+    			        	Description: "Previous name of the policy rule.",
     			        },
                     },
                 },
