@@ -1,4 +1,4 @@
 local/
 .vscode/
 __debug*
-./examples/creds.json
+*/creds.json
