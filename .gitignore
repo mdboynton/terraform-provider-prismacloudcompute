@@ -1,7 +1,4 @@
 local/
 .vscode/
 __debug*
-examples/creds.json
-
-# remove this when we start implementing testing
-*_test.go 
+./examples/creds.json
