@@ -1026,6 +1026,8 @@ func activitiesToSchema(ctx context.Context, tfActivities policyAPI.Forensic, sk
 }
 
 func customRulesToTerraform(ctx context.Context, schemaCustomRules *[]models.RuntimeHostPolicyCustomRuleResourceModel, customRuleIdMap map[string]int) ([]policyAPI.CustomRule, diag.Diagnostics) {
+    // TODO: find a way to have the error message denote which rule has the error
+
     var diags diag.Diagnostics
 
     if schemaCustomRules == nil {

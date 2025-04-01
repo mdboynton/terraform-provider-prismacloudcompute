@@ -12,6 +12,86 @@ import (
 	"time"
 )
 
+type PrismaCloudComputeAPIClientConfig struct {
+    ConsoleURL      *string `tfsdk:"console_url" json:"console_url"`
+    Username        *string `tfsdk:"username" json:"username"`
+    Password        *string `tfsdk:"password" json:"password"`
+    Insecure        *bool   `tfsdk:"insecure" json:"insecure"`
+    RequestTimeout  *int    `tfsdk:"request_timeout" json:"request_timeout"`
+    ConfigFile      *string `tfsdk:"config_file" json:"config_file"`
+}
+
+type PrismaCloudComputeAPIClient struct {
+	Config     PrismaCloudComputeAPIClientConfig
+	HTTPClient *http.Client
+	JWT        string
+}
+
+type ErrResponse struct {
+	Err string
+}
+
+type AuthRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type AuthResponse struct {
+	Token string `json:"token"`
+}
+
+func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPIClient, error) {
+	apiClient := &PrismaCloudComputeAPIClient{
+		Config: config,
+	}
+
+    // Parse request timeout value
+    if config.RequestTimeout == nil {
+        defaultTimeout := 60
+        config.RequestTimeout = &defaultTimeout
+    } 
+
+    requestTimeout, err := time.ParseDuration(fmt.Sprintf("%ds", *config.RequestTimeout))
+    if err != nil {
+        return nil, fmt.Errorf("Error occured while creating API client: Failed to parse request timeout value\n%s", err.Error())
+    }
+
+    // Instantiate HTTP client
+    httpClient := &http.Client{
+        Timeout: requestTimeout,
+    }
+
+    // If the insecure flag is set to true, add TLS configuration with InsecureSkipVerify enabled 
+    if (config.Insecure != nil && *config.Insecure) {
+        transport := http.Transport{
+		    TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+        (*httpClient).Transport = &transport
+    }
+
+    apiClient.HTTPClient = httpClient
+
+    // Authenticate to API
+	if err := apiClient.Authenticate(); err != nil {
+		return nil, err
+	}
+
+	return apiClient, nil
+}
+
+func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
+	res := AuthResponse{}
+    
+	if err := c.Request(http.MethodPost, "api/v1/authenticate", nil, AuthRequest{*c.Config.Username, *c.Config.Password}, &res); err != nil {
+		return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: %v", err)
+	}
+	c.JWT = res.Token
+
+	return nil
+}
+
 func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, data, response interface{}) (err error) {
     // Parse console URL from config
     consoleUrl, err := url.Parse(*c.Config.ConsoleURL)
@@ -19,12 +99,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 		return err
 	}
 
-    // Set URL scheme to HTTPS if undefined
-	if consoleUrl.Scheme == "" {
-		consoleUrl.Scheme = "https"
-	}
-
-    // Append endpoint to URL"
+    // Append endpoint to URL
 	consoleUrl.Path = path.Join(consoleUrl.Path, endpoint)
 
     // Marshal request payload into buffer, if not nil
@@ -48,6 +123,7 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.JWT))
 	req.Header.Set("Content-Type", "application/json")
 
+    // Add query parameters to endpoint URL, if any are provided
     if query != nil {
 		queryParams := req.URL.Query()
 		if queryMap, ok := query.(map[string]string); ok {
@@ -100,42 +176,4 @@ func (c *PrismaCloudComputeAPIClient) Request(method, endpoint string, query, da
 	}
 
 	return nil
-}
-
-func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
-	res := AuthResponse{}
-	if err := c.Request(http.MethodPost, "api/v1/authenticate", nil, AuthRequest{*c.Config.Username, *c.Config.Password}, &res); err != nil {
-		return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: %v", err)
-	}
-	c.JWT = res.Token
-
-	return nil
-}
-
-// Create Client and authenticate.
-func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPIClient, error) {
-	apiClient := &PrismaCloudComputeAPIClient{
-		Config: config,
-	}
-
-	if config.Insecure {
-		apiClient.HTTPClient = &http.Client{
-            Timeout: 60 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		}
-	} else {
-		apiClient.HTTPClient = &http.Client{
-            Timeout: 60 * time.Second,
-        }
-	}
-
-	if err := apiClient.Authenticate(); err != nil {
-		return nil, err
-	}
-
-	return apiClient, nil
 }
