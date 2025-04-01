@@ -14,183 +14,9 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 )
 
-type Settings struct {
-    FormattedName string
-    Module string 
-    Endpoint string
-    Context string
-    IsApplicableVuln func(v system.Vulnerability) bool
-}
-
-const BaseEndpoint = "api/v1"
-
-// TODO: review all policies to make sure there's no policy types missing from these IsApplicableVuln functions
-var SettingsMap map[string]Settings = map[string]Settings {
-        PolicyTypeComplianceContainer: {
-            FormattedName: "Deployed Containers and Images Compliance",
-            Module: "compliance",
-            Context: "container",
-            Endpoint: fmt.Sprintf("%s/policies/compliance/container", BaseEndpoint),
-            IsApplicableVuln: func(v system.Vulnerability) bool {
-                if v.Type == "container" {
-                    return true
-                }
-
-                if v.Type == "image" {
-                    return true
-                }
-
-                if v.Type == "istio" {
-                    return true
-                }
-
-                return false
-            },
-        },
-        PolicyTypeComplianceCiImage: {
-            FormattedName: "CI Images Compliance",
-            Module: "compliance",
-            Context: "ciImages",
-            Endpoint: fmt.Sprintf("%s/policies/compliance/ci/container", BaseEndpoint),
-            IsApplicableVuln: func(v system.Vulnerability) bool {
-                if v.Type == "image" && (v.Id == 406 || v.Id == 408 || v.Id == 41 || v.Id == 422 || v.Id == 424 || v.Id == 425 || v.Id == 426 || v.Id == 448 || v.Id == 5041 || v.Id == 5048) {
-                    return true
-                }
-
-                return false
-            },
-        },
-        PolicyTypeComplianceHost: {
-            FormattedName: "Host Compliance",
-            Module: "compliance",
-            Context: "host",
-            Endpoint: fmt.Sprintf("%s/policies/compliance/host", BaseEndpoint),
-            IsApplicableVuln: func(v system.Vulnerability) bool {
-                if v.Type == "host_config" {
-                    return true
-                }
-
-                if v.Type == "daemon_config" {
-                    return true
-                }
-
-                if v.Type == "daemon_config_files" {
-                    return true
-                }
-
-                if v.Type == "security_operations" {
-                    return true
-                }
-
-                if v.Type == "linux" {
-                    return true
-                }
-
-                if v.Type == "windows" {
-                    return true
-                }
-
-                if v.Type == "k8s_worker" {
-                    return true
-                }
-                
-                if v.Type == "gke_worker" {
-                    return true
-                }
-
-                if v.Type == "eks_worker" {
-                    return true
-                }
-
-                if v.Type == "aks_worker" {
-                    return true
-                }
-
-                if v.Type == "openshift_worker" {
-                    return true
-                }
-
-                if v.Type == "k8s_master" {
-                    return true
-                }
-
-                if v.Type == "openshift_master" {
-                    return true
-                }
-
-                if v.Type == "k8s_federation" {
-                    return true
-                }
-                
-                if v.Type == "docker_stig" {
-                    return true
-                }
-
-                return false
-            },
-        },
-        PolicyTypeComplianceVmImage: {
-            FormattedName: "VM Image Compliance",
-            Module: "compliance",
-            Context: "vms",
-            Endpoint: fmt.Sprintf("%s/policies/compliance/vms", BaseEndpoint),
-            IsApplicableVuln: func(v system.Vulnerability) bool {
-                if v.Type == "host" {
-                    return true
-                }
-
-                if v.Type == "host_config" {
-                    return true
-                }
-
-                if v.Type == "daemon_config" {
-                    return true
-                }
-
-                if v.Type == "daemon_config_files" {
-                    return true
-                }
-
-                if v.Type == "security_operations" {
-                    return true
-                }
-
-                if v.Type == "linux" {
-                    return true
-                }
-
-                return false
-            },
-        },
-        PolicyTypeComplianceFunction: {
-            FormattedName: "Serverless Compliance",
-            Module: "compliance",
-            Context: "serverless",
-            Endpoint: fmt.Sprintf("%s/policies/compliance/serverless", BaseEndpoint),
-            IsApplicableVuln: func(v system.Vulnerability) bool {
-                if v.Type == "serverless" {
-                    return true
-                }
-
-                return false
-            },
-        },
-        PolicyTypeComplianceCiFunction: {
-            FormattedName: "CI Serverless Compliance",
-            Module: "compliance",
-            Context: "ciServerless",
-            Endpoint: fmt.Sprintf("%s/policies/compliance/ci/serverless", BaseEndpoint),
-            IsApplicableVuln: func(v system.Vulnerability) bool {
-                if v.Type == "serverless" {
-                    return true
-                }
-
-                return false
-            },
-        },
-   }
-
 const (
+    BaseEndpoint = "api/v1"
+
 	// Policy Type
 	PolicyTypeAdmission               = "admission"
 	PolicyTypeComplianceCiImage       = "ciImagesCompliance"
@@ -238,8 +64,6 @@ const (
 	// Type
 	TypeCompliance    = "compliance"
 	TypeVulnerability = "vulnerability"
-
-    //BaseEndpoint                = "api/v1"
 )
 
 var (
@@ -311,6 +135,180 @@ var (
         },
     }
 )
+
+type Settings struct {
+    FormattedName string
+    Module string 
+    Endpoint string
+    Context string
+    IsApplicableVuln func(v system.Vulnerability) bool
+}
+
+// TODO: review all policies to make sure there's no policy types missing from these IsApplicableVuln functions
+var SettingsMap map[string]Settings = map[string]Settings {
+    PolicyTypeComplianceContainer: {
+        FormattedName: "Deployed Containers and Images Compliance",
+        Module: "compliance",
+        Context: "container",
+        Endpoint: fmt.Sprintf("%s/policies/compliance/container", BaseEndpoint),
+        IsApplicableVuln: func(v system.Vulnerability) bool {
+            if v.Type == "container" {
+                return true
+            }
+
+            if v.Type == "image" {
+                return true
+            }
+
+            if v.Type == "istio" {
+                return true
+            }
+
+            return false
+        },
+    },
+    PolicyTypeComplianceCiImage: {
+        FormattedName: "CI Images Compliance",
+        Module: "compliance",
+        Context: "ciImages",
+        Endpoint: fmt.Sprintf("%s/policies/compliance/ci/container", BaseEndpoint),
+        IsApplicableVuln: func(v system.Vulnerability) bool {
+            if v.Type == "image" && (v.Id == 406 || v.Id == 408 || v.Id == 41 || v.Id == 422 || v.Id == 424 || v.Id == 425 || v.Id == 426 || v.Id == 448 || v.Id == 5041 || v.Id == 5048) {
+                return true
+            }
+
+            return false
+        },
+    },
+    PolicyTypeComplianceHost: {
+        FormattedName: "Host Compliance",
+        Module: "compliance",
+        Context: "host",
+        Endpoint: fmt.Sprintf("%s/policies/compliance/host", BaseEndpoint),
+        IsApplicableVuln: func(v system.Vulnerability) bool {
+            if v.Type == "host_config" {
+                return true
+            }
+
+            if v.Type == "daemon_config" {
+                return true
+            }
+
+            if v.Type == "daemon_config_files" {
+                return true
+            }
+
+            if v.Type == "security_operations" {
+                return true
+            }
+
+            if v.Type == "linux" {
+                return true
+            }
+
+            if v.Type == "windows" {
+                return true
+            }
+
+            if v.Type == "k8s_worker" {
+                return true
+            }
+            
+            if v.Type == "gke_worker" {
+                return true
+            }
+
+            if v.Type == "eks_worker" {
+                return true
+            }
+
+            if v.Type == "aks_worker" {
+                return true
+            }
+
+            if v.Type == "openshift_worker" {
+                return true
+            }
+
+            if v.Type == "k8s_master" {
+                return true
+            }
+
+            if v.Type == "openshift_master" {
+                return true
+            }
+
+            if v.Type == "k8s_federation" {
+                return true
+            }
+            
+            if v.Type == "docker_stig" {
+                return true
+            }
+
+            return false
+        },
+    },
+    PolicyTypeComplianceVmImage: {
+        FormattedName: "VM Image Compliance",
+        Module: "compliance",
+        Context: "vms",
+        Endpoint: fmt.Sprintf("%s/policies/compliance/vms", BaseEndpoint),
+        IsApplicableVuln: func(v system.Vulnerability) bool {
+            if v.Type == "host" {
+                return true
+            }
+
+            if v.Type == "host_config" {
+                return true
+            }
+
+            if v.Type == "daemon_config" {
+                return true
+            }
+
+            if v.Type == "daemon_config_files" {
+                return true
+            }
+
+            if v.Type == "security_operations" {
+                return true
+            }
+
+            if v.Type == "linux" {
+                return true
+            }
+
+            return false
+        },
+    },
+    PolicyTypeComplianceFunction: {
+        FormattedName: "Serverless Compliance",
+        Module: "compliance",
+        Context: "serverless",
+        Endpoint: fmt.Sprintf("%s/policies/compliance/serverless", BaseEndpoint),
+        IsApplicableVuln: func(v system.Vulnerability) bool {
+            if v.Type == "serverless" {
+                return true
+            }
+
+            return false
+        },
+    },
+    PolicyTypeComplianceCiFunction: {
+        FormattedName: "CI Serverless Compliance",
+        Module: "compliance",
+        Context: "ciServerless",
+        Endpoint: fmt.Sprintf("%s/policies/compliance/ci/serverless", BaseEndpoint),
+        IsApplicableVuln: func(v system.Vulnerability) bool {
+            if v.Type == "serverless" {
+                return true
+            }
+
+            return false
+        },
+    },
+}
 
 func PolicyTypeToFormattedString(policyType string) (string, error) {
     switch policyType {
