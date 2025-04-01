@@ -3,12 +3,12 @@
 page_title: "prismacloudcompute_user Resource - terraform-provider-prismacloudcompute"
 subcategory: ""
 description: |-
-  
+  TODO
 ---
 
 # prismacloudcompute_user (Resource)
 
-
+TODO
 
 ## Example Usage
 
@@ -26,25 +26,19 @@ resource "prismacloudcompute_user" "myuser" {
 
 ### Required
 
-- **authentication_type** (String) The user authentication type.
-- **password** (String) Password.
-- **role** (String) Role.
-- **username** (String) Username.
+- `authentication_type` (String) TODO
+- `password` (String, Sensitive) TODO
+- `role` (String) TODO
+- `username` (String) TODO
 
 ### Optional
 
-- **permissions** (Block List, Max: 1) List of permissions. (see [below for nested schema](#nestedblock--permissions))
+- `permissions` (Attributes Set) TODO (see [below for nested schema](#nestedatt--permissions))
 
-### Read-Only
-
-- **id** (String) The ID of the user.
-
-<a id="nestedblock--permissions"></a>
+<a id="nestedatt--permissions"></a>
 ### Nested Schema for `permissions`
 
-Optional:
+Required:
 
-- **collections** (List of String) Specifies the set of Defenders in-scope for working on a scan job.
-- **project** (String) Names of projects which the user can access.
-
-
+- `collections` (List of String) TODO
+- `project` (String) TODO

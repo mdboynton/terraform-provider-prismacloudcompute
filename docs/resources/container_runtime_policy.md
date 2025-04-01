@@ -13,44 +13,129 @@ description: |-
 ## Example Usage
 
 ```terraform
+# This resource will work with the following provider stored in the following directory path
+# mkdir -p ~/.terraform.d/plugins/paloaltonetworks.com/prismacloud/prismacloudcompute/0.7.1-release/darwin_amd64
+# mv terraform-provider-prismacloudcompute ~/.terraform.d/plugins/paloaltonetworks.com/prismacloud/prismacloudcompute/0.7.1-release/darwin_amd64
+
+terraform {
+  required_providers {
+    prismacloudcompute = {
+      source  = "paloaltonetworks.com/prismacloud/prismacloudcompute"
+      version = "0.7.1-release"
+    }
+  }
+}
+
+provider "prismacloudcompute" {
+  console_url = ""
+  username    = ""
+  password    = ""
+}
+
 resource "prismacloudcompute_container_runtime_policy" "ruleset" {
   learning_disabled = false
   rule {
-    name                       = "Default - alert on suspicious runtime behavior"
-    collections                = ["All"]
-    advanced_protection        = true
-    cloud_metadata_enforcement = false
+    name                              = "string"
+    collections                       = ["string"]
+    advanced_protection_effect        = true
+    cloud_metadata_enforcement_effect = false
+    previous_name                     = "string" # Required if Renaming the Rule
+    skip_exec_sessions                = false    # true | false
+    wildfire_analysis                 = "alert"  # "block" | "prevent" | "alert" | "disable"
+    custom_rule {
+      id     = 0
+      action = "string"
+      effect = "string" # "allow" | "ban" | "block" | "prevent" | "alert" | "disable"
+    }
+    custom_rule {
+      id     = 1
+      action = "string"
+      effect = "string" # "allow" | "ban" | "block" | "prevent" | "alert" | "disable"
+    }
     dns {
-      allowed     = []
-      denied      = []
-      deny_effect = "disable"
+      default_effect = "alert" # "block" | "prevent" | "alert" | "disable"
+      disabled       = true
+      domain_list {
+        allowed = ["0.0.0.0"]
+        denied  = ["1.1.1.1"]
+        effect  = "disable"
+      }
     }
     filesystem {
-      allowed                 = []
-      backdoor_files          = true
-      check_new_files         = true
-      denied                  = []
-      deny_effect             = "alert"
-      skip_encrypted_binaries = false
-      suspicious_elf_headers  = true
+      allowed_list          = ["string"]
+      backdoor_files_effect = "disable" # "block" | "prevent" | "alert" | "disable"
+      default_effect        = "alert"   # "block" | "prevent" | "alert" | "disable"
+      denied_list {
+        effect = "disable" # "block" | "prevent" | "alert" | "disable"
+        paths  = ["string"]
+      }
+      disabled                      = true
+      encrypted_binaries_effect     = "disable"
+      new_files_effect              = "disable"
+      suspicious_elf_headers_effect = "disable"
     }
     kubernetes_enforcement = false
     network {
-      allowed_outbound_ips    = []
-      denied_outbound_ips     = []
-      deny_effect             = "alert"
-      detect_port_scan        = true
-      skip_modified_processes = false
-      skip_raw_sockets        = false
+      allowed_ips       = ["0.0.0.0"]
+      default_effect    = "alert"
+      denied_ips        = ["1.1.1.1"]
+      denied_ips_effect = "disable"
+      disabled          = true
+      listening_ports {
+        allowed {
+          deny  = true
+          end   = 333
+          start = 222
+        }
+        denied {
+          deny  = true
+          end   = 5000
+          start = 4000
+        }
+        denied {
+          deny  = true
+          end   = 222
+          start = 111
+        }
+        effect = "disable" # "block" | "prevent" | "alert" | "disable"
+      }
+      modified_proc_effect = "disable" # "block" | "prevent" | "alert" | "disable"
+      outbound_ports {
+        allowed {
+          deny  = true
+          end   = 300
+          start = 200
+        }
+        denied {
+          deny  = true
+          end   = 6000
+          start = 5000
+        }
+        denied {
+          deny  = true
+          end   = 222
+          start = 111
+        }
+        effect = "disable" # "block" | "prevent" | "alert" | "disable"
+      }
+      port_scan_effect   = "disable" # "block" | "prevent" | "alert" | "disable"
+      raw_sockets_effect = "disable" # "block" | "prevent" | "alert" | "disable"
     }
     processes {
-      allowed                = []
-      check_crypto_miners    = true
-      check_lateral_movement = true
-      denied                 = []
-      deny_effect            = "alert"
+      modified_process_effect = "disable" # "block" | "prevent" | "alert" | "disable"
+      crypto_miners_effect    = "disable" # "block" | "prevent" | "alert" | "disable"
+      lateral_movement_effect = "disable" # "block" | "prevent" | "alert" | "disable"
+      reverse_shell_effect    = "disable" # "block" | "prevent" | "alert" | "disable"
+      suid_binaries_effect    = "disable" # "block" | "prevent" | "alert" | "disable"
+      default_effect          = "alert"   # "block" | "prevent" | "alert" | "disable"
+      check_parent_child      = false
+      allowed_list            = []
+      disabled                = false
+      denied_list {
+        effect = "disable" # "block" | "prevent" | "alert" | "disable"
+        paths  = ["test"]
+      }
     }
-    wildfire_analysis = "alert"
   }
 }
 ```
@@ -60,139 +145,125 @@ resource "prismacloudcompute_container_runtime_policy" "ruleset" {
 
 ### Optional
 
-- **learning_disabled** (Boolean) Whether or not to disable automatic behavioral learning.
-- **rule** (Block List) Rules that make up the policy. (see [below for nested schema](#nestedblock--rule))
+- `automatic_runtime_learning` (Boolean) Enables automatic behavioural learning.
+- `rules` (Attributes List) TODO (see [below for nested schema](#nestedatt--rules))
 
-### Read-Only
-
-- **id** (String) The ID of the policy.
-
-<a id="nestedblock--rule"></a>
-### Nested Schema for `rule`
+<a id="nestedatt--rules"></a>
+### Nested Schema for `rules`
 
 Required:
 
-- **name** (String) Unique name of the rule.
+- `name` (String) Name of the policy rule.
 
 Optional:
 
-- **advanced_protection** (Boolean) Whether or not to enable advanced protection.
-- **cloud_metadata_enforcement** (Boolean) Whether or not to enable cloud metadata access monitoring.
-- **collections** (List of String) Collections used to scope the rule.
-- **custom_rule** (Block List) List of custom rules. (see [below for nested schema](#nestedblock--rule--custom_rule))
-- **disabled** (Boolean) Whether or not to disable the rule.
-- **dns** (Block List, Max: 1) DNS configuration. (see [below for nested schema](#nestedblock--rule--dns))
-- **filesystem** (Block List, Max: 1) File system configuration. (see [below for nested schema](#nestedblock--rule--filesystem))
-- **kubernetes_enforcement** (Boolean) Whether or not to detect attacks against the cluster.
-- **network** (Block List, Max: 1) Network configuration. (see [below for nested schema](#nestedblock--rule--network))
-- **notes** (String) Free-form text field.
-- **processes** (Block List, Max: 1) Processes configuration. (see [below for nested schema](#nestedblock--rule--processes))
-- **wildfire_analysis** (String) The effect to be used when WildFire analysis is enabled. Can be set to 'block', 'alert', or 'disable'.
+- `anti_malware` (Attributes) Configuration for malware monitoring. (see [below for nested schema](#nestedatt--rules--anti_malware))
+- `collections` (Set of String) List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value ("*") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.
+- `custom_rules` (Attributes List) List of custom runtime rules. (see [below for nested schema](#nestedatt--rules--custom_rules))
+- `disabled` (Boolean) Indicates whether to disable the rule.
+- `file_system` (Attributes) Configuration for file system monitoring. (see [below for nested schema](#nestedatt--rules--file_system))
+- `modified` (String) Modified timestamp.
+- `networking` (Attributes) Configuration for network monitoring. (see [below for nested schema](#nestedatt--rules--networking))
+- `notes` (String) Notes for the policy rule.
+- `order` (Number) Order in which the rule will be evaluated. Rules are evaluated from the lowest order value to the highest. When a match is found, the subsequent rules are skipped.
+- `processes` (Attributes) Configuration for process monitoring. (see [below for nested schema](#nestedatt--rules--processes))
 
-<a id="nestedblock--rule--custom_rule"></a>
-### Nested Schema for `rule.custom_rule`
+Read-Only:
 
-Optional:
+- `owner` (String) Owner of the policy rule.
+- `previous_name` (String) Previous name of the policy rule.
 
-- **action** (String) The action to perform if the custom rule applies. Can be set to 'audit' or 'incident'.
-- **effect** (String) The effect to be used. Can be set to 'block', 'prevent', 'alert', or 'allow'.
-- **id** (Number) Custom rule number.
-
-
-<a id="nestedblock--rule--dns"></a>
-### Nested Schema for `rule.dns`
+<a id="nestedatt--rules--anti_malware"></a>
+### Nested Schema for `rules.anti_malware`
 
 Optional:
 
-- **allowed** (List of String) Allowed domains. Wildcard prefixes are supported.
-- **denied** (List of String) Denied domains. Wildcard prefixes are supported.
-- **deny_effect** (String) The effect to be used. Can be set to 'block', 'prevent', 'alert', or 'disable'.
+- `kubernetes_attacks` (String) Effect for detected Kubernetes attacks. Must one of "disable", "alert", "prevent" or "block".
+- `malware_from_advanced_threat_protection` (String) Effect for detected files classified as malware by Prisma Cloud Advanced Threat Protection. Must one of "disable", "alert", "prevent" or "block".
+- `suspicious_cloud_provider_api_queries` (String) Effect for detected suspicious queries to cloud service provider APIs. Must one of "disable", "alert", "prevent" or "block".
+- `wild_fire_analysis` (String) Effect for detected files classified as malware by WildFire, Palo Alto Networks' malware analysis engine. Must be either "disable" or "alert". WildFire must be enabled for runtime protection under Manage > System > WildFire.
 
 
-<a id="nestedblock--rule--filesystem"></a>
-### Nested Schema for `rule.filesystem`
+<a id="nestedatt--rules--custom_rules"></a>
+### Nested Schema for `rules.custom_rules`
 
-Optional:
+Required:
 
-- **allowed** (List of String) List of allowed file system paths.
-- **backdoor_files** (Boolean) Whether or not to monitor files that can create or persist backdoors (SSH or admin account config files).
-- **check_new_files** (Boolean) Whether or not to detect changes to binaries and certificates.
-- **denied** (List of String) List of denied file system paths.
-- **deny_effect** (String) The effect to be used. Can be set to 'block', 'prevent', 'alert', or 'disable'.
-- **skip_encrypted_binaries** (Boolean) Whether or not to skip encrypted binaries.
-- **suspicious_elf_headers** (Boolean) Whether or not to detect suspicious ELF headers.
-
-
-<a id="nestedblock--rule--network"></a>
-### Nested Schema for `rule.network`
+- `effect` (String) Effect for the custom rule. Must be one of "allow", "alert" or "prevent". Note that if set to "allow", the value of log_as will not have any effect.
 
 Optional:
 
-- **allowed_listening_port** (Block List) List of allowed listening ports. (see [below for nested schema](#nestedblock--rule--network--allowed_listening_port))
-- **allowed_outbound_ips** (List of String) List of allowed outbound IP addresses.
-- **allowed_outbound_port** (Block List) List of allowed outbound ports. (see [below for nested schema](#nestedblock--rule--network--allowed_outbound_port))
-- **denied_listening_port** (Block List) List of denied listening ports. (see [below for nested schema](#nestedblock--rule--network--denied_listening_port))
-- **denied_outbound_ips** (List of String) List of denied outbound IP addresses.
-- **denied_outbound_port** (Block List) List of denied outbound ports. (see [below for nested schema](#nestedblock--rule--network--denied_outbound_port))
-- **deny_effect** (String) The effect to be used. Can be set to 'block', 'alert', or 'disable'.
-- **detect_port_scan** (Boolean) Whether or not to detect port scans.
-- **skip_modified_processes** (Boolean) Whether or not to skip network monitoring for modified processes.
-- **skip_raw_sockets** (Boolean) Whether or not to skip raw socket detection.
+- `log_as` (String) How violations of this custom rule will be logged. Must be "audit" or "incident".
+- `name` (String) Name of the custom rule.
 
-<a id="nestedblock--rule--network--allowed_listening_port"></a>
-### Nested Schema for `rule.network.allowed_listening_port`
+Read-Only:
+
+- `id` (Number) Custom rule ID.
+
+
+<a id="nestedatt--rules--file_system"></a>
+### Nested Schema for `rules.file_system`
 
 Optional:
 
-- **deny** (Boolean) Whether or not to deny the connection.
-- **end** (Number) End of the port range.
-- **start** (Number) Start of the port range.
+- `all_other_paths_effect` (String) Effect for all other file system paths not specified in the allow or deny lists. Must be one of "alert", "prevent" or "block".
+- `allowed_paths` (List of String) List of file system paths which will not be monitored.
+- `changes_to_binaries` (String) Effect for detected changes to binary files. Must be one of "disable", "alert", "prevent" or "block".
+- `changes_to_ssh_admin_account_config_files` (String) Effect for detected changes to SSH or admin account configuration files. Must be one of "disable", "alert", "prevent" or "block".
+- `denied_paths` (List of String) File system paths to be alerted on or prevented/blocked.
+- `denied_paths_effect` (String) Effect for detected file system paths from the deny list. Must be one of "disable", "alert", "prevent" or "block".
+- `detection_of_encrypted_binaries` (String) Effect for detected encrypted/packed binaries. Must be one of "disable", "alert", "prevent" or "block".
+- `enabled` (Boolean) Enables file system activity collection/monitoring.
+- `suspicious_elf_headers` (String) Effect for detected binaries with suspicious ELF headers. Must be one of "disable", "alert", "prevent" or "block".
 
 
-<a id="nestedblock--rule--network--allowed_outbound_port"></a>
-### Nested Schema for `rule.network.allowed_outbound_port`
-
-Optional:
-
-- **deny** (Boolean) Whether or not to deny the connection.
-- **end** (Number) End of the port range.
-- **start** (Number) Start of the port range.
-
-
-<a id="nestedblock--rule--network--denied_listening_port"></a>
-### Nested Schema for `rule.network.denied_listening_port`
+<a id="nestedatt--rules--networking"></a>
+### Nested Schema for `rules.networking`
 
 Optional:
 
-- **deny** (Boolean) Whether or not to deny the connection.
-- **end** (Number) End of the port range.
-- **start** (Number) Start of the port range.
+- `all_other_activity_effect` (String) Effect for all other network activity for IPs/ports not specified in the allow or deny lists. Must be either "alert" or "block".
+- `all_other_domains_effect` (String) Effect for all other network activity for domains not specified in the allow or deny lists. Must be one of "alert", "prevent" or "block".
+- `allowed_dns_domains` (List of String) List of DNS domains which will not generate alerts or be prevented/blocked.
+- `allowed_listening_ports` (List of String) List of listening ports which will not generate alerts or be blocked.
+- `allowed_outbound_internet_ports` (List of String) List of outbound internet ports which will not generate alerts or be blocked.
+- `allowed_outbound_ips` (List of String) List of outbound IPs which will not generate alerts or be blocked.
+- `denied_dns_domains` (List of String) List of denied DNS domains.
+- `denied_dns_domains_effect` (String) Effect for DNS domains specified in the deny list. Must be one of "disable", "alert", "prevent" or "block".
+- `denied_listening_ports` (List of String) List of listening ports for which access will be alerted on or blocked.
+- `denied_listening_ports_effect` (String) Effect for denied listening ports. Must be one of "disable", "alert" or "block".
+- `denied_outbound_internet_ports` (List of String) List of outbound internet ports for which access will be alerted on or blocked.
+- `denied_outbound_internet_ports_effect` (String) Effect for denied outbound internet ports. Must be one of "disable", "alert" or "block".
+- `denied_outbound_ips` (List of String) List of outbound IPs for which access will be alerted on or blocked.
+- `denied_outbound_ips_effect` (String) Effect for denied outbound IPs. Must be one of "disable", "alert" or "block".
+- `dns_enabled` (Boolean) Enables DNS monitoring.
+- `ip_connectivity_enabled` (Boolean) Enables IP connectivity monitoring.
+- `network_activity_from_modified_binaries` (String) Effect for activity from modified binaries. Must be one of "disable", "alert" or "block".
+- `port_scanning` (String) Effect for detected port scanning activity. Must be one of "disable", "alert" or "block".
+- `raw_sockets` (String) Effect for detected raw sockets. Must be either "disable" or "alert".
 
 
-<a id="nestedblock--rule--network--denied_outbound_port"></a>
-### Nested Schema for `rule.network.denied_outbound_port`
+<a id="nestedatt--rules--processes"></a>
+### Nested Schema for `rules.processes`
 
 Optional:
 
-- **deny** (Boolean) Whether or not to deny the connection.
-- **end** (Number) End of the port range.
-- **start** (Number) Start of the port range.
+- `all_other_processes_effect` (String) Effect for all other processes not specified in the allow or deny lists. Must be one of "disable", "alert", "prevent" or "block".
+- `allow_all_activity_in_attached_sessions` (Boolean) Enable evaluation of processes triggered from attached sessions (docker, kubectl, etc).
+- `allow_only_learned_processes_from_parents` (Boolean) Enable execution of processes only if they are present in the automatic behavioural learning model.
+- `allowed_processes` (List of String) List of process names to be whitelisted.
+- `crypto_miners` (String) Effect for detected crypto miners. Must be one of "disable", "alert", "prevent" or "block".
+- `denied_processes` (Attributes) Processes to alert on or prevent execution of based on the process name or full path of the binary from which the process is executed. (see [below for nested schema](#nestedatt--rules--processes--denied_processes))
+- `enabled` (Boolean) Enables process monitoring.
+- `lateral_movement_processes` (String) Effect for detected lateral movement processes. Must be one of "disable", "alert", "prevent" or "block".
+- `processes_from_modified_binaries` (String) Effect for detected execution of binaries that do not belong to the original image. Must be one of "disable", "alert", "prevent" or "block".
+- `processes_started_with_suid` (String) Effect for detected processes started with superuser ID. Must be one of "disable", "alert", "prevent" or "block".
+- `reverse_shell` (String) Effect for detected reverse shell attacks. Must be one of "disable", "alert", "prevent" or "block".
 
-
-
-<a id="nestedblock--rule--processes"></a>
-### Nested Schema for `rule.processes`
+<a id="nestedatt--rules--processes--denied_processes"></a>
+### Nested Schema for `rules.processes.denied_processes`
 
 Optional:
 
-- **allowed** (List of String) List of allowed processes.
-- **check_crypto_miners** (Boolean) Whether or not to detect crypto miners.
-- **check_lateral_movement** (Boolean) Whether or not to detect processes that can be used for lateral movement exploits.
-- **check_parent_child** (Boolean) Whether or not to check for parent-child relationship when comparing spawned processes in the model.
-- **check_suid_binaries** (Boolean) Whether or not to check for process-elevating privileges (SUID bit).
-- **denied** (List of String) List of denied processes.
-- **deny_effect** (String) The effect to be used. Can be set to 'block', 'prevent', 'alert', or 'disable'.
-- **skip_modified** (Boolean) Whether or not to skip detection of processes started from modified binaries
-- **skip_reverse_shell** (Boolean) Whether or not skip detection of reverse shells.
-
-
+- `effect` (String) Effect for denied processes. Must be one of "disable", "alert", "prevent" or "block".
+- `paths` (List of String) List of names or full paths of denied processes.
