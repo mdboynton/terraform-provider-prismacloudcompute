@@ -3,12 +3,12 @@
 page_title: "prismacloudcompute_ci_image_compliance_policy Resource - terraform-provider-prismacloudcompute"
 subcategory: ""
 description: |-
-  
+  TODO
 ---
 
 # prismacloudcompute_ci_image_compliance_policy (Resource)
 
-
+TODO
 
 ## Example Usage
 
@@ -35,31 +35,138 @@ resource "prismacloudcompute_ci_image_compliance_policy" "ruleset" {
 
 ### Optional
 
-- **rule** (Block List) Rules that make up the policy. (see [below for nested schema](#nestedblock--rule))
+- `id` (String) TODO
+- `policy_type` (String) TODO
+- `rules` (Attributes List) TODO (see [below for nested schema](#nestedatt--rules))
 
 ### Read-Only
 
-- **id** (String) The ID of the policy.
+- `policy_context` (String) TODO
+- `type` (String) TODO
 
-<a id="nestedblock--rule"></a>
-### Nested Schema for `rule`
+<a id="nestedatt--rules"></a>
+### Nested Schema for `rules`
 
-Optional:
+Required:
 
-- **collections** (List of String) Collections used to scope the rule.
-- **compliance_check** (Block List) Compliance checks. Omitted checks are ignored. (see [below for nested schema](#nestedblock--rule--compliance_check))
-- **disabled** (Boolean) Whether or not to disable the rule.
-- **effect** (String) The effect of the rule. Can be set to 'ignore', 'alert', 'block', or 'alert, block'.
-- **name** (String) Unique name of the rule.
-- **notes** (String) Free-form text field.
-- **verbose** (Boolean) Whether or not to provide verbose output for blocked requests.
-
-<a id="nestedblock--rule--compliance_check"></a>
-### Nested Schema for `rule.compliance_check`
+- `name` (String) TODO
 
 Optional:
 
-- **block** (Boolean) Whether or not to block if this check is failed. Setting to 'false' will only alert if the check is failed.
-- **id** (Number) Compliance check number.
+- `alert_threshold` (Attributes) TODO (see [below for nested schema](#nestedatt--rules--alert_threshold))
+- `apply_only_when_fix_available` (Boolean) TODO
+- `block_message` (String) TODO
+- `block_threshold` (Attributes) TODO (see [below for nested schema](#nestedatt--rules--block_threshold))
+- `collections` (Set of String) TODO
+- `compliance_actions` (Attributes) TODO (see [below for nested schema](#nestedatt--rules--compliance_actions))
+- `cve_rules` (Attributes Set) TODO (see [below for nested schema](#nestedatt--rules--cve_rules))
+- `disabled` (Boolean) TODO
+- `effect` (String) TODO
+- `exclude_base_image_vulns` (Boolean) TODO
+- `grace_days_all_severities` (Number) TODO
+- `grace_days_by_severity` (Attributes) TODO (see [below for nested schema](#nestedatt--rules--grace_days_by_severity))
+- `modified` (String) TODO
+- `notes` (String) TODO
+- `order` (Number) TODO
+- `owner` (String) TODO
+- `package_types_thresholds` (Attributes Set) TODO (see [below for nested schema](#nestedatt--rules--package_types_thresholds))
+- `report_passed_and_failed_checks` (Boolean) TODO
+- `tags` (Attributes Set) TODO (see [below for nested schema](#nestedatt--rules--tags))
+- `verbose` (Boolean) TODO
+
+<a id="nestedatt--rules--alert_threshold"></a>
+### Nested Schema for `rules.alert_threshold`
+
+Optional:
+
+- `risk_factors` (Set of String) TODO
+- `threshold` (String) TODO
 
 
+<a id="nestedatt--rules--block_threshold"></a>
+### Nested Schema for `rules.block_threshold`
+
+Optional:
+
+- `risk_factors` (Set of String) TODO
+- `threshold` (String) TODO
+
+
+<a id="nestedatt--rules--compliance_actions"></a>
+### Nested Schema for `rules.compliance_actions`
+
+Optional:
+
+- `checks` (Attributes Set) TODO (see [below for nested schema](#nestedatt--rules--compliance_actions--checks))
+- `severities` (Set of String) TODO
+- `template` (String) TODO
+- `types` (Set of String) TODO
+
+<a id="nestedatt--rules--compliance_actions--checks"></a>
+### Nested Schema for `rules.compliance_actions.checks`
+
+Optional:
+
+- `action` (String) TODO
+- `id` (Number) TODO
+
+
+
+<a id="nestedatt--rules--cve_rules"></a>
+### Nested Schema for `rules.cve_rules`
+
+Optional:
+
+- `description` (String) TODO
+- `effect` (String) TODO
+- `expiration` (Attributes) TODO (see [below for nested schema](#nestedatt--rules--cve_rules--expiration))
+- `id` (String) TODO
+
+<a id="nestedatt--rules--cve_rules--expiration"></a>
+### Nested Schema for `rules.cve_rules.expiration`
+
+Optional:
+
+- `date` (String) TODO
+- `enabled` (Boolean) TODO
+
+
+
+<a id="nestedatt--rules--grace_days_by_severity"></a>
+### Nested Schema for `rules.grace_days_by_severity`
+
+Optional:
+
+- `critical` (Number) TODO
+- `high` (Number) TODO
+- `low` (Number) TODO
+- `medium` (Number) TODO
+
+
+<a id="nestedatt--rules--package_types_thresholds"></a>
+### Nested Schema for `rules.package_types_thresholds`
+
+Optional:
+
+- `alert_threshold` (String) TODO
+- `block_threshold` (String) TODO
+- `type` (String) TODO
+
+
+<a id="nestedatt--rules--tags"></a>
+### Nested Schema for `rules.tags`
+
+Optional:
+
+- `description` (String) TODO
+- `effect` (String) TODO
+- `expiration` (Attributes) TODO (see [below for nested schema](#nestedatt--rules--tags--expiration))
+- `id` (String) TODO
+
+<a id="nestedatt--rules--tags--expiration"></a>
+### Nested Schema for `rules.tags.expiration`
+
+Optional:
+
+- `date` (String) TODO
+- `enabled` (Boolean) TODO
