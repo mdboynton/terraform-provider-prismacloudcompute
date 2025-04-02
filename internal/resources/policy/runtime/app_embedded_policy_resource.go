@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
     "time"
+    "slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
@@ -66,7 +67,7 @@ func (r *AppEmbeddedRuntimePolicyResource) Create(ctx context.Context, req resou
     }
 
     // Create new app-embedded runtime policy 
-    err := policyAPI.UpsertRuntimeAppEmbedded(*r.client, data)
+    err := policyAPI.UpsertRuntimeAppEmbeddedPolicyFiltered(*r.client, data, []string{})
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating App-Embedded Runtime Policy resource", 
@@ -76,7 +77,7 @@ func (r *AppEmbeddedRuntimePolicyResource) Create(ctx context.Context, req resou
 	}
 
     // Retrieve newly created app-embedded runtime policy 
-    response, err := policyAPI.GetRuntimeAppEmbedded(*r.client)
+    response, err := policyAPI.GetRuntimeAppEmbeddedPolicyFiltered(*r.client, plan.GetRuleNames())
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created App-Embedded Runtime Policy resource", 
@@ -108,7 +109,7 @@ func (r *AppEmbeddedRuntimePolicyResource) Read(ctx context.Context, req resourc
     }
 
     // Get policy value from Prisma Cloud
-    data, err := policyAPI.GetRuntimeAppEmbedded(*r.client)
+    data, err := policyAPI.GetRuntimeAppEmbeddedPolicyFiltered(*r.client, state.GetRuleNames())
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error reading App-Embedded Runtime Policy resource", 
@@ -156,8 +157,17 @@ func (r *AppEmbeddedRuntimePolicyResource) Update(ctx context.Context, req resou
         return
     }
 
+    // Find any rules being deleted
+    deletedRuleNames := []string{}
+    planRuleNames := plan.GetRuleNames()
+    for _, stateRule := range *state.Rules {
+        if !slices.Contains(planRuleNames, stateRule.Name.ValueString()) {
+            deletedRuleNames = append(deletedRuleNames, stateRule.Name.ValueString())
+        }
+    }
+
     // Update existing policy
-    err := policyAPI.UpsertRuntimeAppEmbedded(*r.client, planPolicy)
+    err := policyAPI.UpsertRuntimeAppEmbeddedPolicyFiltered(*r.client, planPolicy, deletedRuleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating App-Embedded Runtime Policy resource", 
@@ -167,7 +177,7 @@ func (r *AppEmbeddedRuntimePolicyResource) Update(ctx context.Context, req resou
 	}
 
     // Get updated policy value from Prisma Cloud
-    updatedPolicy, err := policyAPI.GetRuntimeAppEmbedded(*r.client)
+    updatedPolicy, err := policyAPI.GetRuntimeAppEmbeddedPolicyFiltered(*r.client, plan.GetRuleNames())
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading App-Embedded Runtime Policy resource", 
@@ -200,6 +210,8 @@ func (r *AppEmbeddedRuntimePolicyResource) Delete(ctx context.Context, req resou
         return
     }
 
+    ruleNames := state.GetRuleNames()
+
     // Clear policy rules
     state.Rules = &[]models.RuntimeAppEmbeddedPolicyRuleResourceModel{}
 
@@ -211,7 +223,7 @@ func (r *AppEmbeddedRuntimePolicyResource) Delete(ctx context.Context, req resou
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertRuntimeAppEmbedded(*r.client, updatedPlan)
+    err := policyAPI.UpsertRuntimeAppEmbeddedPolicyFiltered(*r.client, updatedPlan, ruleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting App-Embedded Runtime Policy resource", 

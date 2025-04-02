@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
     "time"
+    "slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
@@ -66,7 +67,7 @@ func (r *ContainerRuntimePolicyResource) Create(ctx context.Context, req resourc
     }
 
     // Create new container runtime policy 
-    err := policyAPI.UpsertRuntimeContainer(*r.client, data)
+    err := policyAPI.UpsertRuntimeContainerPolicyFiltered(*r.client, data, []string{})
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating Container Runtime Policy resource", 
@@ -76,7 +77,7 @@ func (r *ContainerRuntimePolicyResource) Create(ctx context.Context, req resourc
 	}
 
     // Retrieve newly created container runtime policy 
-    response, err := policyAPI.GetRuntimeContainer(*r.client)
+    response, err := policyAPI.GetRuntimeContainerPolicyFiltered(*r.client, plan.GetRuleNames())
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created Container Runtime Policy resource", 
@@ -108,7 +109,7 @@ func (r *ContainerRuntimePolicyResource) Read(ctx context.Context, req resource.
     }
 
     // Get policy value from Prisma Cloud
-    data, err := policyAPI.GetRuntimeContainer(*r.client)
+    data, err := policyAPI.GetRuntimeContainerPolicyFiltered(*r.client, state.GetRuleNames())
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error reading Container Runtime Policy resource", 
@@ -156,8 +157,17 @@ func (r *ContainerRuntimePolicyResource) Update(ctx context.Context, req resourc
         return
     }
 
+    // Find any rules being deleted
+    deletedRuleNames := []string{}
+    planRuleNames := plan.GetRuleNames()
+    for _, stateRule := range *state.Rules {
+        if !slices.Contains(planRuleNames, stateRule.Name.ValueString()) {
+            deletedRuleNames = append(deletedRuleNames, stateRule.Name.ValueString())
+        }
+    }
+
     // Update existing policy
-    err := policyAPI.UpsertRuntimeContainer(*r.client, planPolicy)
+    err := policyAPI.UpsertRuntimeContainerPolicyFiltered(*r.client, planPolicy, deletedRuleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Container Runtime Policy resource", 
@@ -167,7 +177,7 @@ func (r *ContainerRuntimePolicyResource) Update(ctx context.Context, req resourc
 	}
 
     // Get updated policy value from Prisma Cloud
-    updatedPolicy, err := policyAPI.GetRuntimeContainer(*r.client)
+    updatedPolicy, err := policyAPI.GetRuntimeContainerPolicyFiltered(*r.client, plan.GetRuleNames())
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Container Runtime Policy resource", 
@@ -200,6 +210,8 @@ func (r *ContainerRuntimePolicyResource) Delete(ctx context.Context, req resourc
         return
     }
 
+    ruleNames := state.GetRuleNames()
+
     // Clear policy rules
     state.Rules = &[]models.RuntimeContainerPolicyRuleResourceModel{}
 
@@ -211,7 +223,7 @@ func (r *ContainerRuntimePolicyResource) Delete(ctx context.Context, req resourc
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertRuntimeContainer(*r.client, updatedPlan)
+    err := policyAPI.UpsertRuntimeContainerPolicyFiltered(*r.client, updatedPlan, ruleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting Container Runtime Policy resource", 

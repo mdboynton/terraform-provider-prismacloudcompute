@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
     "sort"
+    "slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
@@ -97,12 +98,6 @@ type RuntimeHostNetwork struct {
 	IntelligenceFeed   string      `json:"intelligenceFeed"`
 }
 
-//type PortRange struct {
-//	Deny  bool `json:"deny"`
-//	End   int  `json:"end"`
-//	Start int  `json:"start"`
-//}
-
 func (p *RuntimeHostPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeHostPolicyRuleResourceModel) {
 	util.DLog(ctx, "Executing api.RuntimeHostPolicy.SortRules()")
     if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
@@ -115,6 +110,20 @@ func (p *RuntimeHostPolicy) SortRules(ctx context.Context, planRules *[]models.R
 	})
 
 	util.DLog(ctx, "Finishing api.RuntimeHostPolicy.SortRules() execution")
+}
+
+func (p *RuntimeHostPolicy) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *p.Rules {
+        ruleNames = append(ruleNames, rule.Name)
+    }
+
+    return ruleNames
 }
 
 // TODO: remove this duplicate function when we can move the logic somewhere that can be used here
@@ -155,17 +164,75 @@ func generateRuntimePolicyRulesOrderMap(rules []models.RuntimeHostPolicyRuleReso
 	return ruleOrders
 }
 
-// Get the current host runtime policy.
-func GetRuntimeHost(c api.PrismaCloudComputeAPIClient) (RuntimeHostPolicy, error) {
-	var ans RuntimeHostPolicy
-	if err := c.Request(http.MethodGet, RuntimeHostEndpoint, nil, nil, &ans); err != nil {
-		return ans, fmt.Errorf("error getting host runtime policy: %s", err)
+// Get host runtime policy
+func GetRuntimeHostPolicy(c api.PrismaCloudComputeAPIClient) (RuntimeHostPolicy, error) {
+	var response RuntimeHostPolicy
+	if err := c.Request(http.MethodGet, RuntimeHostEndpoint, nil, nil, &response); err != nil {
+		return response, fmt.Errorf("error getting host runtime policy: %s", err)
 	}
-	return ans, nil
+	return response, nil
 }
 
-// Update the current host runtime policy.
-func UpsertRuntimeHost(c api.PrismaCloudComputeAPIClient, policy RuntimeHostPolicy) error {
-    // TODO: error handling
+// Get host runtime policy filtered on rule names
+func GetRuntimeHostPolicyFiltered(c api.PrismaCloudComputeAPIClient, ruleNames []string) (RuntimeHostPolicy, error) {
+    policy, err := GetRuntimeHostPolicy(c)
+    if err != nil {
+        return RuntimeHostPolicy{}, err
+    }
+
+    if (policy.Rules == nil || len(*policy.Rules) == 0) {
+        return policy, nil
+    }
+
+    filteredRules := []RuntimeHostPolicyRule{}
+    for _, rule := range *policy.Rules {
+        if slices.Contains(ruleNames, rule.Name) {
+            filteredRules = append(filteredRules, rule)
+        }
+    }
+
+    response := RuntimeHostPolicy{
+        Id: policy.Id,
+        Owner: policy.Owner,
+        Rules: &filteredRules,
+    }
+
+    return response, nil
+}
+
+// Update host runtime policy
+func UpsertRuntimeHostPolicy(c api.PrismaCloudComputeAPIClient, policy RuntimeHostPolicy) error {
+	return c.Request(http.MethodPut, RuntimeHostEndpoint, nil, policy, nil)
+}
+
+// Update host runtime policy, scoped to specified rule names
+// Rules not managed through Terraform will be preserved
+func UpsertRuntimeHostPolicyFiltered(c api.PrismaCloudComputeAPIClient, policy RuntimeHostPolicy, deletedRuleNames []string) error {
+    currentPolicy, err := GetRuntimeHostPolicy(c)
+    if err != nil {
+        return err
+    }
+
+    if (currentPolicy.Rules == nil || len(*currentPolicy.Rules) == 0) {
+	    return c.Request(http.MethodPut, RuntimeHostEndpoint, nil, policy, nil)
+    }
+
+    updatedRuleNames := policy.GetRuleNames()
+    updatedRules := *policy.Rules
+
+    // Loop through the current policy rules and add any rules that are not present in the updated policy's rules and are not being deleted
+    for _, currentPolicyRule := range *currentPolicy.Rules {
+        // If the rule is being deleted, do not include it in the updated ruleset
+        if slices.Contains(deletedRuleNames, currentPolicyRule.Name) {
+            continue
+        }
+
+        if !slices.Contains(updatedRuleNames, currentPolicyRule.Name) {
+            updatedRules = append(updatedRules, currentPolicyRule)
+        }
+    }
+
+    policy.Rules = &updatedRules
+
 	return c.Request(http.MethodPut, RuntimeHostEndpoint, nil, policy, nil)
 }

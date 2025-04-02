@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
     "sort"
+    "slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
@@ -92,6 +93,20 @@ type RuntimeServerlessDeniedList struct {
 	Paths  []string `json:"paths,omitempty"`
 }
 
+func (p *RuntimeServerlessPolicy) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *p.Rules {
+        ruleNames = append(ruleNames, rule.Name)
+    }
+
+    return ruleNames
+}
+
 func (p *RuntimeServerlessPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeServerlessPolicyRuleResourceModel) {
 	util.DLog(ctx, "Executing api.RuntimeServerlessPolicy.SortRules()")
     if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
@@ -144,16 +159,75 @@ func generateRuntimeServerlessPolicyRulesOrderMap(rules []models.RuntimeServerle
 	return ruleOrders
 }
 
-// Get the current container runtime policy.
-func GetRuntimeServerless(c api.PrismaCloudComputeAPIClient) (RuntimeServerlessPolicy, error) {
+// Get serverless runtime policy
+func GetRuntimeServerlessPolicy(c api.PrismaCloudComputeAPIClient) (RuntimeServerlessPolicy, error) {
 	var ans RuntimeServerlessPolicy
 	if err := c.Request(http.MethodGet, RuntimeServerlessEndpoint, nil, nil, &ans); err != nil {
-		return ans, fmt.Errorf("error getting container runtime policy: %s", err)
+		return ans, fmt.Errorf("error getting serverless runtime policy: %s", err)
 	}
 	return ans, nil
 }
 
-// Update the current container runtime policy.
-func UpsertRuntimeServerless(c api.PrismaCloudComputeAPIClient, policy RuntimeServerlessPolicy) error {
+// Get serverless runtime policy filtered on rule names
+func GetRuntimeServerlessPolicyFiltered(c api.PrismaCloudComputeAPIClient, ruleNames []string) (RuntimeServerlessPolicy, error) {
+    policy, err := GetRuntimeServerlessPolicy(c)
+    if err != nil {
+        return RuntimeServerlessPolicy{}, err
+    }
+
+    if (policy.Rules == nil || len(*policy.Rules) == 0) {
+        return policy, nil
+    }
+
+    filteredRules := []RuntimeServerlessPolicyRule{}
+    for _, rule := range *policy.Rules {
+        if slices.Contains(ruleNames, rule.Name) {
+            filteredRules = append(filteredRules, rule)
+        }
+    }
+
+    response := RuntimeServerlessPolicy{
+        Id: policy.Id,
+        LearningDisabled: policy.LearningDisabled,
+        Rules: &filteredRules,
+    }
+
+    return response, nil
+}
+
+// Update serverless runtime policy
+func UpsertRuntimeServerlessPolicy(c api.PrismaCloudComputeAPIClient, policy RuntimeServerlessPolicy) error {
+	return c.Request(http.MethodPut, RuntimeServerlessEndpoint, nil, policy, nil)
+}
+
+// Update host runtime policy, scoped to specified rule names
+// Rules not managed through Terraform will be preserved
+func UpsertRuntimeServerlessPolicyFiltered(c api.PrismaCloudComputeAPIClient, policy RuntimeServerlessPolicy, deletedRuleNames []string) error {
+    currentPolicy, err := GetRuntimeServerlessPolicy(c)
+    if err != nil {
+        return err
+    }
+
+    if (currentPolicy.Rules == nil || len(*currentPolicy.Rules) == 0) {
+	    return c.Request(http.MethodPut, RuntimeServerlessEndpoint, nil, policy, nil)
+    }
+
+    updatedRuleNames := policy.GetRuleNames()
+    updatedRules := *policy.Rules
+
+    // Loop through the current policy rules and add any rules that are not present in the updated policy's rules and are not being deleted
+    for _, currentPolicyRule := range *currentPolicy.Rules {
+        // If the rule is being deleted, do not include it in the updated ruleset
+        if slices.Contains(deletedRuleNames, currentPolicyRule.Name) {
+            continue
+        }
+
+        if !slices.Contains(updatedRuleNames, currentPolicyRule.Name) {
+            updatedRules = append(updatedRules, currentPolicyRule)
+        }
+    }
+
+    policy.Rules = &updatedRules
+
 	return c.Request(http.MethodPut, RuntimeServerlessEndpoint, nil, policy, nil)
 }

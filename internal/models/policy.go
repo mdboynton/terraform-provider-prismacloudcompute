@@ -206,6 +206,20 @@ type RuntimeHostPolicyResourceModel struct {
     Rules  *[]RuntimeHostPolicyRuleResourceModel `tfsdk:"rules"`
 }
 
+func (m *RuntimeHostPolicyResourceModel) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (m.Rules == nil || len(*m.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *m.Rules {
+        ruleNames = append(ruleNames, rule.Name.ValueString())
+    }
+
+    return ruleNames
+}
+
 type RuntimeHostPolicyRuleResourceModel struct {
     AntiMalware       *RuntimeHostPolicyAntiMalwareResourceModel `tfsdk:"anti_malware"`
     Collections       types.Set `tfsdk:"collections"`
@@ -364,6 +378,20 @@ type RuntimeContainerPolicyResourceModel struct {
     Rules  *[]RuntimeContainerPolicyRuleResourceModel `tfsdk:"rules"`
 }
 
+func (m *RuntimeContainerPolicyResourceModel) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (m.Rules == nil || len(*m.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *m.Rules {
+        ruleNames = append(ruleNames, rule.Name.ValueString())
+    }
+
+    return ruleNames
+}
+
 type RuntimeContainerPolicyRuleResourceModel struct {
     AntiMalware       *RuntimeContainerPolicyAntiMalwareResourceModel `tfsdk:"anti_malware"`
     Processes         *RuntimeContainerPolicyProcessesResourceModel `tfsdk:"processes"`
@@ -492,6 +520,20 @@ type RuntimeServerlessPolicyResourceModel struct {
     Rules  *[]RuntimeServerlessPolicyRuleResourceModel `tfsdk:"rules"`
 }
 
+func (m *RuntimeServerlessPolicyResourceModel) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (m.Rules == nil || len(*m.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *m.Rules {
+        ruleNames = append(ruleNames, rule.Name.ValueString())
+    }
+
+    return ruleNames
+}
+
 type RuntimeServerlessPolicyRuleResourceModel struct {
     Processes         *RuntimeServerlessPolicyProcessesResourceModel `tfsdk:"processes"`
     Networking        *RuntimeServerlessPolicyNetworkingResourceModel `tfsdk:"networking"`
@@ -588,6 +630,20 @@ func (m *RuntimeServerlessPolicyResourceModel) SortRules(ctx context.Context, pl
 
 type RuntimeAppEmbeddedPolicyResourceModel struct {
     Rules  *[]RuntimeAppEmbeddedPolicyRuleResourceModel `tfsdk:"rules"`
+}
+
+func (m *RuntimeAppEmbeddedPolicyResourceModel) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (m.Rules == nil || len(*m.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *m.Rules {
+        ruleNames = append(ruleNames, rule.Name.ValueString())
+    }
+
+    return ruleNames
 }
 
 type RuntimeAppEmbeddedPolicyRuleResourceModel struct {
