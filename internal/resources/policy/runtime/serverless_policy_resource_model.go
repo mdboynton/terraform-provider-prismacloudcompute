@@ -37,14 +37,6 @@ type ServerlessRuntimePolicyResource struct {
 func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-            // TODO: probably dont need this
-            "automatic_runtime_learning": schema.BoolAttribute{
-                //MarkdownDescription: "TODO",
-                Optional:            true,
-                Computed:            true,
-                Description: "Enables automatic behavioural learning.",
-                Default:             booldefault.StaticBool(true),
-            },
             "rules": schema.ListNestedAttribute{
                 MarkdownDescription: "TODO",
                 Optional:            true,
@@ -68,8 +60,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        "collections": schema.SetAttribute{
     			        	Optional:    true,
     			        	Computed:    true,
-                            // TODO: update resource types
-                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.",
+                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Hosts, Images, Labels, App IDs, Namespaces and Clusters.",
                             Default: setdefault.StaticValue(
                                 types.SetValueMust(types.StringType, []attr.Value{types.StringValue("All")}),
                             ),
@@ -80,6 +71,12 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                             Computed:   true,
                             Default: booldefault.StaticBool(false),
     			        	Description: "Indicates whether to disable the rule.",
+    			        },
+    			        "advanced_threat_protection": schema.BoolAttribute{
+    			        	Optional:   true,
+                            Computed:   true,
+                            Default: booldefault.StaticBool(true),
+    			        	Description: "Toggles Serverless Advanced Threat Protection. Serverless Advanced Threat Protection (ATP) is a collection of paths (researched by Prisma Cloud Labs) that define which file system or process activity is allowed within the function. Activities that do not match these paths will raise a security audit (Note: filesystem monitoring must be enabled for this to work). When enabled, it creates an automatic hardening for the function in runtime, without the need to manually configure the runtime policy.",
     			        },
     			        "file_system": schema.SingleNestedAttribute{
     			        	Optional: true,

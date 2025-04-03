@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
     "sort"
+    "slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
@@ -68,6 +69,20 @@ type RuntimeAppEmbeddedProcesses struct {
 	Whitelist            []string                     `json:"whitelist,omitempty"`
 }
 
+func (p *RuntimeAppEmbeddedPolicy) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *p.Rules {
+        ruleNames = append(ruleNames, rule.Name)
+    }
+
+    return ruleNames
+}
+
 func (p *RuntimeAppEmbeddedPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeAppEmbeddedPolicyRuleResourceModel) {
 	util.DLog(ctx, "Executing api.RuntimeAppEmbeddedPolicy.SortRules()")
     if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
@@ -120,8 +135,8 @@ func generateRuntimeAppEmbeddedPolicyRulesOrderMap(rules []models.RuntimeAppEmbe
 	return ruleOrders
 }
 
-// Get the current app-embedded runtime policy.
-func GetRuntimeAppEmbedded(c api.PrismaCloudComputeAPIClient) (RuntimeAppEmbeddedPolicy, error) {
+// Get app-embedded runtime policy
+func GetRuntimeAppEmbeddedPolicy(c api.PrismaCloudComputeAPIClient) (RuntimeAppEmbeddedPolicy, error) {
 	var ans RuntimeAppEmbeddedPolicy
 	if err := c.Request(http.MethodGet, RuntimeAppEmbeddedEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting app-embedded runtime policy: %s", err)
@@ -129,8 +144,66 @@ func GetRuntimeAppEmbedded(c api.PrismaCloudComputeAPIClient) (RuntimeAppEmbedde
 	return ans, nil
 }
 
-// Update the current app-embedded runtime policy.
-func UpsertRuntimeAppEmbedded(c api.PrismaCloudComputeAPIClient, policy RuntimeAppEmbeddedPolicy) error {
-    // TODO: error handling
+// Get app-embedded runtime policy filtered on rule names
+func GetRuntimeAppEmbeddedPolicyFiltered(c api.PrismaCloudComputeAPIClient, ruleNames []string) (RuntimeAppEmbeddedPolicy, error) {
+    policy, err := GetRuntimeAppEmbeddedPolicy(c)
+    if err != nil {
+        return RuntimeAppEmbeddedPolicy{}, err
+    }
+
+    if (policy.Rules == nil || len(*policy.Rules) == 0) {
+        return policy, nil
+    }
+
+    filteredRules := []RuntimeAppEmbeddedPolicyRule{}
+    for _, rule := range *policy.Rules {
+        if slices.Contains(ruleNames, rule.Name) {
+            filteredRules = append(filteredRules, rule)
+        }
+    }
+
+    response := RuntimeAppEmbeddedPolicy{
+        Id: policy.Id,
+        LearningDisabled: policy.LearningDisabled,
+        Rules: &filteredRules,
+    }
+
+    return response, nil
+}
+
+// Update app-embedded runtime policy
+func UpsertRuntimeAppEmbeddedPolicy(c api.PrismaCloudComputeAPIClient, policy RuntimeAppEmbeddedPolicy) error {
+	return c.Request(http.MethodPut, RuntimeAppEmbeddedEndpoint, nil, policy, nil)
+}
+
+// Update app-embedded runtime policy, scoped to specified rule names
+// Rules not managed through Terraform will be preserved
+func UpsertRuntimeAppEmbeddedPolicyFiltered(c api.PrismaCloudComputeAPIClient, policy RuntimeAppEmbeddedPolicy, deletedRuleNames []string) error {
+    currentPolicy, err := GetRuntimeAppEmbeddedPolicy(c)
+    if err != nil {
+        return err
+    }
+
+    if (currentPolicy.Rules == nil || len(*currentPolicy.Rules) == 0) {
+	    return c.Request(http.MethodPut, RuntimeAppEmbeddedEndpoint, nil, policy, nil)
+    }
+
+    updatedRuleNames := policy.GetRuleNames()
+    updatedRules := *policy.Rules
+
+    // Loop through the current policy rules and add any rules that are not present in the updated policy's rules and are not being deleted
+    for _, currentPolicyRule := range *currentPolicy.Rules {
+        // If the rule is being deleted, do not include it in the updated ruleset
+        if slices.Contains(deletedRuleNames, currentPolicyRule.Name) {
+            continue
+        }
+
+        if !slices.Contains(updatedRuleNames, currentPolicyRule.Name) {
+            updatedRules = append(updatedRules, currentPolicyRule)
+        }
+    }
+
+    policy.Rules = &updatedRules
+
 	return c.Request(http.MethodPut, RuntimeAppEmbeddedEndpoint, nil, policy, nil)
 }

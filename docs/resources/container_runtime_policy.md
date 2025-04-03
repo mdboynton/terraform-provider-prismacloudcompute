@@ -13,130 +13,80 @@ description: |-
 ## Example Usage
 
 ```terraform
-# This resource will work with the following provider stored in the following directory path
-# mkdir -p ~/.terraform.d/plugins/paloaltonetworks.com/prismacloud/prismacloudcompute/0.7.1-release/darwin_amd64
-# mv terraform-provider-prismacloudcompute ~/.terraform.d/plugins/paloaltonetworks.com/prismacloud/prismacloudcompute/0.7.1-release/darwin_amd64
-
-terraform {
-  required_providers {
-    prismacloudcompute = {
-      source  = "paloaltonetworks.com/prismacloud/prismacloudcompute"
-      version = "0.7.1-release"
-    }
-  }
-}
-
-provider "prismacloudcompute" {
-  console_url = ""
-  username    = ""
-  password    = ""
-}
-
-resource "prismacloudcompute_container_runtime_policy" "ruleset" {
-  learning_disabled = false
-  rule {
-    name                              = "string"
-    collections                       = ["string"]
-    advanced_protection_effect        = true
-    cloud_metadata_enforcement_effect = false
-    previous_name                     = "string" # Required if Renaming the Rule
-    skip_exec_sessions                = false    # true | false
-    wildfire_analysis                 = "alert"  # "block" | "prevent" | "alert" | "disable"
-    custom_rule {
-      id     = 0
-      action = "string"
-      effect = "string" # "allow" | "ban" | "block" | "prevent" | "alert" | "disable"
-    }
-    custom_rule {
-      id     = 1
-      action = "string"
-      effect = "string" # "allow" | "ban" | "block" | "prevent" | "alert" | "disable"
-    }
-    dns {
-      default_effect = "alert" # "block" | "prevent" | "alert" | "disable"
-      disabled       = true
-      domain_list {
-        allowed = ["0.0.0.0"]
-        denied  = ["1.1.1.1"]
-        effect  = "disable"
-      }
-    }
-    filesystem {
-      allowed_list          = ["string"]
-      backdoor_files_effect = "disable" # "block" | "prevent" | "alert" | "disable"
-      default_effect        = "alert"   # "block" | "prevent" | "alert" | "disable"
-      denied_list {
-        effect = "disable" # "block" | "prevent" | "alert" | "disable"
-        paths  = ["string"]
-      }
-      disabled                      = true
-      encrypted_binaries_effect     = "disable"
-      new_files_effect              = "disable"
-      suspicious_elf_headers_effect = "disable"
-    }
-    kubernetes_enforcement = false
-    network {
-      allowed_ips       = ["0.0.0.0"]
-      default_effect    = "alert"
-      denied_ips        = ["1.1.1.1"]
-      denied_ips_effect = "disable"
-      disabled          = true
-      listening_ports {
-        allowed {
-          deny  = true
-          end   = 333
-          start = 222
+resource "prismacloudcompute_container_runtime_policy" "example" {
+    automatic_runtime_learning = true 
+    rules = [
+        {
+            name        = "Example Rule"
+            order       = 1
+            collections = ["All", "Production Hosts"]
+            notes       = "Test rule"
+            anti_malware = {
+                malware_from_advanced_threat_protection = "prevent"
+                kubernetes_attacks                      = "block"
+                suspicious_cloud_provider_api_queries   = "alert"
+                wild_fire_analysis                      = "block"
+            }
+            file_system = {
+                enabled                                     = true
+                allowed_paths                               = ["/allowed/path/1", "/allowed/path/2"]
+                changes_to_binaries                         = "block"
+                detection_of_encrypted_binaries             = "prevent"
+                changes_to_ssh_admin_account_config_files   = "alert"
+                suspicious_elf_headers                      = "block"
+                denied_paths                                = ["/denied/path/1", "/denied/path/2"]
+                denied_paths_effect                         = "block"
+                all_other_paths_effect                      = "block"
+            }
+            processes = {
+                allow_only_learned_processes_from_parents   = true 
+                allowed_processes                           = ["bash", "grep"]
+                allow_all_activity_in_attached_sessions     = true 
+                processes_from_modified_binaries            = "prevent"
+                crypto_miners                               = "prevent"
+                reverse_shell                               = "block"
+                lateral_movement_processes                  = "block"
+                processes_started_with_suid                 = "prevent"
+                denied_processes = {
+                    effect                                  = "block"
+                    paths                                   = ["netstat", "ipconfig"]
+                }
+                all_other_processes_effect                  = "prevent"
+            }
+            networking = {
+                ip_connectivity_enabled                 = true
+                allowed_listening_ports                 = ["100", "200"]
+                allowed_outbound_internet_ports         = ["300", "400"]
+                allowed_outbound_ips                    = ["192.168.0.1", "192.168.0.2"]
+                denied_listening_ports                  = ["500", "600"]
+                denied_listening_ports_effect           = "block"
+                denied_outbound_internet_ports          = ["700", "800"]
+                denied_outbound_internet_ports_effect   = "alert"
+                denied_outbound_ips                     = ["10.0.0.1", "10.0.0.2"]
+                denied_outbound_ips_effect              = "alert"
+                all_other_activity_effect               = "block"
+                network_activity_from_modified_binaries = "block"
+                port_scanning                           = "block"
+                raw_sockets                             = "alert"
+                dns_enabled                             = true
+                allowed_dns_domains                     = ["allowed1.com", "allowed2.com"]
+                denied_dns_domains                      = ["denied1.com", "denied2.com"]
+                denied_dns_domains_effect               = "prevent"
+                all_other_domains_effect                = "prevent"
+            }
+            custom_rules = [
+                {
+                    name    = "Example Custom Rule 1"
+                    effect  = "allow"
+                },
+                {
+                    name    = "Example Custom Rule 2"
+                    effect  = "alert"
+                    log_as  = "incident"
+                }
+            ]
         }
-        denied {
-          deny  = true
-          end   = 5000
-          start = 4000
-        }
-        denied {
-          deny  = true
-          end   = 222
-          start = 111
-        }
-        effect = "disable" # "block" | "prevent" | "alert" | "disable"
-      }
-      modified_proc_effect = "disable" # "block" | "prevent" | "alert" | "disable"
-      outbound_ports {
-        allowed {
-          deny  = true
-          end   = 300
-          start = 200
-        }
-        denied {
-          deny  = true
-          end   = 6000
-          start = 5000
-        }
-        denied {
-          deny  = true
-          end   = 222
-          start = 111
-        }
-        effect = "disable" # "block" | "prevent" | "alert" | "disable"
-      }
-      port_scan_effect   = "disable" # "block" | "prevent" | "alert" | "disable"
-      raw_sockets_effect = "disable" # "block" | "prevent" | "alert" | "disable"
-    }
-    processes {
-      modified_process_effect = "disable" # "block" | "prevent" | "alert" | "disable"
-      crypto_miners_effect    = "disable" # "block" | "prevent" | "alert" | "disable"
-      lateral_movement_effect = "disable" # "block" | "prevent" | "alert" | "disable"
-      reverse_shell_effect    = "disable" # "block" | "prevent" | "alert" | "disable"
-      suid_binaries_effect    = "disable" # "block" | "prevent" | "alert" | "disable"
-      default_effect          = "alert"   # "block" | "prevent" | "alert" | "disable"
-      check_parent_child      = false
-      allowed_list            = []
-      disabled                = false
-      denied_list {
-        effect = "disable" # "block" | "prevent" | "alert" | "disable"
-        paths  = ["test"]
-      }
-    }
-  }
+    ]
 }
 ```
 
@@ -158,7 +108,7 @@ Required:
 Optional:
 
 - `anti_malware` (Attributes) Configuration for malware monitoring. (see [below for nested schema](#nestedatt--rules--anti_malware))
-- `collections` (Set of String) List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value ("*") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.
+- `collections` (Set of String) List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value ("*") for all of the following resource types: App IDs and Functions.
 - `custom_rules` (Attributes List) List of custom runtime rules. (see [below for nested schema](#nestedatt--rules--custom_rules))
 - `disabled` (Boolean) Indicates whether to disable the rule.
 - `file_system` (Attributes) Configuration for file system monitoring. (see [below for nested schema](#nestedatt--rules--file_system))

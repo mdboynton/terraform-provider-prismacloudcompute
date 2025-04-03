@@ -62,8 +62,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                 types.SetValueMust(types.StringType, []attr.Value{types.StringValue("All")}),
                             ),
     			        	ElementType: types.StringType,
-                            // TODO: fill out allowed fields
-                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.",
+                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Hosts, Labels, Functions and Namespaces.",
     			        },
     			        "custom_rules": schema.ListNestedAttribute{
                             Optional: true,

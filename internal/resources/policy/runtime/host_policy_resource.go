@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+    "slices"
     "time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
@@ -67,7 +68,7 @@ func (r *HostRuntimePolicyResource) Create(ctx context.Context, req resource.Cre
     }
 
     // Create new host runtime policy 
-    err := policyAPI.UpsertRuntimeHost(*r.client, data)
+    err := policyAPI.UpsertRuntimeHostPolicyFiltered(*r.client, data, []string{})
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error creating Host Runtime Policy resource", 
@@ -77,7 +78,7 @@ func (r *HostRuntimePolicyResource) Create(ctx context.Context, req resource.Cre
 	}
 
     // Retrieve newly created host runtime policy 
-    response, err := policyAPI.GetRuntimeHost(*r.client)
+    response, err := policyAPI.GetRuntimeHostPolicyFiltered(*r.client, plan.GetRuleNames())
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error retrieving created Host Runtime Policy resource", 
@@ -109,7 +110,7 @@ func (r *HostRuntimePolicyResource) Read(ctx context.Context, req resource.ReadR
     }
 
     // Get policy value from Prisma Cloud
-    data, err := policyAPI.GetRuntimeHost(*r.client)
+    data, err := policyAPI.GetRuntimeHostPolicyFiltered(*r.client, state.GetRuleNames())
     if err != nil {
 		resp.Diagnostics.AddError(
             "Error reading Host Runtime Policy resource", 
@@ -157,8 +158,17 @@ func (r *HostRuntimePolicyResource) Update(ctx context.Context, req resource.Upd
         return
     }
 
+    // Find any rules being deleted
+    deletedRuleNames := []string{}
+    planRuleNames := plan.GetRuleNames()
+    for _, stateRule := range *state.Rules {
+        if !slices.Contains(planRuleNames, stateRule.Name.ValueString()) {
+            deletedRuleNames = append(deletedRuleNames, stateRule.Name.ValueString())
+        }
+    }
+
     // Update existing policy
-    err := policyAPI.UpsertRuntimeHost(*r.client, planPolicy)
+    err := policyAPI.UpsertRuntimeHostPolicyFiltered(*r.client, planPolicy, deletedRuleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error updating Host Runtime Policy resource", 
@@ -168,7 +178,7 @@ func (r *HostRuntimePolicyResource) Update(ctx context.Context, req resource.Upd
 	}
 
     // Get updated policy value from Prisma Cloud
-    updatedPolicy, err := policyAPI.GetRuntimeHost(*r.client)
+    updatedPolicy, err := policyAPI.GetRuntimeHostPolicyFiltered(*r.client, plan.GetRuleNames())
     if err != nil {
         resp.Diagnostics.AddError(
             "Error reading Host Runtime Policy resource", 
@@ -201,6 +211,8 @@ func (r *HostRuntimePolicyResource) Delete(ctx context.Context, req resource.Del
         return
     }
 
+    ruleNames := state.GetRuleNames()
+
     // Clear policy rules
     state.Rules = &[]models.RuntimeHostPolicyRuleResourceModel{}
 
@@ -212,7 +224,7 @@ func (r *HostRuntimePolicyResource) Delete(ctx context.Context, req resource.Del
     }
     
     // Delete existing policy 
-    err := policyAPI.UpsertRuntimeHost(*r.client, updatedPlan)
+    err := policyAPI.UpsertRuntimeHostPolicyFiltered(*r.client, updatedPlan, ruleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
             "Error deleting Host Runtime Policy resource", 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
     "sort"
+    "slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
@@ -92,6 +93,20 @@ type RuntimeContainerDeniedList struct {
 	Paths  []string `json:"paths,omitempty"`
 }
 
+func (p *RuntimeContainerPolicy) GetRuleNames() []string {
+    ruleNames := []string{}
+
+    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
+        return ruleNames
+    }
+
+    for _, rule := range *p.Rules {
+        ruleNames = append(ruleNames, rule.Name)
+    }
+
+    return ruleNames
+}
+
 func (p *RuntimeContainerPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeContainerPolicyRuleResourceModel) {
 	util.DLog(ctx, "Executing api.RuntimeContainerPolicy.SortRules()")
     if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
@@ -144,8 +159,8 @@ func generateRuntimeContainerPolicyRulesOrderMap(rules []models.RuntimeContainer
 	return ruleOrders
 }
 
-// Get the current container runtime policy.
-func GetRuntimeContainer(c api.PrismaCloudComputeAPIClient) (RuntimeContainerPolicy, error) {
+// Get container runtime policy
+func GetRuntimeContainerPolicy(c api.PrismaCloudComputeAPIClient) (RuntimeContainerPolicy, error) {
 	var ans RuntimeContainerPolicy
 	if err := c.Request(http.MethodGet, RuntimeContainerEndpoint, nil, nil, &ans); err != nil {
 		return ans, fmt.Errorf("error getting container runtime policy: %s", err)
@@ -153,7 +168,66 @@ func GetRuntimeContainer(c api.PrismaCloudComputeAPIClient) (RuntimeContainerPol
 	return ans, nil
 }
 
-// Update the current container runtime policy.
-func UpsertRuntimeContainer(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy) error {
+// Get container runtime policy filtered on rule names
+func GetRuntimeContainerPolicyFiltered(c api.PrismaCloudComputeAPIClient, ruleNames []string) (RuntimeContainerPolicy, error) {
+    policy, err := GetRuntimeContainerPolicy(c)
+    if err != nil {
+        return RuntimeContainerPolicy{}, err
+    }
+
+    if (policy.Rules == nil || len(*policy.Rules) == 0) {
+        return policy, nil
+    }
+
+    filteredRules := []RuntimeContainerPolicyRule{}
+    for _, rule := range *policy.Rules {
+        if slices.Contains(ruleNames, rule.Name) {
+            filteredRules = append(filteredRules, rule)
+        }
+    }
+
+    response := RuntimeContainerPolicy{
+        Id: policy.Id,
+        LearningDisabled: policy.LearningDisabled,
+        Rules: &filteredRules,
+    }
+
+    return response, nil
+}
+
+// Update container runtime policy
+func UpsertRuntimeContainerPolicy(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy) error {
+	return c.Request(http.MethodPut, RuntimeContainerEndpoint, nil, policy, nil)
+}
+
+// Update container runtime policy, scoped to specified rule names
+// Rules not managed through Terraform will be preserved
+func UpsertRuntimeContainerPolicyFiltered(c api.PrismaCloudComputeAPIClient, policy RuntimeContainerPolicy, deletedRuleNames []string) error {
+    currentPolicy, err := GetRuntimeContainerPolicy(c)
+    if err != nil {
+        return err
+    }
+
+    if (currentPolicy.Rules == nil || len(*currentPolicy.Rules) == 0) {
+	    return c.Request(http.MethodPut, RuntimeContainerEndpoint, nil, policy, nil)
+    }
+
+    updatedRuleNames := policy.GetRuleNames()
+    updatedRules := *policy.Rules
+
+    // Loop through the current policy rules and add any rules that are not present in the updated policy's rules and are not being deleted
+    for _, currentPolicyRule := range *currentPolicy.Rules {
+        // If the rule is being deleted, do not include it in the updated ruleset
+        if slices.Contains(deletedRuleNames, currentPolicyRule.Name) {
+            continue
+        }
+
+        if !slices.Contains(updatedRuleNames, currentPolicyRule.Name) {
+            updatedRules = append(updatedRules, currentPolicyRule)
+        }
+    }
+
+    policy.Rules = &updatedRules
+
 	return c.Request(http.MethodPut, RuntimeContainerEndpoint, nil, policy, nil)
 }
