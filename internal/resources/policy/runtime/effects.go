@@ -15,5 +15,12 @@ var ValidEffects = map[string]map[string][]string{
         "anti_malware.suspicious_elf_headers": []string{"disable", "alert"},
         "anti_malware.web_shell": []string{"disable", "alert", "prevent"},
         "anti_malware.wild_fire_analysis": []string{"disable", "alert"},
+        //TODO: custom rules
+        "networking.suspicious_ips_custom_feed": []string{"disable", "alert"},
+        "networking.denied_ips_ports_effect": []string{"disable", "alert"},
+        "networking.suspicious_ips_advanced_threat_protection_effect": []string{"disable", "alert"},
+        "networking.denied_dns_domains_effect": []string{"disable", "alert", "prevent"},
+        "networking.suspicious_domains_advanced_threat_protection_effect": []string{"disable", "alert", "prevent"},
+
     },
 }

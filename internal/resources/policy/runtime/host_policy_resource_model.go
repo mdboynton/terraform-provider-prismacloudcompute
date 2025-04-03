@@ -381,7 +381,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		"suspicious_ips_custom_feed": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["networking.suspicious_ips_custom_feed"]),
                                     },
     			        			Description: "Effect for detected IPs from the list of suspicious or high risk IPs under Manage > System > Custom feeds > IP Reputation lists. Must be either \"disable\" or \"alert\".",
     			        		},
@@ -403,17 +403,16 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		"denied_ips_ports_effect": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["networking.denied_ips_ports_effect"]),
                                     },
     			        			Description: "Effect for denied IP/ports. Must be either \"disable\" or \"alert\".",
     			        		},
     			        		"suspicious_ips_advanced_threat_protection_effect": schema.StringAttribute{
     			        			Optional:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["networking.suspicious_ips_advanced_threat_protection_effect"]),
                                     },
     			        			Description: "Effect for detected malicious IPs based on the Prisma Cloud advanced threat protection intelligence stream.",
-                                    // TODO: description
     			        		},
     			        		"allowed_dns_domains": schema.ListAttribute{
     			        			Optional:    true,
@@ -431,7 +430,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
                                     Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["networking.denied_dns_domains_effect"]),
                                     },
                                     Default:    stringdefault.StaticString("disable"),
     			        			Description: "Effect for denied DNS domains. Must be one of \"disable\", \"alert\" or \"prevent\".",
@@ -440,7 +439,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
                                     Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["networking.suspicious_domains_advanced_threat_protection_effect"]),
                                     },
                                     Default:    stringdefault.StaticString("disable"),
     			        			Description: "Effect for detected malicious domains based on the Prisma Cloud advanced threat protection intelligence stream.",
