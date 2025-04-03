@@ -1,5 +1,7 @@
 # Changelog
 
+## NOTE: This has not been updated for this forked repo. It will be updated once this code is merged with the official repo and the hashicorp registry has been updated.
+
 ## Version 0.5.0 - 2022-02-07
 #### Added
 - Code repo scanning policy support ([#45](https://github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/pull/45), @pnancarrow)
