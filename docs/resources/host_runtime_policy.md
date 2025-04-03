@@ -13,51 +13,92 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "prismacloudcompute_host_runtime_policy" "ruleset" {
-  rule {
-    name        = "Default - alert on suspicious runtime behavior"
-    collections = ["All"]
-    activities {
-      disabled                   = false
-      docker_enabled             = false
-      readonly_docker_enabled    = false
-      service_activities_enabled = false
-      sshd_enabled               = false
-      sudo_enabled               = false
+resource "prismacloudcompute_host_runtime_policy" "example" {
+    rules = [
+        {
+            name        = "Example Rule"
+            order       = 1
+            collections = ["All", "Production Hosts"]
+            notes       = "Test rule"
+            activities  = {
+                host_activity_monitoring = {
+                    enabled                         = true
+                    docker_commands = {
+                        enabled                     = true
+                        include_read_only_events    = true
+                    }
+                    sshd_sessions                   = true
+                    sudo_commands                   = true
+                    log_background_apps             = true
+                }
+                track_ssh_events                    = true 
+            }
+            anti_malware = {
+                allowed_processes                       = ["/process/path/1", "/process/path/2"]
+                denied_processes {
+                    effect                              = "prevent"
+                    paths                               = ["/denied/process/1", "/denied/process/2"]
+                }
+                crypto_miners                           = "prevent"
+                non_packaged_binaries_service           = "alert"
+                non_packaged_binaries_user              = "alert"
+                processes_temporary_storage             = "prevent"
+                web_shell                               = "alert"
+                reverse_shell                           = "disable"
+                execution_flow_hijacking                = "alert"
+                encrypted_binaries                      = "alert"
+                suspicious_elf_headers                  = "alert"
+                malware_from_custom_feed                = "disable"
+                malware_from_advanced_threat_protection = "alert"
+            }
+            log_inspection_rules = [
+                {
+                    path    = "/path/to/log1.log"
+                    regex   = ["^test1$", "^test2$"]
+                },
+                {
+                    path    = "/path/to/log2.log"
+                    regex   = ["^test3$", "^test4$"]
+                },
+            ]
+            file_integrity_rules = [
+                {
+                    file_path               = "/path/to/file.sh"
+                    allowed_processes       = ["bash"]
+                    monitor_read_ops        = true
+                    monitor_write_ops       = true
+                },
+                {
+                    file_path               = "/path/to/directory/"
+                    allowed_processes       = ["grep"]
+                    monitor_subdirectories  = true
+                },
+            ]
+            networking = {
+              allowed_outbound_ips                                  = ["192.168.0.1", "192.168.0.2"]
+              denied_listening_ports                                = ["100", "200"]
+              denied_outbound_ips                                   = ["10.0.0.1", "10.0.0.2"]
+              denied_outbound_ports                                 = ["300", "400"]
+              suspicious_ips_custom_feed                            = "alert"
+              suspicious_domains_advanced_threat_protection_effect  = "alert"
+              allowed_dns_domains                                   = ["example.com", "example2.com"]
+              denied_dns_domains                                    = ["example3.com", "example4.com"]
+              denied_dns_domains_effect                             = "prevent"
+              suspicious_domains_advanced_threat_protection_effect  = "alert"
+            }
+            custom_rules = [
+                {
+                    name    = "Example Custom Rule 1"
+                    effect  = "allow"
+                },
+                {
+                    name    = "Example Custom Rule 2"
+                    effect  = "alert"
+                    log_as  = "incident"
+                }
+            ]
+        }
     }
-    antimalware {
-      allowed_processes = []
-      crypto_miners     = "alert"
-      custom_feed       = "alert"
-      denied_processes {
-        effect = "alert"
-        paths  = []
-      }
-      encrypted_binaries            = "alert"
-      execution_flow_hijack         = "alert"
-      intelligence_feed             = "alert"
-      reverse_shell                 = "alert"
-      service_unknown_origin_binary = "alert"
-      suspicious_elf_headers        = "alert"
-      temp_filesystem_processes     = "alert"
-      user_unknown_origin_binary    = "alert"
-      webshell                      = "alert"
-      wildfire_analysis             = "alert"
-    }
-    dns {
-      allowed           = []
-      denied            = []
-      deny_effect       = "disable"
-      intelligence_feed = "disable"
-    }
-    network {
-      allowed_outbound_ips = []
-      custom_feed          = "alert"
-      denied_outbound_ips  = []
-      deny_effect          = "alert"
-      intelligence_feed    = "alert"
-    }
-  }
 }
 ```
 

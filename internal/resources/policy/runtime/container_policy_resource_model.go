@@ -377,6 +377,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                                 validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
                                             },
     			        				},
+                                        // TODO: rename to "processes"
     			        				"paths": schema.ListAttribute{
     			        					Optional:    true,
                                             Computed: true,
