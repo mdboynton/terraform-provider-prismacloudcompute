@@ -6,10 +6,11 @@
     - GNU Make
 2. Clone this branch (or download the source as a zip and extract the contents)
 3. Navigate to the repo directory in your terminal
-4. Run `make` (this will run the `install` step by default)
+4. Open the Makefile and specify the OS architecture of your machine in the `OS_ARCH` variable
+5. Run `make` (this will run the `install` step by default)
     - This assumes that Terraform will look in the default location for providers (`~/.terraform.d/plugins`)
-5. After the provider has been built and moved to the correct location, populate provider data (see "Basic Setup" section below) into `providers.tf`
-6. Run `terraform init`
+6. After the provider has been built and moved to the correct location, populate provider data (see "Basic Setup" section below) into `providers.tf`
+7. Run `terraform init`
 
 ### Windows [WIP]
 1. Install requirements
