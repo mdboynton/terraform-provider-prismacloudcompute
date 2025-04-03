@@ -119,26 +119,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Default: stringdefault.StaticString("alert"),
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "enabled": types.BoolType,
-                                        "allowed_paths": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_paths": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_paths_effect": types.StringType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "enabled": types.BoolValue(true),
-                                        "allowed_paths": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_paths": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_paths_effect": types.StringValue("alert"),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(serverlessFileSystemDefault),
     			        },
     			        "processes": schema.SingleNestedAttribute{
     			        	Optional: true,
@@ -183,26 +164,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Description: "Enables blocking of all processes except the main process.",
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "enabled": types.BoolType,
-                                        "allowed_processes": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_processes_effect": types.StringType,
-                                        "crypto_miners": types.BoolType,
-                                        "block_all_processes_except_main": types.BoolType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "enabled": types.BoolValue(true),
-                                        "allowed_processes": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_processes_effect": types.StringValue("alert"),
-                                        "crypto_miners": types.BoolValue(true),
-                                        "block_all_processes_except_main": types.BoolValue(true),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(serverlessProcessesDefault),
     			        },
     			        "modified": schema.StringAttribute{
     			        	Optional:   true,
@@ -288,38 +250,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     },
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "ip_connectivity_enabled": types.BoolType,
-                                        "allowed_listening_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "allowed_outbound_internet_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "allowed_outbound_ips": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_ips_ports_effect": types.StringType,
-                                        "dns_enabled": types.BoolType,
-                                        "allowed_dns_domains": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_dns_domains_effect": types.StringType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "ip_connectivity_enabled": types.BoolValue(true),
-                                        "allowed_listening_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "allowed_outbound_internet_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "allowed_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_ips_ports_effect": types.StringValue("alert"),
-                                        "dns_enabled": types.BoolValue(true),
-                                        "allowed_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_dns_domains_effect": types.StringValue("alert"),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(serverlessNetworkingDefault),
     			        },
     			        "notes": schema.StringAttribute{
     			        	Optional:    true,

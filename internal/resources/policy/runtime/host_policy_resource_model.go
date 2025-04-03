@@ -197,64 +197,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Description: "Effect for detected files classified as malware by WildFire, Palo Alto Networks' malware analysis engine. Must be either \"disable\" or \"alert\". WildFire must be enabled for runtime protection under Manage > System > WildFire.",
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "allowed_processes": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "crypto_miners": types.StringType,
-                                        "denied_processes": types.ObjectType{
-                                            AttrTypes: map[string]attr.Type{
-                                                "effect": types.StringType,
-                                                "paths": types.ListType{
-                                                    ElemType: types.StringType,
-                                                },
-                                            },
-                                        },
-                                        "encrypted_binaries": types.StringType,
-                                        "execution_flow_hijacking": types.StringType,
-                                        "malware_from_advanced_threat_protection": types.StringType,
-                                        "malware_from_custom_feed": types.StringType,
-                                        "non_packaged_binaries_service": types.StringType,
-                                        "non_packaged_binaries_user": types.StringType,
-                                        "processes_temporary_storage": types.StringType,
-                                        "reverse_shell": types.StringType,
-                                        "suppress_compiler_generated_binaries": types.BoolType,
-                                        "suspicious_elf_headers": types.StringType,
-                                        "web_shell": types.StringType,
-                                        "wild_fire_analysis": types.StringType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "allowed_processes": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "crypto_miners": types.StringValue("alert"),
-                                        "denied_processes": types.ObjectValueMust(
-                                            map[string]attr.Type{
-                                                "effect": types.StringType,
-                                                "paths": types.ListType{
-                                                    ElemType: types.StringType,
-                                                },
-                                            },
-                                            map[string]attr.Value{
-                                                "effect": types.StringValue("alert"),
-                                                "paths": types.ListValueMust(types.StringType, []attr.Value{}),
-                                            },
-                                        ),
-                                        "encrypted_binaries": types.StringValue("alert"),
-                                        "execution_flow_hijacking": types.StringValue("alert"),
-                                        "malware_from_advanced_threat_protection": types.StringValue("alert"),
-                                        "malware_from_custom_feed": types.StringValue("alert"),
-                                        "non_packaged_binaries_service": types.StringValue("alert"),
-                                        "non_packaged_binaries_user": types.StringValue("alert"),
-                                        "processes_temporary_storage": types.StringValue("alert"),
-                                        "reverse_shell": types.StringValue("alert"),
-                                        "suppress_compiler_generated_binaries": types.BoolValue(false),
-                                        "suspicious_elf_headers": types.StringValue("alert"),
-                                        "web_shell": types.StringValue("alert"),
-                                        "wild_fire_analysis": types.StringValue("alert"),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(hostAntiMalwareDefault),
     			        },
     			        "collections": schema.SetAttribute{
     			        	Optional:    true,
@@ -503,48 +446,49 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Description: "Effect for detected malicious domains based on the Prisma Cloud advanced threat protection intelligence stream.",
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "allowed_outbound_ips": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "suspicious_ips_custom_feed": types.StringType,
-                                        "denied_listening_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_outbound_ips": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_outbound_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_ips_ports_effect": types.StringType,
-                                        "suspicious_ips_advanced_threat_protection_effect": types.StringType,
-                                        "allowed_dns_domains": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_dns_domains": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_dns_domains_effect": types.StringType,
-                                        "suspicious_domains_advanced_threat_protection_effect": types.StringType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "allowed_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "suspicious_ips_custom_feed": types.StringValue("alert"),
-                                        "denied_listening_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_outbound_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_ips_ports_effect": types.StringValue("alert"),
-                                        "suspicious_ips_advanced_threat_protection_effect": types.StringValue("alert"),
-                                        "allowed_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_dns_domains_effect": types.StringValue("disable"),
-                                        "suspicious_domains_advanced_threat_protection_effect": types.StringValue("disable"),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(hostNetworkingDefault),
+                            //Default: objectdefault.StaticValue(
+                            //    types.ObjectValueMust(
+                            //        map[string]attr.Type{
+                            //            "allowed_outbound_ips": types.ListType{
+                            //                ElemType: types.StringType,
+                            //            },
+                            //            "suspicious_ips_custom_feed": types.StringType,
+                            //            "denied_listening_ports": types.ListType{
+                            //                ElemType: types.StringType,
+                            //            },
+                            //            "denied_outbound_ips": types.ListType{
+                            //                ElemType: types.StringType,
+                            //            },
+                            //            "denied_outbound_ports": types.ListType{
+                            //                ElemType: types.StringType,
+                            //            },
+                            //            "denied_ips_ports_effect": types.StringType,
+                            //            "suspicious_ips_advanced_threat_protection_effect": types.StringType,
+                            //            "allowed_dns_domains": types.ListType{
+                            //                ElemType: types.StringType,
+                            //            },
+                            //            "denied_dns_domains": types.ListType{
+                            //                ElemType: types.StringType,
+                            //            },
+                            //            "denied_dns_domains_effect": types.StringType,
+                            //            "suspicious_domains_advanced_threat_protection_effect": types.StringType,
+                            //        }, 
+                            //        map[string]attr.Value{
+                            //            "allowed_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
+                            //            "suspicious_ips_custom_feed": types.StringValue("alert"),
+                            //            "denied_listening_ports": types.ListValueMust(types.StringType, []attr.Value{}),
+                            //            "denied_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
+                            //            "denied_outbound_ports": types.ListValueMust(types.StringType, []attr.Value{}),
+                            //            "denied_ips_ports_effect": types.StringValue("alert"),
+                            //            "suspicious_ips_advanced_threat_protection_effect": types.StringValue("alert"),
+                            //            "allowed_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
+                            //            "denied_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
+                            //            "denied_dns_domains_effect": types.StringValue("disable"),
+                            //            "suspicious_domains_advanced_threat_protection_effect": types.StringValue("disable"),
+                            //        },
+                            //    ),
+                            //),
     			        },
     			        "notes": schema.StringAttribute{
     			        	Optional:    true,
