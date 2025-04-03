@@ -60,8 +60,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        "collections": schema.SetAttribute{
     			        	Optional:    true,
     			        	Computed:    true,
-                            // TODO: update resource types
-                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.",
+                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Hosts, Images, Labels, App IDs, Namespaces and Clusters.",
                             Default: setdefault.StaticValue(
                                 types.SetValueMust(types.StringType, []attr.Value{types.StringValue("All")}),
                             ),

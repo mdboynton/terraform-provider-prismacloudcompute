@@ -259,7 +259,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        "collections": schema.SetAttribute{
     			        	Optional:    true,
     			        	ElementType: types.StringType,
-                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.",
+                            Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces and Clusters.",
     			        },
     			        "custom_rules": schema.ListNestedAttribute{
                             Optional: true,

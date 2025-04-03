@@ -17,7 +17,6 @@ description: |-
 
 ### Optional
 
-- `automatic_runtime_learning` (Boolean) Enables automatic behavioural learning.
 - `rules` (Attributes List) TODO (see [below for nested schema](#nestedatt--rules))
 
 <a id="nestedatt--rules"></a>
@@ -29,7 +28,8 @@ Required:
 
 Optional:
 
-- `collections` (Set of String) List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value ("*") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.
+- `advanced_threat_protection` (Boolean) Toggles Serverless Advanced Threat Protection. Serverless Advanced Threat Protection (ATP) is a collection of paths (researched by Prisma Cloud Labs) that define which file system or process activity is allowed within the function. Activities that do not match these paths will raise a security audit (Note: filesystem monitoring must be enabled for this to work). When enabled, it creates an automatic hardening for the function in runtime, without the need to manually configure the runtime policy.
+- `collections` (Set of String) List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value ("*") for all of the following resource types: Containers, Hosts, Images, Labels, App IDs, Namespaces and Clusters.
 - `disabled` (Boolean) Indicates whether to disable the rule.
 - `file_system` (Attributes) Configuration for file system monitoring. (see [below for nested schema](#nestedatt--rules--file_system))
 - `modified` (String) Modified timestamp.

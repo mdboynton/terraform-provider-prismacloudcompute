@@ -158,7 +158,7 @@ Required:
 Optional:
 
 - `anti_malware` (Attributes) Configuration for malware monitoring. (see [below for nested schema](#nestedatt--rules--anti_malware))
-- `collections` (Set of String) List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value ("*") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces, and Clusters.
+- `collections` (Set of String) List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value ("*") for all of the following resource types: App IDs and Functions.
 - `custom_rules` (Attributes List) List of custom runtime rules. (see [below for nested schema](#nestedatt--rules--custom_rules))
 - `disabled` (Boolean) Indicates whether to disable the rule.
 - `file_system` (Attributes) Configuration for file system monitoring. (see [below for nested schema](#nestedatt--rules--file_system))
