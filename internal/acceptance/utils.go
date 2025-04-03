@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+var (
+    providerConfig string
+)
+
 func testAccPreCheck(t *testing.T) {
 	//if os.Getenv(configFileEnvVar) == "" {
 	//	t.Fatalf("%s must be set for acceptance tests", configFileEnvVar)

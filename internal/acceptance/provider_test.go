@@ -20,7 +20,6 @@ const (
 var (
     providerFactory map[string]func() (tfprotov6.ProviderServer, error)
     client *api.PrismaCloudComputeAPIClient
-    providerConfig string
 )
 
 func protoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {

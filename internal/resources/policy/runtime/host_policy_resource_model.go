@@ -67,7 +67,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.crypto_miners"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "Effect for detected crypto miners. Must be one of \"disable\", \"alert\", or \"prevent\". Note that when setting to \"prevent\", only some detected use cases will be prevented. Others will only generate an alert.",
@@ -80,7 +80,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        					Optional:    true,
     			        					Description: "Effect for denied processes. Must be either \"alert\" or \"prevent\".",
                                             Validators: []validator.String{
-                                                validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                                validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.denied_processes.effect"]),
                                             },
     			        				},
     			        				"paths": schema.ListAttribute{
@@ -94,7 +94,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.encrypted_binaries"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected encrypted/packed binaries. Must be either \"disable\" or \"alert\".",
@@ -103,7 +103,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.execution_flow_hijacking"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected execution flow hijack attempts. Must be either \"disable\" or \"alert\".",
@@ -112,7 +112,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.malware_from_advanced_threat_protection"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "Effect for detected files classified as malware by Prisma Cloud Advanced Threat Protection. Must be either \"disable\" or \"alert\".",
@@ -121,7 +121,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.malware_from_custom_feed"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected files classified as malware by the presence of their MD5 hash in the custom malware signature feed. Must be either \"disable\" or \"alert\". Custom malware signatures can be configured in the console by navigating to Manage > System > Custom feeds > Malware signatures.",
@@ -130,7 +130,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:   true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.non_packaged_binaries_service"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected binaries created or executed by a service without a package manager. Must be one of \"disable\", \"alert\", or \"prevent\". Defender must be running when a file is written to detect its source. Note that when setting to \"prevent\", only file execution will be prevented, while alerts will be generated on file creation.",
@@ -139,7 +139,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.non_packaged_binaries_user"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected binaries created or executed by a user without a package manager. Must be one of \"disable\", \"alert\", or \"prevent\". Defender must be running when a file is written to detect its source. Note that when setting to \"prevent\", only file execution will be prevented, while alerts will be generated on file creation.",
@@ -148,7 +148,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.processes_temporary_storage"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected processes executed from temporary storage. Must be one of \"disable\", \"alert\", or \"prevent\".",
@@ -157,7 +157,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.reverse_shell"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected reverse shell attacks. Must be either \"disable\" or \"alert\".",
@@ -173,7 +173,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.suspicious_elf_headers"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
                                     Description: "Effect for detected suspicious ELF headers. Must be either \"disable\" or \"alert\".",
@@ -182,7 +182,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.web_shell"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for detected web shell attacks. Must be one of \"disable\", \"alert\" or \"prevent\". Note that when setting to \"prevent\", only Linux command line tool execution will be prevented. Alerts will be generated on web shell creation.",
@@ -191,7 +191,7 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.wild_fire_analysis"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for detected files classified as malware by WildFire, Palo Alto Networks' malware analysis engine. Must be either \"disable\" or \"alert\". WildFire must be enabled for runtime protection under Manage > System > WildFire.",
@@ -447,48 +447,6 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		},
     			        	},
                             Default: objectdefault.StaticValue(hostNetworkingDefault),
-                            //Default: objectdefault.StaticValue(
-                            //    types.ObjectValueMust(
-                            //        map[string]attr.Type{
-                            //            "allowed_outbound_ips": types.ListType{
-                            //                ElemType: types.StringType,
-                            //            },
-                            //            "suspicious_ips_custom_feed": types.StringType,
-                            //            "denied_listening_ports": types.ListType{
-                            //                ElemType: types.StringType,
-                            //            },
-                            //            "denied_outbound_ips": types.ListType{
-                            //                ElemType: types.StringType,
-                            //            },
-                            //            "denied_outbound_ports": types.ListType{
-                            //                ElemType: types.StringType,
-                            //            },
-                            //            "denied_ips_ports_effect": types.StringType,
-                            //            "suspicious_ips_advanced_threat_protection_effect": types.StringType,
-                            //            "allowed_dns_domains": types.ListType{
-                            //                ElemType: types.StringType,
-                            //            },
-                            //            "denied_dns_domains": types.ListType{
-                            //                ElemType: types.StringType,
-                            //            },
-                            //            "denied_dns_domains_effect": types.StringType,
-                            //            "suspicious_domains_advanced_threat_protection_effect": types.StringType,
-                            //        }, 
-                            //        map[string]attr.Value{
-                            //            "allowed_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
-                            //            "suspicious_ips_custom_feed": types.StringValue("alert"),
-                            //            "denied_listening_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                            //            "denied_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
-                            //            "denied_outbound_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                            //            "denied_ips_ports_effect": types.StringValue("alert"),
-                            //            "suspicious_ips_advanced_threat_protection_effect": types.StringValue("alert"),
-                            //            "allowed_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
-                            //            "denied_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
-                            //            "denied_dns_domains_effect": types.StringValue("disable"),
-                            //            "suspicious_domains_advanced_threat_protection_effect": types.StringValue("disable"),
-                            //        },
-                            //    ),
-                            //),
     			        },
     			        "notes": schema.StringAttribute{
     			        	Optional:    true,
