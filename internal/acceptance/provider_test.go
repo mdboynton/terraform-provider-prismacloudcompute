@@ -20,7 +20,6 @@ const (
 var (
     providerFactory map[string]func() (tfprotov6.ProviderServer, error)
     client *api.PrismaCloudComputeAPIClient
-    providerConfig string
 )
 
 func protoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
@@ -69,41 +68,3 @@ func hasError(diagnostics []*tfprotov6.Diagnostic) bool {
 	}
 	return false
 }
-
-//func testAccPreCheck(t *testing.T) {
-//	//if os.Getenv(configFileEnvVar) == "" {
-//	//	t.Fatalf("%s must be set for acceptance tests", configFileEnvVar)
-//	//}
-//    
-//    config, err := p.GetConfigurationFromFile(CredentialsFilePath)
-//    if err != nil {
-//        // TODO: error message
-//        return
-//    }
-//   
-//    if config.ConsoleURL == nil {
-//        t.Fatalf("ConsoleURL is nil")
-//    }
-//
-//    if config.Username == nil {
-//        t.Fatalf("Username is nil")
-//    }
-//
-//    if config.Password == nil {
-//        t.Fatalf("Password is nil")
-//    }
-//
-//    if config.RequestTimeout == nil {
-//        t.Fatalf("RequestTimeout is nil")
-//    }
-//
-//    providerConfig = fmt.Sprintf(`
-//        provider "prismacloudcompute" {
-//            console_url = "%s"
-//            username = "%s"
-//            password = "%s"
-//            insecure = %t
-//            request_timeout = %d
-//        }
-//    `, *config.ConsoleURL, *config.Username, *config.Password, *config.Insecure, *config.RequestTimeout)
-//}

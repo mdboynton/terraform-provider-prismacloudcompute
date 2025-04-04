@@ -141,7 +141,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["file_system.denied_paths_effect"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "Effect for detected file system paths from the deny list. Must be either \"alert\" or \"prevent\"",
@@ -180,44 +180,13 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["file_system.wild_fire_analysis"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        			Description: "Effect for detected files classified as malware by WildFire, Palo Alto Networks' malware analysis engine. Must be either \"disable\" or \"alert\". WildFire must be enabled for runtime protection under Manage > System > WildFire.",
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "enabled": types.BoolType,
-                                        "allowed_paths": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_paths": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_paths_effect": types.StringType,
-                                        "changes_to_binaries_and_certs": types.BoolType,
-                                        "detection_of_encrypted_binaries": types.BoolType,
-                                        "changes_to_ssh_admin_account_config_files": types.BoolType,
-                                        "suspicious_elf_headers": types.BoolType,
-                                        "malware_from_custom_feed": types.BoolType,
-                                        "wild_fire_analysis": types.StringType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "enabled": types.BoolValue(true),
-                                        "allowed_paths": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_paths": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_paths_effect": types.StringValue("alert"),
-                                        "changes_to_binaries_and_certs": types.BoolValue(true),
-                                        "detection_of_encrypted_binaries": types.BoolValue(true),
-                                        "changes_to_ssh_admin_account_config_files": types.BoolValue(true),
-                                        "suspicious_elf_headers": types.BoolValue(true),
-                                        "malware_from_custom_feed": types.BoolValue(true),
-                                        "wild_fire_analysis": types.StringValue("alert"),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(appEmbeddedFileSystemDefault),
     			        },
     			        "processes": schema.SingleNestedAttribute{
     			        	Optional: true,
@@ -256,7 +225,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["processes.denied_processes_effect"]),
                                     },
                                     Description: "Effect for detected denied processes. Must be either \"alert\" or \"prevent\".",
     			        		},
@@ -273,30 +242,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Description: "Enable execution of binaries that do not belong to the original image.",
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "enabled": types.BoolType,
-                                        "allowed_processes": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_processes": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_processes_effect": types.StringType,
-                                        "crypto_miners": types.BoolType,
-                                        "processes_from_modified_binaries": types.BoolType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "enabled": types.BoolValue(true),
-                                        "allowed_processes": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_processes": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_processes_effect": types.StringValue("alert"),
-                                        "crypto_miners": types.BoolValue(true),
-                                        "processes_from_modified_binaries": types.BoolValue(true),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(appEmbeddedProcessesDefault),
     			        },
     			        "modified": schema.StringAttribute{
     			        	Optional:   true,
@@ -358,7 +304,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["networking.denied_ips_ports_effect"]),
                                     },
     			        			Description: "Effect for denied IPs and ports. Must be either \"alert\" or \"prevent\".",
     			        		},
@@ -409,55 +355,12 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["networking.denied_dns_domains_effect"]),
                                     },
     			        			Description: "Effect for DNS domains not specified in the allow list. Must be either \"alert\" or \"prevent\".",
     			        		},
     			        	},
-                            Default: objectdefault.StaticValue(
-                                types.ObjectValueMust(
-                                    map[string]attr.Type{
-                                        "ip_connectivity_enabled": types.BoolType,
-                                        "allowed_listening_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "allowed_outbound_internet_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "allowed_outbound_ips": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_ips_ports_effect": types.StringType,
-                                        "denied_listening_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_outbound_internet_ports": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_outbound_ips": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "dns_enabled": types.BoolType,
-                                        "allowed_dns_domains": types.ListType{
-                                            ElemType: types.StringType,
-                                        },
-                                        "denied_dns_domains_effect": types.StringType,
-                                    }, 
-                                    map[string]attr.Value{
-                                        "ip_connectivity_enabled": types.BoolValue(true),
-                                        "allowed_listening_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "allowed_outbound_internet_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "allowed_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_ips_ports_effect": types.StringValue("alert"),
-                                        "denied_listening_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_outbound_internet_ports": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_outbound_ips": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "dns_enabled": types.BoolValue(true),
-                                        "allowed_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
-                                        "denied_dns_domains_effect": types.StringValue("alert"),
-                                    },
-                                ),
-                            ),
+                            Default: objectdefault.StaticValue(appEmbeddedNetworkingDefault),
     			        },
     			        "notes": schema.StringAttribute{
     			        	Optional:    true,

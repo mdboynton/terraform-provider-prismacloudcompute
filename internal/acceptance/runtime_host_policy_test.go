@@ -1,10 +1,8 @@
 package acceptance
 
 import (
-	//"context"
 	"os"
 	"testing"
-	//"fmt"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 
@@ -48,7 +46,6 @@ func TestAccHostRuntimePolicy_Base(t *testing.T) {
                         allowed_processes = ["/path/to/process", "/other/path"]
                         denied_processes = {
                             effect = "prevent"
-                            //effect = "asdf"
                             paths = ["/another/path", "/yet/another"]
                         }
                         crypto_miners = "alert"
@@ -212,5 +209,18 @@ func TestAccHostRuntimePolicy_Base(t *testing.T) {
                 ),
             },
         },
+    })
+}
+
+func TestAccHostRuntimePolicy_Effects(t *testing.T) {
+    testSteps, err := generateEffectsAttributesTestSteps("host", providerConfig)
+    if err != nil {
+        t.Error(err)
+    }
+
+    resource.UnitTest(t, resource.TestCase{
+        PreCheck: func() { testAccPreCheck(t) },
+        ProtoV6ProviderFactories: protoV6ProviderFactories(),
+        Steps: testSteps,
     })
 }
