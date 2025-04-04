@@ -30,19 +30,19 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.11.*"
-          terraform_wrapper: false
+          #- name: Setup Terraform
+          #  uses: hashicorp/setup-terraform@v3
+          #  with:
+          #    terraform_version: "1.11.*"
+          #    terraform_wrapper: false
       - name: Install dependencies
         run: go get .
       - name: Build
         run: go build -o terraform-provider-prismacloudcompute
-      - name: Create provider directory
-        run: mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/PaloAltoNetworks/prismacloudcompute/v0.0.0-dev/amd64
-      - name: Move binary
-        run: mv terraform-provider-prismacloudcompute $HOME/.terraform.d/plugins/registry.terraform.io/PaloAltoNetworks/prismacloudcompute/v0.0.0-dev
+        #- name: Create provider directory
+        #  run: mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/PaloAltoNetworks/prismacloudcompute/v0.0.0-dev/amd64
+        #- name: Move binary
+        #  run: mv terraform-provider-prismacloudcompute $HOME/.terraform.d/plugins/registry.terraform.io/PaloAltoNetworks/prismacloudcompute/v0.0.0-dev
       - run: go test -v ./...
         env:
           TF_ACC: '1'
