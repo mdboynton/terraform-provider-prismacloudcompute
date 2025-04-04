@@ -7,15 +7,10 @@ on:
     branches: [ "github-actions", "migrate-to-plugin-framework" ]
 
 env:
-  TF_CLOUD_ORGANIZATION: "example-org-6e17c7"
-  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "compute-tf-provider-testing"
   CONFIG_DIRECTORY: "./"
-  PRISMACLOUDCOMPUTE_CONSOLE_URL: "https://54.198.38.171:8083/"
-  PRISMACLOUDCOMPUTE_USERNAME: "admin"
+  PRISMACLOUDCOMPUTE_CONSOLE_URL: "${{ secrets.PCC_CONSOLE_URL }}"
+  PRISMACLOUDCOMPUTE_USERNAME: "${{ secrets.PCC_USERNAME }}"
   PRISMACLOUDCOMPUTE_PASSWORD: "${{ secrets.PCC_ADMIN_PASSWORD }}"
-  PRISMACLOUDCOMPUTE_INSECURE: "true"
-  PRISMACLOUDCOMPUTE_REQUEST_TIMEOUT: "60"
 
 permissions:
   contents: read
@@ -30,19 +25,10 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-          #- name: Setup Terraform
-          #  uses: hashicorp/setup-terraform@v3
-          #  with:
-          #    terraform_version: "1.11.*"
-          #    terraform_wrapper: false
       - name: Install dependencies
         run: go get .
       - name: Build
         run: go build -o terraform-provider-prismacloudcompute
-        #- name: Create provider directory
-        #  run: mkdir -p $HOME/.terraform.d/plugins/registry.terraform.io/PaloAltoNetworks/prismacloudcompute/v0.0.0-dev/amd64
-        #- name: Move binary
-        #  run: mv terraform-provider-prismacloudcompute $HOME/.terraform.d/plugins/registry.terraform.io/PaloAltoNetworks/prismacloudcompute/v0.0.0-dev
-      - run: go test -v ./...
+      - run: go test -v ./internal/acceptance/...
         env:
           TF_ACC: '1'
