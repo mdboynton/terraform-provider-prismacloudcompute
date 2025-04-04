@@ -75,7 +75,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Description: "Effect for detected files classified as malware by Prisma Cloud Advanced Threat Protection. Must one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["anti_malware.malware_from_advanced_threat_protection"]),
                                     },
     			        		},
     			        		"kubernetes_attacks": schema.StringAttribute{
@@ -83,7 +83,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected Kubernetes attacks. Must one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["anti_malware.kubernetes_attacks"]),
                                     },
                                     Default: stringdefault.StaticString("disable"),
     			        		},
@@ -92,7 +92,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected suspicious queries to cloud service provider APIs. Must one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["anti_malware.suspicious_cloud_provider_api_queries"]),
                                     },
                                     Default: stringdefault.StaticString("disable"),
     			        		},
@@ -100,7 +100,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:   true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["anti_malware.wild_fire_analysis"]),
                                     },
                                     Default:    stringdefault.StaticString("alert"),
     			        			Description: "Effect for detected files classified as malware by WildFire, Palo Alto Networks' malware analysis engine. Must be either \"disable\" or \"alert\". WildFire must be enabled for runtime protection under Manage > System > WildFire.",
@@ -183,7 +183,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected changes to binary files. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["file_system.changes_to_binaries"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -192,7 +192,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected encrypted/packed binaries. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["file_system.detection_of_encrypted_binaries"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -201,7 +201,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected changes to SSH or admin account configuration files. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["file_system.changes_to_ssh_admin_account_config_files"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -228,7 +228,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected file system paths from the deny list. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["file_system.denied_paths_effect"]),
                                     },
                                     Default: stringdefault.StaticString("disable"),
     			        		},
@@ -237,7 +237,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for all other file system paths not specified in the allow or deny lists. Must be one of \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["file_system.all_other_paths_effect"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -248,6 +248,9 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        	Optional: true,
                             Computed: true,
                             Description: "Configuration for process monitoring.",
+                            Validators: []validator.Object{
+                                validators.NoSharedValuesBetweenProcessLists(),
+                            },
     			        	Attributes: map[string]schema.Attribute{
                                 "enabled": schema.BoolAttribute{
                                     Optional: true,
@@ -281,7 +284,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected execution of binaries that do not belong to the original image. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["processes.processes_from_modified_binaries"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -290,7 +293,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected crypto miners. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["processes.crypto_miners"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -308,7 +311,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Computed:    true,
                                     Description: "Effect for detected lateral movement processes. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["processes.lateral_movement_processes"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -317,7 +320,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Description: "Effect for detected processes started with superuser ID. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["processes.processes_started_with_suid"]),
                                     },
                                     Default: stringdefault.StaticString("disable"),
     			        		},
@@ -330,7 +333,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        					Optional:    true,
                                             Description: "Effect for denied processes. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                             Validators: []validator.String{
-                                                validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                                validators.PolicyEffectIsValid(ValidEffects["container"]["processes.denied_processes.effect"]),
                                             },
     			        				},
                                         // TODO: rename to "processes"
@@ -349,7 +352,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["processes.all_other_processes_effect"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "Effect for all other processes not specified in the allow or deny lists. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
@@ -413,7 +416,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Description: "Effect for activity from modified binaries. Must be one of \"disable\", \"alert\" or \"block\".",
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.network_activity_from_modified_binaries"]),
                                     },
     			        		},
     			        		"port_scanning": schema.StringAttribute{
@@ -422,7 +425,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Description: "Effect for detected port scanning activity. Must be one of \"disable\", \"alert\" or \"block\".",
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.port_scanning"]),
                                     },
     			        		},
     			        		"raw_sockets": schema.StringAttribute{
@@ -432,6 +435,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
                                         validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.raw_sockets"]),
                                     },
     			        		},
     			        		"denied_listening_ports": schema.ListAttribute{
@@ -449,7 +453,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Description: "Effect for denied listening ports. Must be one of \"disable\", \"alert\" or \"block\".",
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.denied_listening_ports_effect"]),
                                     },
     			        		},
     			        		"denied_outbound_internet_ports": schema.ListAttribute{
@@ -467,7 +471,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Description: "Effect for denied outbound internet ports. Must be one of \"disable\", \"alert\" or \"block\".",
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.denied_outbound_internet_ports_effect"]),
                                     },
     			        		},
     			        		"denied_outbound_ips": schema.ListAttribute{
@@ -485,7 +489,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Description: "Effect for denied outbound IPs. Must be one of \"disable\", \"alert\" or \"block\".",
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.denied_outbound_ips_effect"]),
                                     },
     			        		},
     			        		"all_other_activity_effect": schema.StringAttribute{
@@ -494,7 +498,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Description: "Effect for all other network activity for IPs/ports not specified in the allow or deny lists. Must be either \"alert\" or \"block\".",
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.all_other_activity_effect"]),
                                     },
     			        		},
                                 "dns_enabled": schema.BoolAttribute{
@@ -527,7 +531,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
     			        			Description: "Effect for DNS domains specified in the deny list. Must be one of \"disable\", \"alert\", \"prevent\" or \"block\".",
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.denied_dns_domains_effect"]),
                                     },
     			        		},
     			        		"all_other_domains_effect": schema.StringAttribute{
@@ -536,7 +540,7 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Description: "Effect for all other network activity for domains not specified in the allow or deny lists. Must be one of \"alert\", \"prevent\" or \"block\".",
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent", "block"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["container"]["networking.all_other_domains_effect"]),
                                     },
     			        		},
     			        	},

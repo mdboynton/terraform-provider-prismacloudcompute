@@ -141,7 +141,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["file_system.denied_paths_effect"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
                                     Description: "Effect for detected file system paths from the deny list. Must be either \"alert\" or \"prevent\"",
@@ -180,7 +180,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
     			        			Computed:    true,
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"disable", "alert"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["file_system.wild_fire_analysis"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        			Description: "Effect for detected files classified as malware by WildFire, Palo Alto Networks' malware analysis engine. Must be either \"disable\" or \"alert\". WildFire must be enabled for runtime protection under Manage > System > WildFire.",
@@ -225,7 +225,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["processes.denied_processes_effect"]),
                                     },
                                     Description: "Effect for detected denied processes. Must be either \"alert\" or \"prevent\".",
     			        		},
@@ -304,7 +304,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["networking.denied_ips_ports_effect"]),
                                     },
     			        			Description: "Effect for denied IPs and ports. Must be either \"alert\" or \"prevent\".",
     			        		},
@@ -355,7 +355,7 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
                                     Computed:    true,
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["app_embedded"]["networking.denied_dns_domains_effect"]),
                                     },
     			        			Description: "Effect for DNS domains not specified in the allow list. Must be either \"alert\" or \"prevent\".",
     			        		},

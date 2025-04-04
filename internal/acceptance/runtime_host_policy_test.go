@@ -1,17 +1,12 @@
 package acceptance
 
 import (
-    "fmt"
-	//"context"
 	"os"
-	"regexp"
 	"testing"
-    "strings"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/provider"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/runtime"
 )
 
 
@@ -218,39 +213,9 @@ func TestAccHostRuntimePolicy_Base(t *testing.T) {
 }
 
 func TestAccHostRuntimePolicy_Effects(t *testing.T) {
-    var (
-        resourceConfig string
-        attributeAssignment string
-        testSteps []resource.TestStep = []resource.TestStep{}
-    )
-
-    for attribute, effects := range policy.ValidEffects["host"] {
-        splitAttribute := strings.Split(attribute, ".")
-        nestedAttribute := splitAttribute[0]
-        
-        if len(splitAttribute) == 2 {
-            attributeAssignment = fmt.Sprintf("%s = \"invalid\"", splitAttribute[1])
-        } else if len(splitAttribute) == 3 {
-            attributeAssignment = fmt.Sprintf("%s = { %s = \"invalid\" }", splitAttribute[1], splitAttribute[2])
-        }
-
-        resourceConfig = fmt.Sprintf(`
-            resource "prismacloudcompute_host_runtime_policy" "accTestBase" {
-                rules = [
-                    {
-                        name = "effectsTestRule"
-                        %s = {
-                            %s
-                        }
-                    }
-                ]
-            }
-        `, nestedAttribute, attributeAssignment)
-
-        testSteps = append(testSteps, resource.TestStep{
-            Config: providerConfig + resourceConfig,
-            ExpectError: regexp.MustCompile(fmt.Sprintf("Invalid value \"%s\" specified for attribute\nrules\\[0\\]\\.%s\\.\nMust be one of the following: %s", "invalid", attribute, strings.Join(effects[:], ", "))),
-        })
+    testSteps, err := generateEffectsAttributesTestSteps("host", providerConfig)
+    if err != nil {
+        t.Error(err)
     }
 
     resource.UnitTest(t, resource.TestCase{

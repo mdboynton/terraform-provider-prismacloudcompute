@@ -82,6 +82,9 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        	Optional: true,
                             Computed: true,
                             Description: "Configuration for file system monitoring.",
+                            Validators: []validator.Object{
+                                validators.ErrorIfBothListsConfigured("allowed_paths", "denied_paths"),
+                            },
     			        	Attributes: map[string]schema.Attribute{
                                 "enabled": schema.BoolAttribute{
                                     Optional: true,
@@ -89,7 +92,6 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Default: booldefault.StaticBool(true),
                                     Description: "Enables file system activity collection/monitoring.",
                                 },
-                                // TODO: allowed_paths cannot be set if denied_paths is set
     			        		"allowed_paths": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -99,7 +101,6 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     ),
     			        			Description: "List of file system paths which will not be monitored. Cannot be configured if denied_paths is configured.",
     			        		},
-                                // TODO: denied_paths cannot be set if allowed_paths is set
     			        		"denied_paths": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -114,7 +115,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        			Computed:    true,
                                     Description: "Effect for detected file system paths from the deny list. Must be either \"alert\" or \"prevent\"",
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["serverless"]["file_system.denied_paths_effect"]),
                                     },
                                     Default: stringdefault.StaticString("alert"),
     			        		},
@@ -125,6 +126,9 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        	Optional: true,
                             Computed: true,
                             Description: "Configuration for process monitoring.",
+                            Validators: []validator.Object{
+                                validators.ErrorIfAllowListNonEmptyWithBlock(),
+                            },
     			        	Attributes: map[string]schema.Attribute{
                                 "enabled": schema.BoolAttribute{
                                     Optional: true,
@@ -132,7 +136,6 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Default: booldefault.StaticBool(true),
                                     Description: "Enables process monitoring.",
                                 },
-                                // TODO: if block_all_processes_except_main is set to true, this cannot be set
     			        		"allowed_processes": schema.ListAttribute{
     			        			Optional:    true,
                                     Computed: true,
@@ -148,7 +151,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
                                     Description: "Effect for detected denied processes. Must be either \"alert\" or \"prevent\".",
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["serverless"]["processes.denied_processes_effect"]),
                                     },
     			        		},
     			        		"crypto_miners": schema.BoolAttribute{
@@ -160,7 +163,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        		"block_all_processes_except_main": schema.BoolAttribute{
     			        			Optional:    true,
     			        			Computed:    true,
-                                    Default: booldefault.StaticBool(true),
+                                    Default: booldefault.StaticBool(false),
                                     Description: "Enables blocking of all processes except the main process.",
     			        		},
     			        	},
@@ -222,7 +225,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        			Description: "Effect for denied IPs and ports. Must be either \"alert\" or \"prevent\".",
                                     Default: stringdefault.StaticString("disable"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["serverless"]["networking.denied_ips_ports_effect"]),
                                     },
     			        		},
                                 "dns_enabled": schema.BoolAttribute{
@@ -246,7 +249,7 @@ func (r *ServerlessRuntimePolicyResource) GetSchema(ctx context.Context) schema.
     			        			Description: "Effect for DNS domains not specified in the allow list. Must be either \"alert\" or \"prevent\".",
                                     Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
-                                        validators.PolicyEffectIsValid([]string{"alert", "prevent"}),
+                                        validators.PolicyEffectIsValid(ValidEffects["serverless"]["networking.denied_dns_domains_effect"]),
                                     },
     			        		},
     			        	},
