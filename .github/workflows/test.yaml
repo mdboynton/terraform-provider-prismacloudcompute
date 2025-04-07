@@ -25,7 +25,7 @@ jobs:
         uses: haythem/public-ip@v1.3
       - name: Update security group
         run: |
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} aws ec2 authorize-security-group-ingress --group-name ComputeTfProviderTestingSG --protocol tcp --port 8083 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} aws ec2 authorize-security-group-ingress --region ${{ secrets.AWS_REGION }} --group-name ${{ secrets.AWS_TEST_SG_NAME }} --protocol tcp --port 8083 --cidr ${{ steps.ip.outputs.ipv4 }}/32
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -40,5 +40,5 @@ jobs:
           TF_ACC: '1'
       - name: Revoke security group ingress 
         run: |
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} aws ec2 revoke-security-group-ingress --group-name ComputeTfProviderTestingSG --protocol tcp --port 8083 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} aws ec2 revoke-security-group-ingress --region ${{ secrets.AWS_REGION }} --group-name ${{ secrets.AWS_TEST_SG_NAME }} --protocol tcp --port 8083 --cidr ${{ steps.ip.outputs.ipv4 }}/32
         if: always()
