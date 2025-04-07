@@ -35,7 +35,8 @@ jobs:
             --group-id ${{ secrets.AWS_TEST_SG_ID }} \
             --protocol tcp \
             --port 8083 \
-            --cidr ${{ steps.ip.outputs.ipv4 }}/32
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32 \
+            > /dev/null 2>&1
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -54,5 +55,6 @@ jobs:
           --group-id ${{ secrets.AWS_TEST_SG_ID }} \
           --protocol tcp \
           --port 8083 \
-          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          --cidr ${{ steps.ip.outputs.ipv4 }}/32 \
+          > /dev/null 2>&1
         if: always()
