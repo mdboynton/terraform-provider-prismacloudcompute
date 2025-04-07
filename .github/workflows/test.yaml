@@ -20,12 +20,22 @@ jobs:
     name: Acceptance Tests
     runs-on: ubuntu-latest
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: Get public IP
         id: ip
         uses: haythem/public-ip@v1.3
       - name: Update security group
         run: |
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} aws ec2 authorize-security-group-ingress --region ${{ secrets.AWS_REGION }} --group-id ${{ secrets.AWS_TEST_SG_ID }} --protocol tcp --port 8083 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.AWS_TEST_SG_ID }} \
+            --protocol tcp \
+            --port 8083 \
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -40,5 +50,9 @@ jobs:
           TF_ACC: '1'
       - name: Revoke security group ingress 
         run: |
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} aws ec2 revoke-security-group-ingress --region ${{ secrets.AWS_REGION }} --group-id ${{ secrets.AWS_TEST_SG_ID }} --protocol tcp --port 8083 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          aws ec2 revoke-security-group-ingress \
+          --group-id ${{ secrets.AWS_TEST_SG_ID }} \
+          --protocol tcp \
+          --port 8083 \
+          --cidr ${{ steps.ip.outputs.ipv4 }}/32
         if: always()
