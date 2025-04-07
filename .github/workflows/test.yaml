@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [ "github-actions", "migrate-to-plugin-framework" ]
+    branches: [ "migrate-to-plugin-framework" ]
   pull_request:
-    branches: [ "github-actions", "migrate-to-plugin-framework" ]
+    branches: [ "migrate-to-plugin-framework" ]
 
 env:
   CONFIG_DIRECTORY: "./"
