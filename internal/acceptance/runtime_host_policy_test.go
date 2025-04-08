@@ -9,6 +9,8 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/provider"
 )
 
+// TODO: Defaults test
+// TODO: Rule ordering/sorting test
 
 func TestAccHostRuntimePolicy_EmptyRules(t *testing.T) {
     resourceConfig := `

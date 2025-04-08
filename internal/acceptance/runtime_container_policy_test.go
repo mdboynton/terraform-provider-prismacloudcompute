@@ -11,6 +11,9 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/provider"
 )
 
+// TODO: Defaults test
+// TODO: Rule ordering/sorting test
+
 const (
     resourceType string = "prismacloudcompute_container_runtime_policy"
 )
