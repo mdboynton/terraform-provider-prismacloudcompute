@@ -83,6 +83,18 @@ func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPICli
 
 func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
 	res := AuthResponse{}
+
+    if c == nil {
+        return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: client uninitialized")
+    }
+
+    if c.Config.Username == nil {
+        return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: nil username")
+    }
+
+    if c.Config.Password == nil {
+        return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: nil password")
+    }
     
 	if err := c.Request(http.MethodPost, "api/v1/authenticate", nil, AuthRequest{*c.Config.Username, *c.Config.Password}, &res); err != nil {
 		return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: %v", err)
