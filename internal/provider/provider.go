@@ -8,7 +8,6 @@ import (
     "os"
     "strings"
     "strconv"
-    "math"
     "net/url"
 
     "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
@@ -19,7 +18,6 @@ import (
     custom "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/custom"
     systemResource "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
     systemDataSource "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/data_sources/system"
-    //"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
     "github.com/hashicorp/terraform-plugin-framework/datasource"
     "github.com/hashicorp/terraform-plugin-framework/provider"
@@ -175,11 +173,20 @@ func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider
         return
     }
 
-    // Attempt to read in configuration values from file, using provider block or environment variables if not provided
-    // TODO: make it more obvious whats happening here
-    if config.ConfigFile != nil && !createConfigurationFromFile(ctx, &config, resp) {
-        overwriteConfigurationWithEnvVars(ctx, &config, resp)
+    // If a config file was specified in the provider configuration, attempt to parse and populate the values into the config object
+    if config.ConfigFile != nil {
+        overwriteApiClientConfigWithFile(ctx, &config, resp)
+        if resp.Diagnostics.HasError() {
+            return 
+        }
+    // Otherwise, attempt to parse and populate the values from the relevant environment variables, if they are defined
+    } else {
+        overwriteApiClientConfigurationWithEnvVars(ctx, &config, resp)
+        if resp.Diagnostics.HasError() {
+            return 
+        }
     }
+
    
 
     // TODO: fix this 
@@ -243,7 +250,7 @@ func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider
 //    return &config, nil
 //}
 
-func createConfigurationFromFile(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig, resp *provider.ConfigureResponse) bool {
+func overwriteApiClientConfigWithFile(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig, resp *provider.ConfigureResponse) {
     tflog.Debug(ctx, "Attempting to create provider config from file")
 
     // Open config file specified 
@@ -253,7 +260,7 @@ func createConfigurationFromFile(ctx context.Context, config *api.PrismaCloudCom
             "Provider Configuration File Error",
             fmt.Sprintf("Error configuring provider: Configuration file specified but could not be opened. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
         )
-        return false
+        return
     }
 
     defer configFile.Close()
@@ -265,7 +272,7 @@ func createConfigurationFromFile(ctx context.Context, config *api.PrismaCloudCom
             "Provider Configuration File Error",
             fmt.Sprintf("Error configuring provider: Failed to read configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
         )
-        return false
+        return
     }
 
     // Unmarshal config file contents
@@ -275,92 +282,113 @@ func createConfigurationFromFile(ctx context.Context, config *api.PrismaCloudCom
             "Provider Configuration File Error",
             fmt.Sprintf("Error configuring provider: Failed to unmarshal configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
         )
-        return false
     }
 
-    return true
+    return
 }
 
-func overwriteConfigurationWithEnvVars(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig, resp *provider.ConfigureResponse) {
-    envVarValues := make([]string, 0, 3)
+// Overwrite API client configuration values with values from environment variables if they're set, non-empty and valid
+func overwriteApiClientConfigurationWithEnvVars(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig, resp *provider.ConfigureResponse) {
+    var (
+        consoleUrl string
+        username string
+        password string
+        insecureString string
+        insecure bool
+        //requestTimeoutString string 
+        //requestTimeout int
+        usedValues []string = []string{}
+        emptyValues []string = []string{}
+        failedParsedValues []string = []string{}
+        err error
+    )
 
-    // Check each environment variable for provider, overwriting the provider configuration values from Terraform if set
+    // Check each environment variable for a non-empty/valid value.
+    // If a valid value is found, overwrite the relevent configuration value
 
-    // TODO: add checks to see if env vars are set
-    if config.ConsoleURL == nil {
-        consoleUrl := os.Getenv(ConsoleUrlEnvVar)
-        config.ConsoleURL = &consoleUrl
-        envVarValues = append(envVarValues, "console_url")
+    if (config.ConsoleURL == nil || *config.ConsoleURL == "") {
+        consoleUrl = os.Getenv(ConsoleUrlEnvVar)
+        if consoleUrl != "" {
+            config.ConsoleURL = &consoleUrl
+            usedValues = append(usedValues, "console_url")
+        } else {
+            emptyValues = append(usedValues, "console_url")
+        }
     }
 
     if config.Username == nil {
-        username := os.Getenv(UsernameEnvVar)
-        config.Username = &username
-        envVarValues = append(envVarValues, "username")
+        username = os.Getenv(UsernameEnvVar)
+        if username != "" {
+            config.Username = &username
+            usedValues = append(usedValues, "username")
+        } else {
+            emptyValues = append(emptyValues, "username")
+        }
     }
 
     if config.Password == nil {
-        password := os.Getenv(PasswordEnvVar)
-        config.Password = &password
-        envVarValues = append(envVarValues, "password")
+        password = os.Getenv(PasswordEnvVar)
+        if password != "" {
+            config.Password = &password
+            usedValues = append(usedValues, "password")
+        } else {
+            emptyValues = append(usedValues, "password")
+        }
     }
     
     if config.Insecure == nil {
-        insecureString := os.Getenv(InsecureEnvVar)
+        insecureString = os.Getenv(InsecureEnvVar)
         if insecureString != "" {
-            insecure, err := strconv.ParseBool(insecureString)
+            insecure, err = strconv.ParseBool(insecureString)
             if err != nil {
-                // TODO
-                //resp.Diagnostics.AddError(
-                //    "Provider Configuration Error",
-                //    fmt.Sprintf("Error configuring provider: Invalid value specified for \"request_timeout\" in configuration file. Value must be an integer between 1 and %d", math.MaxInt),
-                //)
-                return
+                failedParsedValues = append(failedParsedValues, "insecure")
+            } else {
+                config.Insecure = &insecure
+                usedValues = append(usedValues, "insecure")
             }
-            config.Insecure = &insecure
-            envVarValues = append(envVarValues, "insecure")
+        } else {
+            emptyValues = append(emptyValues, "insecure")
         }
     }
 
-    if config.RequestTimeout == nil {
-        requestTimeoutStr := os.Getenv(RequestTimeoutEnvVar)
-        if requestTimeoutStr != "" {
-            requestTimeout, err := strconv.Atoi(requestTimeoutStr)
-            if err != nil {
-                resp.Diagnostics.AddError(
-                    "Provider Configuration Error",
-                    fmt.Sprintf("Error configuring provider: Invalid value specified for \"request_timeout\" in configuration file. Value must be an integer between 1 and %d", math.MaxInt),
-                )
-            }
-            config.RequestTimeout = &requestTimeout
-            envVarValues = append(envVarValues, "password")
+    // request_timeout is optional, setting it to 60 seconds by default
+
+    //if config.RequestTimeout == nil {
+    //    requestTimeoutString = os.Getenv(RequestTimeoutEnvVar)
+    //    if requestTimeoutString != "" {
+    //        requestTimeout, err = strconv.Atoi(requestTimeoutString)
+    //        if err != nil {
+    //            failedParsedValues = append(failedParsedValues, "request_timeout")
+    //        } else {
+    //            config.RequestTimeout = &requestTimeout
+    //            usedValues = append(usedValues, "request_timeout")
+    //        }
+    //    } else {
+    //        emptyValues = append(emptyValues, "request_timeout")
+    //    }
+    //}
+
+    if (len(failedParsedValues) > 0 || len(emptyValues) > 0) {
+        errorMessage := "Error occured while attempting to populate provider configuration with environment variables for values not found in provider block/config file."
+        
+        if len(emptyValues) > 0 {
+            errorMessage += fmt.Sprintf("\nThe following environment variables are not set or are set to empty values: %s", strings.Join(emptyValues, ", "))
         }
-    }
 
-    if len(envVarValues) > 0 {
-        tflog.Debug(ctx, fmt.Sprintf("Using environment variable values for configuration fields: %s", strings.Join(envVarValues, ", ")))
-    }
+        if len(failedParsedValues) > 0 {
+            errorMessage += fmt.Sprintf("\nThe following environment variables contained invalid values: %s", strings.Join(failedParsedValues, ", "))
+        }
 
-    // Raise errors if required values are not configured in configuration file, provider block or environment variables
-    if *config.ConsoleURL == "" {
         resp.Diagnostics.AddError(
             "Provider Configuration Error",
-            "Error configuring provider: No console URL value supplied. Specify the console URL value in a configuration file, the provider block or in the PRISMACLOUDCOMPUTE_CONSOLE_URL environment variable. Refer to provider documentation for configuration options and examples.",
+            errorMessage,
         )
+
+        return
     }
 
-    if *config.Username == "" {
-        resp.Diagnostics.AddError(
-            "Provider Configuration Error",
-            "Error configuring provider: No username value supplied. Specify the username value in a configuration file, the provider block or in the PRISMACLOUDCOMPUTE_USERNAME environment variable. Refer to provider documentation for configuration options and examples.",
-        )
-    }
-
-    if *config.Password == "" {
-        resp.Diagnostics.AddError(
-            "Provider Configuration Error",
-            "Error configuring provider: No password value supplied. Specify the password value in a configuration file, the provider block or in the PRISMACLOUDCOMPUTE_PASSWORD environment variable. Refer to provider documentation for configuration options and examples.",
-        )
+    if len(usedValues) > 0 {
+        tflog.Debug(ctx, fmt.Sprintf("Using environment variable values for configuration fields: %s", strings.Join(usedValues, ", ")))
     }
 }
 

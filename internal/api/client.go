@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"time"
+    "math"
 )
 
 type PrismaCloudComputeAPIClientConfig struct {
@@ -49,7 +50,9 @@ func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPICli
     if config.RequestTimeout == nil {
         defaultTimeout := 60
         config.RequestTimeout = &defaultTimeout
-    } 
+    } else if *config.RequestTimeout > math.MaxInt {
+        return nil, fmt.Errorf("Error occured while creating API client: Invalid value supplied for request_timeout. Value must be an integer between 1 and %d.", math.MaxInt)
+    }
 
     requestTimeout, err := time.ParseDuration(fmt.Sprintf("%ds", *config.RequestTimeout))
     if err != nil {
