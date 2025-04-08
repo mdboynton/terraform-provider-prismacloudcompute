@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
-    "strconv"
 
 	//"cmp"
 	"time"
@@ -18,7 +18,9 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	systemAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	//"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -48,34 +51,31 @@ import (
 
 func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted string, policyContext string, metaType string) (schema.Schema, diag.Diagnostics) {
     var diags diag.Diagnostics
+    // TODO: dont need to return diags here
 
-    return schema.Schema{
+    schema := schema.Schema{
         MarkdownDescription: "TODO",
         Attributes: map[string]schema.Attribute{
             "id": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional:            true,
                 Computed:            true,
-                //Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceHost),
                 Default: stringdefault.StaticString(policyType),
             },
             "policy_context": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Computed:            true,
-                //Default: stringdefault.StaticString(policyAPI.PolicyContextVulnerabilityDeployedImage),
                 Default: stringdefault.StaticString(policyContext),
             },
             "policy_type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Optional:            true,
                 Computed:            true,
-                //Default: stringdefault.StaticString(policyAPI.PolicyTypeComplianceHost),
                 Default: stringdefault.StaticString(policyType),
             },
             "type": schema.StringAttribute{
                 MarkdownDescription: "TODO",
                 Computed:            true,
-                //Default: stringdefault.StaticString(policyAPI.TypeVulnerability),
                 Default: stringdefault.StaticString(metaType),
             },
             "rules": schema.ListNestedAttribute{
@@ -83,14 +83,11 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
                 Optional:            true,
                 Computed:            true,
                 PlanModifiers: []planmodifier.List{
-                    //planmodifiers.UseIndexForUnknownOrder(policyAPI.PolicyTypeComplianceHostFormatted),
                     //planmodifiers.SetNullByModuleType(metaType),
                     planmodifiers.UseIndexForUnknownOrder(policyTypeFormatted),
                     //planmodifiers.GenerateConditionFromEffect(policyType, complianceVulnerabilities),
                 },
                 Validators: []validator.List{
-                    //validators.PolicyRuleNameIsUnique(policyAPI.PolicyTypeComplianceHostFormatted),
-                    //validators.PolicyRuleOrderIsPositiveNonZero(policyAPI.PolicyTypeComplianceHostFormatted),
                     validators.PolicyRuleNameIsUnique(policyTypeFormatted),
                     validators.PolicyRuleOrderIsPositiveNonZero(policyTypeFormatted),
                 },
@@ -302,12 +299,10 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
                             MarkdownDescription: "TODO",
                             Optional:            true,
                             Computed:            true,
+                            Default:             stringdefault.StaticString("alert"),
                             Validators: []validator.String{
                                 stringvalidator.OneOf("ignore", "alert", "block", "alert, block"),
                             },
-                            //PlanModifiers: []planmodifier.String{
-                            //    planmodifiers.UseDefaultForUnknownEffect(),
-                            //},
                         },
                         "exclude_base_image_vulns": schema.BoolAttribute{
                             MarkdownDescription: "TODO",
@@ -497,7 +492,9 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
                 },
             },
         },
-    }, diags
+    }
+
+    return schema, diags
 }
 
 func GetPolicyResourceTypeName(policyType string) (string, error) {
@@ -579,7 +576,7 @@ func PolicySchemaToTerraform(ctx context.Context, plan *models.PolicyResourceMod
         Type:          plan.Type.ValueString(),
     }
 
-    tfPolicy.SortRules(ctx, plan.Rules)
+    models.SortPolicyRules(ctx, tfPolicy.PolicyType, &tfPolicy, plan.GetRuleOrderMap(), true)
 
     util.DLog(ctx, "Finishing PolicySchemaToTerraform execution")
 
@@ -708,7 +705,7 @@ func PolicyRulesSchemaToTerraform(ctx context.Context, settings policyAPI.Settin
             Modified:                       time.Now().Format("2006-01-02T15:04:05.000Z"),
             Name:                           schemaRule.Name.ValueString(),
             Notes:                          schemaRule.Notes.ValueString(),
-            Order:                          int(schemaRule.Order.ValueInt32()),
+            //Order:                          int(schemaRule.Order.ValueInt32()),
             OnlyFixed:                      schemaRule.OnlyFixed.ValueBool(),
             PkgTypesThresholds:             pkgTypesThresholds,
             ReportAllPassedAndFailedChecks: schemaRule.ReportAllPassedAndFailedChecks.ValueBool(),
@@ -754,7 +751,12 @@ func PolicyTerraformToSchema(ctx context.Context, policy policyAPI.Policy, plan 
         Rules:         &rules,
     }
 
-    schema.SortRules(ctx, plan.Rules)
+    ruleOrderMap := make(map[string]int)
+    for index, planRule := range *plan.Rules {
+        ruleOrderMap[planRule.Name.ValueString()] = index
+    }
+
+    models.SortPolicyRules(ctx, policy.PolicyType, &schema, plan.GetRuleOrderMap(), false)
 
     util.DLog(ctx, "Finishing PolicyTerraformToSchema execution")
 
@@ -1595,11 +1597,19 @@ func validateRuleCollectionsByPolicyType(ctx context.Context, policyType string,
     return diags
 }
 
-func PortRangesToTerraform(portRangeStrings []string) ([]policyAPI.PortRange, diag.Diagnostics) {
-    var diags diag.Diagnostics
+func PortRangesToTerraform(ctx context.Context, portRanges basetypes.ListValue) ([]policyAPI.PortRange, diag.Diagnostics) {
+    var (
+        diags diag.Diagnostics
+        values []string = []string{}
+        tfPortRanges []policyAPI.PortRange = []policyAPI.PortRange{}
+    )
 
-    portRanges := []policyAPI.PortRange{}
-    for _, port := range portRangeStrings {
+    diags.Append(util.ListToStringSlice(ctx, &portRanges, &values)...)
+    if diags.HasError() {
+        return tfPortRanges, diags
+    }
+
+    for _, port := range values {
         if strings.ContainsAny(port, "-") {
             splitPort := strings.Split(port, "-")
 
@@ -1621,7 +1631,7 @@ func PortRangesToTerraform(portRangeStrings []string) ([]policyAPI.PortRange, di
                 return []policyAPI.PortRange{}, diags
             }
 
-            portRanges = append(portRanges, policyAPI.PortRange{
+            tfPortRanges = append(tfPortRanges, policyAPI.PortRange{
                 Start: start,
                 End: end,
             })
@@ -1635,7 +1645,7 @@ func PortRangesToTerraform(portRangeStrings []string) ([]policyAPI.PortRange, di
                 return []policyAPI.PortRange{}, diags
             }
 
-            portRanges = append(portRanges, policyAPI.PortRange{
+            tfPortRanges = append(tfPortRanges, policyAPI.PortRange{
                 Start: portInt,
                 End: portInt,
                 Deny: false,
@@ -1643,7 +1653,7 @@ func PortRangesToTerraform(portRangeStrings []string) ([]policyAPI.PortRange, di
         }
     }
 
-    return portRanges, diags
+    return tfPortRanges, diags
 }
 
 func PortRangeToStringSlice(portRanges []policyAPI.PortRange) []string {

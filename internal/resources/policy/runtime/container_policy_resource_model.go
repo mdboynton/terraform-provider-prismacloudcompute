@@ -388,6 +388,9 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed: true,
     			        			Description: "List of listening ports which will not generate alerts or be blocked.",
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),
@@ -397,6 +400,9 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed: true,
     			        			Description: "List of outbound internet ports which will not generate alerts or be blocked.",
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),
@@ -443,6 +449,9 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed: true,
                                     Description: "List of listening ports for which access will be alerted on or blocked.",
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),
@@ -461,6 +470,9 @@ func (r *ContainerRuntimePolicyResource) GetSchema(ctx context.Context) schema.S
                                     Computed: true,
                                     Description: "List of outbound internet ports for which access will be alerted on or blocked.",
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),

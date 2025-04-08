@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
+
 	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
 
@@ -14,8 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -60,8 +63,12 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        	Attributes: map[string]schema.Attribute{
     			        		"allowed_processes": schema.ListAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
     			        			ElementType: types.StringType,
     			        			Description: "Processes marked as safe to use based on the process name or full path of the binary from which the process is executed. Processes added to this list will not be alerted on or prevented by any of the malware runtime capabilities.",
+                                    Default: listdefault.StaticValue(
+                                        types.ListValueMust(types.StringType, []attr.Value{}),
+                                    ),
     			        		},
     			        		"crypto_miners": schema.StringAttribute{
     			        			Optional:    true,
@@ -74,21 +81,29 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		},
     			        		"denied_processes": schema.SingleNestedAttribute{
     			        			Optional:    true,
+                                    Computed:    true,
     			        			Description: "Processes to alert on or prevent execution of based on the process name or full path of the binary from which the process is executed.",
     			        			Attributes: map[string]schema.Attribute{
     			        				"effect": schema.StringAttribute{
     			        					Optional:    true,
+                                            Computed:   true,
     			        					Description: "Effect for denied processes. Must be either \"alert\" or \"prevent\".",
+                                            Default: stringdefault.StaticString("alert"),
                                             Validators: []validator.String{
                                                 validators.PolicyEffectIsValid(ValidEffects["host"]["anti_malware.denied_processes.effect"]),
                                             },
     			        				},
     			        				"paths": schema.ListAttribute{
     			        					Optional:    true,
+                                            Computed: true,
     			        					ElementType: types.StringType,
     			        			        Description: "List of names or full paths of denied processes.",
+                                            Default: listdefault.StaticValue(
+                                                types.ListValueMust(types.StringType, []attr.Value{}),
+                                            ),
     			        				},
     			        			},
+                                    Default: objectdefault.StaticValue(hostAntiMalwareDeniedProcessesDefault),
     			        		},
     			        		"encrypted_binaries": schema.StringAttribute{
     			        			Optional:   true,
@@ -201,8 +216,13 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        },
     			        "collections": schema.SetAttribute{
     			        	Optional:    true,
+                            Computed: true,
     			        	ElementType: types.StringType,
                             Description: "List of collection names. Used to scope the rule. Note that in order for a collection to be attached to this type of policy rule, it must contain only the wildcard value (\"*\") for all of the following resource types: Containers, Images, App IDs, Functions, Namespaces and Clusters.",
+                            Default: setdefault.StaticValue(
+                                types.SetValueMust(types.StringType, []attr.Value{types.StringValue("All")}),
+
+                            ),
     			        },
     			        "custom_rules": schema.ListNestedAttribute{
                             Optional: true,
@@ -298,48 +318,68 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        },
     			        "activities": schema.SingleNestedAttribute{
     			        	Optional: true,
+                            Computed: true,
+                            // TODO: description
+                            Description: "",
     			        	Attributes: map[string]schema.Attribute{
                                 "host_activity_monitoring": schema.SingleNestedAttribute{
                                     Optional: true,
+                                    Computed: true,
                                     Attributes: map[string]schema.Attribute{
                                         "enabled": schema.BoolAttribute{
                                             Optional: true,
+                                            Computed: true,
                                             Description: "Enables host activity collection/monitoring.",
+                                            Default: booldefault.StaticBool(true),
                                         },
                                         "docker_commands": schema.SingleNestedAttribute{
                                             Optional: true,
+                                            Computed: true,
                                             Attributes: map[string]schema.Attribute{
                                                 "enabled": schema.BoolAttribute{
                                                     Optional: true,
+                                                    Computed: true,
                                                     Description: "Enables monitoring of docker commands.",
+                                                    Default: booldefault.StaticBool(false),
                                                 },
                                                 "include_read_only_events": schema.BoolAttribute{
                                                     Optional: true,
+                                                    Computed: true,
                                                     Description: "Enables monitoring of read-only Docker events.",
+                                                    Default: booldefault.StaticBool(false),
                                                 },
                                             },
+                                            Default: objectdefault.StaticValue(hostActivityMonitoringDockerCommandsDefault),
                                         },
                                         "sshd_sessions": schema.BoolAttribute{
                                             Optional: true,
+                                            Computed: true,
                                             Description: "Enables monitoring of activity data from new sessions spawned by sshd.",
+                                            Default: booldefault.StaticBool(false),
                                         },
                                         "sudo_commands": schema.BoolAttribute{
                                             Optional: true,
+                                            Computed: true,
                                             Description: "Enables monitoring of activity data from commands executed with sudo or su.",
+                                            Default: booldefault.StaticBool(false),
                                         },
                                         "log_background_apps": schema.BoolAttribute{
                                             Optional: true,
+                                            Computed: true,
                                             Description: "Enables monitoring of activity data from background applications. Note that this will result in additional performance overhead and significant data being logged.",
+                                            Default: booldefault.StaticBool(false),
                                         },
                                     },
+                                    Default: objectdefault.StaticValue(hostActivityMonitoringDefault),
                                 },
                                 "track_ssh_events": schema.BoolAttribute{
                                     Optional: true,
-                                    Computed:   true,
-                                    Default: booldefault.StaticBool(false),
+                                    Computed: true,
+                                    Default: booldefault.StaticBool(true),
                                     Description: "Enables monitoring of SSH events.",
                                 },
     			        	},
+                            Default: objectdefault.StaticValue(hostActivitiesDefault),
     			        },
     			        "log_inspection_rules": schema.ListAttribute{
     			        	Optional:    true,
@@ -375,11 +415,17 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        	Attributes: map[string]schema.Attribute{
     			        		"allowed_outbound_ips": schema.ListAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
     			        			ElementType: types.StringType,
     			        			Description: "List of allowed outbound IPs which will not generate alerts.",
+                                    Default: listdefault.StaticValue(
+                                        types.ListValueMust(types.StringType, []attr.Value{}),
+                                    ),
     			        		},
     			        		"suspicious_ips_custom_feed": schema.StringAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
+                                    Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
                                         validators.PolicyEffectIsValid(ValidEffects["host"]["networking.suspicious_ips_custom_feed"]),
                                     },
@@ -387,21 +433,41 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		},
     			        		"denied_listening_ports": schema.ListAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
     			        			ElementType: types.StringType,
     			        			Description: "List of listening ports for which accessing will generate alerts.",
+                                    Default: listdefault.StaticValue(
+                                        types.ListValueMust(types.StringType, []attr.Value{}),
+                                    ),
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
     			        		},
     			        		"denied_outbound_ips": schema.ListAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
     			        			ElementType: types.StringType,
     			        			Description: "List of outbound IPs for which accessing will generate alerts.",
+                                    Default: listdefault.StaticValue(
+                                        types.ListValueMust(types.StringType, []attr.Value{}),
+                                    ),
     			        		},
     			        		"denied_outbound_ports": schema.ListAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
     			        			ElementType: types.StringType,
     			        			Description: "List of outbound ports for which accessing will generate alerts.",
+                                    Default: listdefault.StaticValue(
+                                        types.ListValueMust(types.StringType, []attr.Value{}),
+                                    ),
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
     			        		},
     			        		"denied_ips_ports_effect": schema.StringAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
+                                    Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
                                         validators.PolicyEffectIsValid(ValidEffects["host"]["networking.denied_ips_ports_effect"]),
                                     },
@@ -409,6 +475,8 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		},
     			        		"suspicious_ips_advanced_threat_protection_effect": schema.StringAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
+                                    Default: stringdefault.StaticString("alert"),
                                     Validators: []validator.String{
                                         validators.PolicyEffectIsValid(ValidEffects["host"]["networking.suspicious_ips_advanced_threat_protection_effect"]),
                                     },
@@ -416,14 +484,22 @@ func (r *HostRuntimePolicyResource) GetSchema(ctx context.Context) schema.Schema
     			        		},
     			        		"allowed_dns_domains": schema.ListAttribute{
     			        			Optional:    true,
+                                    Computed: true,
     			        			ElementType: types.StringType,
     			        			Description: "List of DNS domains which will not generate alerts.",
+                                    Default: listdefault.StaticValue(
+                                        types.ListValueMust(types.StringType, []attr.Value{}),
+                                    ),
                                     // TODO: validation (no duplicates)
     			        		},
     			        		"denied_dns_domains": schema.ListAttribute{
     			        			Optional:    true,
+                                    Computed:   true,
     			        			ElementType: types.StringType,
                                     Description: "List of DNS domains for which access will generate an alert or be prevented.",
+                                    Default: listdefault.StaticValue(
+                                        types.ListValueMust(types.StringType, []attr.Value{}),
+                                    ),
                                     // TODO: validation (no duplicates)
     			        		},
     			        		"denied_dns_domains_effect": schema.StringAttribute{

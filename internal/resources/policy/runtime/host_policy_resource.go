@@ -12,7 +12,7 @@ import (
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	ruleAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/rule"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -278,7 +278,7 @@ func RuntimePolicySchemaToTerraform(ctx context.Context, plan *models.RuntimeHos
         Rules:      &rules,
     }
 
-    tfPolicy.SortRules(ctx, plan.Rules)
+    //tfPolicy.SortRules(ctx, plan.Rules)
 
     util.DLog(ctx, "Finishing RuntimePolicySchemaToTerraform execution")
 
@@ -336,7 +336,7 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
             return rules, diags
         }
 
-        customRules, diags := customRulesToTerraform(ctx, schemaRule.CustomRules, customRuleIdMap)
+        customRules, diags := models.CustomRuntimeRulesToTerraform(ctx, schemaRule.CustomRules, customRuleIdMap)
         if diags.HasError() {
             return rules, diags
         }
@@ -420,7 +420,7 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
             planRule models.RuntimeHostPolicyRuleResourceModel
             antiMalware *models.RuntimeHostPolicyAntiMalwareResourceModel
             skipSshTracking bool
-            customRules *[]models.RuntimeHostPolicyCustomRuleResourceModel
+            customRules *[]models.RuntimePolicyCustomRuleResourceModel
             activities *models.RuntimeHostPolicyActivitiesResourceModel
             fileIntegrityRules *[]models.RuntimeHostPolicyFileIntegrityRuleResourceModel
             logInspectionRules *[]models.RuntimeHostPolicyLogInspectionRuleResourceModel
@@ -506,7 +506,7 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
         if planRule.CustomRules == nil {
             customRules = nil
         } else {
-            customRulesValue, diags := customRulesToSchema(ctx, rule.CustomRules, customRuleIdMap)
+            customRulesValue, diags := models.CustomRuntimeRulesToSchema(ctx, rule.CustomRules, customRuleIdMap)
             if diags.HasError() {
                 return []models.RuntimeHostPolicyRuleResourceModel{}, diags
             }
@@ -1037,61 +1037,61 @@ func activitiesToSchema(ctx context.Context, tfActivities policyAPI.Forensic, sk
     }, diags
 }
 
-func customRulesToTerraform(ctx context.Context, schemaCustomRules *[]models.RuntimeHostPolicyCustomRuleResourceModel, customRuleIdMap map[string]int) ([]policyAPI.CustomRule, diag.Diagnostics) {
-    // TODO: find a way to have the error message denote which rule has the error
-
-    var diags diag.Diagnostics
-
-    if schemaCustomRules == nil {
-        return []policyAPI.CustomRule{}, diags
-    }
-
-    tfCustomRules := []policyAPI.CustomRule{}
-
-    for _, schemaCustomRule := range *schemaCustomRules {
-        customRuleId, ok := customRuleIdMap[schemaCustomRule.Name.ValueString()]
-        if !ok {
-            diags.AddError(
-                "Value Conversion Error",
-                fmt.Sprintf("No matching custom rule found for specified rule name \"%s\"", schemaCustomRule.Name.ValueString()),
-            )
-
-            return []policyAPI.CustomRule{}, diags
-        }
-
-        tfCustomRules = append(tfCustomRules, policyAPI.CustomRule{
-            ID: customRuleId,
-            Action: schemaCustomRule.LogAs.ValueString(),
-            Effect: schemaCustomRule.Effect.ValueString(),
-        })
-    }
-
-    return tfCustomRules, diags
-}
-
-func customRulesToSchema(ctx context.Context, tfCustomRules []policyAPI.CustomRule, customRuleIdMap map[int]string) ([]models.RuntimeHostPolicyCustomRuleResourceModel, diag.Diagnostics) {
-    var diags diag.Diagnostics
-
-    schemaCustomRules := []models.RuntimeHostPolicyCustomRuleResourceModel{}
-
-    for _, tfCustomRule := range tfCustomRules {
-        customRuleName, ok := customRuleIdMap[tfCustomRule.ID]
-        if !ok {
-            diags.AddError(
-                "Value Conversion Error",
-                fmt.Sprintf("No matching custom rule found for specified rule ID %d", tfCustomRule.ID), 
-            )
-
-            return []models.RuntimeHostPolicyCustomRuleResourceModel{}, diags
-        }
-
-        schemaCustomRules = append(schemaCustomRules, models.RuntimeHostPolicyCustomRuleResourceModel{
-            ID: types.Int64Value(int64(tfCustomRule.ID)),
-            Name: types.StringValue(customRuleName),
-            LogAs: types.StringValue(tfCustomRule.Action),
-            Effect: types.StringValue(tfCustomRule.Effect),
-        })
-    }
-
-    return schemaCustomRules, diags
-}
+//func customRulesToTerraform(ctx context.Context, schemaCustomRules *[]models.RuntimeHostPolicyCustomRuleResourceModel, customRuleIdMap map[string]int) ([]policyAPI.CustomRule, diag.Diagnostics) {
+//    // TODO: find a way to have the error message denote which rule has the error
+//
+//    var diags diag.Diagnostics
+//
+//    if schemaCustomRules == nil {
+//        return []policyAPI.CustomRule{}, diags
+//    }
+//
+//    tfCustomRules := []policyAPI.CustomRule{}
+//
+//    for _, schemaCustomRule := range *schemaCustomRules {
+//        customRuleId, ok := customRuleIdMap[schemaCustomRule.Name.ValueString()]
+//        if !ok {
+//            diags.AddError(
+//                "Value Conversion Error",
+//                fmt.Sprintf("No matching custom rule found for specified rule name \"%s\"", schemaCustomRule.Name.ValueString()),
+//            )
+//
+//            return []policyAPI.CustomRule{}, diags
+//        }
+//
+//        tfCustomRules = append(tfCustomRules, policyAPI.CustomRule{
+//            ID: customRuleId,
+//            Action: schemaCustomRule.LogAs.ValueString(),
+//            Effect: schemaCustomRule.Effect.ValueString(),
+//        })
+//    }
+//
+//    return tfCustomRules, diags
+//}
+//
+//func customRulesToSchema(ctx context.Context, tfCustomRules []policyAPI.CustomRule, customRuleIdMap map[int]string) ([]models.RuntimeHostPolicyCustomRuleResourceModel, diag.Diagnostics) {
+//    var diags diag.Diagnostics
+//
+//    schemaCustomRules := []models.RuntimeHostPolicyCustomRuleResourceModel{}
+//
+//    for _, tfCustomRule := range tfCustomRules {
+//        customRuleName, ok := customRuleIdMap[tfCustomRule.ID]
+//        if !ok {
+//            diags.AddError(
+//                "Value Conversion Error",
+//                fmt.Sprintf("No matching custom rule found for specified rule ID %d", tfCustomRule.ID), 
+//            )
+//
+//            return []models.RuntimeHostPolicyCustomRuleResourceModel{}, diags
+//        }
+//
+//        schemaCustomRules = append(schemaCustomRules, models.RuntimeHostPolicyCustomRuleResourceModel{
+//            ID: types.Int64Value(int64(tfCustomRule.ID)),
+//            Name: types.StringValue(customRuleName),
+//            LogAs: types.StringValue(tfCustomRule.Action),
+//            Effect: types.StringValue(tfCustomRule.Effect),
+//        })
+//    }
+//
+//    return schemaCustomRules, diags
+//}

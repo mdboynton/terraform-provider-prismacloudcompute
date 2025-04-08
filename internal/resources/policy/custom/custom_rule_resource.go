@@ -6,7 +6,7 @@ import (
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	ruleAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/rule"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"

@@ -11,7 +11,7 @@ import (
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	ruleAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/rule"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -268,7 +268,7 @@ func ServerlessRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.
         LearningDisabled: false, 
     }
 
-    tfPolicy.SortRules(ctx, plan.Rules)
+    //tfPolicy.SortRules(ctx, plan.Rules)
 
     util.DLog(ctx, "Finishing ServerlessRuntimePolicySchemaToTerraform execution")
 
@@ -541,8 +541,8 @@ func serverlessRuntimeProcessesToSchema(ctx context.Context, tfProcesses policyA
 func serverlessRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworking *models.RuntimeServerlessPolicyNetworkingResourceModel) (policyAPI.RuntimeServerlessNetwork, policyAPI.RuntimeServerlessDns, diag.Diagnostics) {
     var (
         diags diag.Diagnostics
-        allowedListeningPorts []string
-        allowedOutboundInternetPorts []string
+        //allowedListeningPorts []string
+        //allowedOutboundInternetPorts []string
         allowedOutboundIPs []string
         allowedDnsDomains []string 
     )
@@ -551,33 +551,35 @@ func serverlessRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworkin
         return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
     }
 
-    if schemaNetworking.AllowedListeningPorts.IsNull() {
-        allowedListeningPorts = []string{}
-    } else {
-        diags = schemaNetworking.AllowedListeningPorts.ElementsAs(ctx, &allowedListeningPorts, false)
-        if diags.HasError() {
-            return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
-        }
-    }
+    allowedListeningPorts, diags := models.PortRangesToTerraform(ctx, schemaNetworking.AllowedListeningPorts)
+    //if schemaNetworking.AllowedListeningPorts.IsNull() {
+    //    allowedListeningPorts = []string{}
+    //} else {
+    //    diags = schemaNetworking.AllowedListeningPorts.ElementsAs(ctx, &allowedListeningPorts, false)
+    //    if diags.HasError() {
+    //        return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
+    //    }
+    //}
 
-    allowedListeningPortRanges, diags := policy.PortRangesToTerraform(allowedListeningPorts)
-    if diags.HasError() {
-        return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
-    }
+    //allowedListeningPortRanges, diags := policy.PortRangesToTerraform(allowedListeningPorts)
+    //if diags.HasError() {
+    //    return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
+    //}
 
-    if schemaNetworking.AllowedOutboundInternetPorts.IsNull() {
-        allowedOutboundInternetPorts = []string{}
-    } else {
-        diags = schemaNetworking.AllowedOutboundInternetPorts.ElementsAs(ctx, &allowedOutboundInternetPorts, false)
-        if diags.HasError() {
-            return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
-        }
-    }
+    allowedOutboundInternetPorts, diags := models.PortRangesToTerraform(ctx, schemaNetworking.AllowedOutboundInternetPorts)
+    //if schemaNetworking.AllowedOutboundInternetPorts.IsNull() {
+    //    allowedOutboundInternetPorts = []string{}
+    //} else {
+    //    diags = schemaNetworking.AllowedOutboundInternetPorts.ElementsAs(ctx, &allowedOutboundInternetPorts, false)
+    //    if diags.HasError() {
+    //        return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
+    //    }
+    //}
 
-    allowedOutboundInternetPortRanges, diags := policy.PortRangesToTerraform(allowedOutboundInternetPorts)
-    if diags.HasError() {
-        return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
-    }
+    //allowedOutboundInternetPortRanges, diags := policy.PortRangesToTerraform(allowedOutboundInternetPorts)
+    //if diags.HasError() {
+    //    return policyAPI.RuntimeServerlessNetwork{}, policyAPI.RuntimeServerlessDns{}, diags
+    //}
 
     if schemaNetworking.AllowedOutboundIPs.IsNull() {
         allowedOutboundIPs = []string{}
@@ -616,8 +618,8 @@ func serverlessRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworkin
 
     network := policyAPI.RuntimeServerlessNetwork{
         Effect: networkEffect,
-        WhitelistListeningPorts: allowedListeningPortRanges,
-        WhitelistOutboundPorts: allowedOutboundInternetPortRanges,
+        WhitelistListeningPorts: allowedListeningPorts,
+        WhitelistOutboundPorts: allowedOutboundInternetPorts,
         WhitelistIps: allowedOutboundIPs,
     }
 

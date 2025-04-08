@@ -1,17 +1,12 @@
 package policy
 
 import (
-	"context"
 	"fmt"
-    "errors"
 	"net/http"
-	"sort"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/system"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 )
 
 const (
@@ -78,8 +73,8 @@ var (
     TrustedImagesEndpoint = fmt.Sprintf("%s/trust/data", BaseEndpoint)
     CustomComplianceChecksEndpoint = fmt.Sprintf("%s/custom-compliance", BaseEndpoint)
     // Vulnerabilities endpoints
-	DeployedImageVulnerabilityEndpoint      = fmt.Sprintf("%s/policies/policies/vulnerability/images", BaseEndpoint)
-	CiImageVulnerabilityEndpoint            = fmt.Sprintf("%s/policies/policies/vulnerability/ci/images", BaseEndpoint)
+	DeployedImageVulnerabilityEndpoint      = fmt.Sprintf("%s/policies/vulnerability/images", BaseEndpoint)
+	CiImageVulnerabilityEndpoint            = fmt.Sprintf("%s/policies/vulnerability/ci/images", BaseEndpoint)
 	HostVulnerabilityEndpoint               = fmt.Sprintf("%s/policies/vulnerability/host", BaseEndpoint)
 	VmImageVulnerabilityEndpoint            = fmt.Sprintf("%s/policies/vulnerability/vms", BaseEndpoint)
 	FunctionVulnerabilityEndpoint           = fmt.Sprintf("%s/policies/vulnerability/serverless", BaseEndpoint)
@@ -89,6 +84,21 @@ var (
     RuntimeHostEndpoint = fmt.Sprintf("%s/policies/runtime/host", BaseEndpoint)
     RuntimeServerlessEndpoint = fmt.Sprintf("%s/policies/runtime/serverless", BaseEndpoint)
     RuntimeAppEmbeddedEndpoint = fmt.Sprintf("%s/policies/runtime/app-embedded", BaseEndpoint)
+
+    OrderedGenericPolicyTypes = []string{ 
+	    PolicyTypeComplianceCiImage,
+	    PolicyTypeComplianceContainer,
+	    PolicyTypeComplianceHost,
+	    PolicyTypeComplianceVmImage,
+	    PolicyTypeComplianceFunction,
+	    PolicyTypeComplianceCiFunction,
+	    PolicyTypeVulnerabilityDeployedImage,
+	    PolicyTypeVulnerabilityCiImage,
+	    PolicyTypeVulnerabilityHost,
+	    PolicyTypeVulnerabilityVmImage,
+	    PolicyTypeVulnerabilityFunction,
+	    PolicyTypeVulnerabilityCiFunction,
+    }
 
     IsAttributeSupported = map[string]map[string]bool{
         "block_message": {
@@ -308,49 +318,42 @@ var SettingsMap map[string]Settings = map[string]Settings {
             return false
         },
     },
-}
-
-func PolicyTypeToFormattedString(policyType string) (string, error) {
-    switch policyType {
-        case PolicyTypeAdmission:
-            return "Admission Control", nil
-        case PolicyTypeComplianceCiImage:
-            return "CI Images Compliance", nil
-        case PolicyTypeComplianceContainer:
-            return "Deployed Containers and Images Compliance", nil
-        case PolicyTypeComplianceHost:
-            return "Host Compliance", nil
-        case PolicyTypeComplianceVmImage:
-            return "VM Image Compliance", nil
-        case PolicyTypeComplianceFunction:
-            return "Function Compliance", nil
-        case PolicyTypeComplianceCiFunction:
-            return "CI Function Compliance", nil
-        case PolicyTypeComplianceTrustedImages:
-            return "Trusted Images Compliance", nil
-        case PolicyTypeVulnerabilityDeployedImage:
-            return "Deployed Images Vulnerability", nil
-        case PolicyTypeVulnerabilityCiImage:
-            return "CI Images Vulnerability", nil
-        case PolicyTypeVulnerabilityHost:
-            return "Host Vulnerability", nil
-        case PolicyTypeVulnerabilityVmImage:
-            return "VM Image Vulnerability", nil
-        case PolicyTypeVulnerabilityFunction:
-            return "Function Vulnerability", nil
-        case PolicyTypeVulnerabilityCiFunction:
-            return "CI Function Vulnerability", nil
-        case PolicyTypeRuntimeContainer:
-            return "Container Runtime", nil
-        case PolicyTypeRuntimeHost:
-            return "Host Runtime", nil
-        case PolicyTypeRuntimeServerless:
-            return "Serverless Runtime", nil
-        case PolicyTypeRuntimeAppEmbedded:
-            return "Application Embedded Runtime", nil
-        default:
-            return "", errors.New(fmt.Sprintf("unknown policy type \"%s\" specified", policyType))
-    }
+    PolicyTypeVulnerabilityDeployedImage: {
+        FormattedName: PolicyTypeVulnerabilityDeployedImageFormatted,
+        Module: TypeVulnerability,
+        Context: PolicyContextImage,
+        Endpoint: DeployedImageVulnerabilityEndpoint,
+    },
+    PolicyTypeVulnerabilityCiImage: {
+        FormattedName: PolicyTypeVulnerabilityCiImageFormatted,
+        Module: TypeVulnerability,
+        Context: PolicyContextCiImage,
+        Endpoint: CiImageVulnerabilityEndpoint,
+    },
+    PolicyTypeVulnerabilityHost: {
+        FormattedName: PolicyTypeVulnerabilityHostFormatted,
+        Module: TypeVulnerability,
+        Context: PolicyContextHost,
+        Endpoint: HostVulnerabilityEndpoint,
+    },
+    PolicyTypeVulnerabilityVmImage: {
+        FormattedName: PolicyTypeVulnerabilityVmImageFormatted,
+        Module: TypeVulnerability,
+        Context: PolicyContextVmImage,
+        Endpoint: VmImageVulnerabilityEndpoint,
+    },
+    PolicyTypeVulnerabilityFunction: {
+        FormattedName: PolicyTypeVulnerabilityFunctionFormatted,
+        Module: TypeVulnerability,
+        Context: PolicyContextFunction,
+        Endpoint: FunctionVulnerabilityEndpoint,
+    },
+    PolicyTypeVulnerabilityCiFunction: {
+        FormattedName: "CI Serverless Vulnerability",
+        Module: TypeVulnerability,
+        Context: PolicyContextCiFunction,
+        Endpoint: CiFunctionVulnerabilityEndpoint,
+    },
 }
 
 type Policy struct {
@@ -359,17 +362,6 @@ type Policy struct {
 	PolicyContext string        `json:"policyContext"`
 	Rules         *[]PolicyRule `json:"rules"`
 	Type          string        `json:"type"`
-}
-
-func (p *Policy) SortRules(ctx context.Context, planRules *[]models.PolicyRuleResourceModel) {
-	util.DLog(ctx, "Executing api.Policy.SortRules()")
-
-	rulesOrderMap := generatePolicyRulesOrderMap(*planRules)
-	sort.Slice((*p.Rules), func(i, j int) bool {
-		return rulesOrderMap[(*p.Rules)[i].Name] < rulesOrderMap[(*p.Rules)[j].Name]
-	})
-
-	util.DLog(ctx, "Finishing api.Policy.SortRules() execution")
 }
 
 func (p *Policy) EndpointUrl() string {
@@ -432,44 +424,6 @@ func (p *Policy) FormattedType() string {
 	    default:
 	    	return ""
 	}
-}
-
-// TODO: remove this duplicate function when we can move the logic somewhere that can be used here
-// and by internal/resources/policy/common.go
-func generatePolicyRulesOrderMap(rules []models.PolicyRuleResourceModel) map[string]int {
-	orderedRulesMap := make(map[int][]string)
-
-	for _, rule := range rules {
-		order := int(rule.Order.ValueInt32())
-		if _, exists := orderedRulesMap[order]; exists {
-			orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
-		} else {
-			orderedRulesMap[order] = []string{rule.Name.ValueString()}
-		}
-	}
-
-	sortedKeys := make([]int, 0, len(orderedRulesMap))
-	for key := range orderedRulesMap {
-		sortedKeys = append(sortedKeys, key)
-	}
-	sort.Ints(sortedKeys)
-
-	ruleOrders := make(map[string]int)
-	lastOrderValue := -1
-	for _, key := range sortedKeys {
-		offset := 0
-		if lastOrderValue != -1 && lastOrderValue >= key {
-			offset = lastOrderValue - key + 1
-		}
-
-		for sliceIndex, ruleName := range orderedRulesMap[key] {
-			orderValue := key + sliceIndex + offset
-			ruleOrders[ruleName] = orderValue
-			lastOrderValue = orderValue
-		}
-	}
-
-	return ruleOrders
 }
 
 type PolicyRule struct {

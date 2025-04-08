@@ -38,18 +38,7 @@ var (
         map[string]attr.Value{
             "allowed_processes": types.ListValueMust(types.StringType, []attr.Value{}),
             "crypto_miners": types.StringValue("alert"),
-            "denied_processes": types.ObjectValueMust(
-                map[string]attr.Type{
-                    "effect": types.StringType,
-                    "paths": types.ListType{
-                        ElemType: types.StringType,
-                    },
-                },
-                map[string]attr.Value{
-                    "effect": types.StringValue("alert"),
-                    "paths": types.ListValueMust(types.StringType, []attr.Value{}),
-                },
-            ),
+            "denied_processes": hostAntiMalwareDeniedProcessesDefault,
             "encrypted_binaries": types.StringValue("alert"),
             "execution_flow_hijacking": types.StringValue("alert"),
             "malware_from_advanced_threat_protection": types.StringValue("alert"),
@@ -62,6 +51,19 @@ var (
             "suspicious_elf_headers": types.StringValue("alert"),
             "web_shell": types.StringValue("alert"),
             "wild_fire_analysis": types.StringValue("alert"),
+        },
+    )
+
+    hostAntiMalwareDeniedProcessesDefault = types.ObjectValueMust(
+        map[string]attr.Type{
+            "effect": types.StringType,
+            "paths": types.ListType{
+                ElemType: types.StringType,
+            },
+        },
+        map[string]attr.Value{
+            "effect": types.StringValue("alert"),
+            "paths": types.ListValueMust(types.StringType, []attr.Value{}),
         },
     )
 
@@ -103,6 +105,63 @@ var (
             "denied_dns_domains": types.ListValueMust(types.StringType, []attr.Value{}),
             "denied_dns_domains_effect": types.StringValue("disable"),
             "suspicious_domains_advanced_threat_protection_effect": types.StringValue("disable"),
+        },
+    )
+
+    hostActivitiesDefault = types.ObjectValueMust(
+        map[string]attr.Type{
+            "host_activity_monitoring": types.ObjectType{
+                AttrTypes: map[string]attr.Type{
+                    "enabled": types.BoolType,
+                    "docker_commands": types.ObjectType{
+                        AttrTypes: map[string]attr.Type{
+                            "enabled": types.BoolType,
+                            "include_read_only_events": types.BoolType,
+                        },
+                    },
+                    "sshd_sessions": types.BoolType,
+                    "sudo_commands": types.BoolType,
+                    "log_background_apps": types.BoolType,
+                },
+            },
+            "track_ssh_events": types.BoolType,
+        }, 
+        map[string]attr.Value{
+            "host_activity_monitoring": hostActivityMonitoringDefault, 
+            "track_ssh_events": types.BoolValue(true),
+        },
+    )
+
+    hostActivityMonitoringDefault = types.ObjectValueMust(
+        map[string]attr.Type{
+            "enabled": types.BoolType,
+            "docker_commands": types.ObjectType{
+                AttrTypes: map[string]attr.Type{
+                    "enabled": types.BoolType,
+                    "include_read_only_events": types.BoolType,
+                },
+            },
+            "sshd_sessions": types.BoolType,
+            "sudo_commands": types.BoolType,
+            "log_background_apps": types.BoolType,
+        },
+        map[string]attr.Value{
+            "enabled": types.BoolValue(true),
+            "docker_commands": hostActivityMonitoringDockerCommandsDefault,
+            "sshd_sessions": types.BoolValue(false),
+            "sudo_commands": types.BoolValue(false),
+            "log_background_apps": types.BoolValue(false),
+        },
+    )
+
+    hostActivityMonitoringDockerCommandsDefault = types.ObjectValueMust(
+        map[string]attr.Type{
+            "enabled": types.BoolType,
+            "include_read_only_events": types.BoolType,
+        },
+        map[string]attr.Value{
+            "enabled": types.BoolValue(false),
+            "include_read_only_events": types.BoolValue(false),
         },
     )
 

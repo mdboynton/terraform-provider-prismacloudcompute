@@ -5,7 +5,7 @@ import (
     "context"
     "slices"
 
-    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
@@ -33,7 +33,7 @@ func (v customRulesAreValid) ValidateList(ctx context.Context, req validator.Lis
     //  these rules cannot be paired with "prevent" effect
     // (probably need to do this in ModifyPlan)
 
-    customRules := []models.RuntimeHostPolicyCustomRuleResourceModel{}
+    customRules := []models.RuntimePolicyCustomRuleResourceModel{}
     resp.Diagnostics.Append(req.ConfigValue.ElementsAs(ctx, &customRules, false)...)
     if resp.Diagnostics.HasError() {
         return

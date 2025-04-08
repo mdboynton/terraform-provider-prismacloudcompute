@@ -11,7 +11,8 @@ import (
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	ruleAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/rule"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -277,7 +278,7 @@ func ContainerRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.R
         LearningDisabled: !plan.AutomaticRuntimeLearning.ValueBool(), 
     }
 
-    tfPolicy.SortRules(ctx, plan.Rules)
+    //tfPolicy.SortRules(ctx, plan.Rules)
 
     util.DLog(ctx, "Finishing ContainerRuntimePolicySchemaToTerraform execution")
 
@@ -325,7 +326,7 @@ func ContainerRuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRul
             return rules, diags
         }
 
-        customRules, diags := customRulesToTerraform(ctx, schemaRule.CustomRules, customRuleIdMap)
+        customRules, diags := models.CustomRuntimeRulesToTerraform(ctx, schemaRule.CustomRules, customRuleIdMap)
         if diags.HasError() {
             return rules, diags
         }
@@ -413,7 +414,7 @@ func ContainerRuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []p
             processes *models.RuntimeContainerPolicyProcessesResourceModel
             networking *models.RuntimeContainerPolicyNetworkingResourceModel
             fileSystem *models.RuntimeContainerPolicyFileSystemResourceModel
-            customRules *[]models.RuntimeHostPolicyCustomRuleResourceModel
+            customRules *[]models.RuntimePolicyCustomRuleResourceModel
             notes basetypes.StringValue
         )
 
@@ -471,7 +472,7 @@ func ContainerRuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []p
         if planRule.CustomRules == nil {
             customRules = nil
         } else {
-            customRulesValue, diags := customRulesToSchema(ctx, rule.CustomRules, customRuleIdMap)
+            customRulesValue, diags := models.CustomRuntimeRulesToSchema(ctx, rule.CustomRules, customRuleIdMap)
             if diags.HasError() {
                 return []models.RuntimeContainerPolicyRuleResourceModel{}, diags
             }
@@ -601,11 +602,7 @@ func containerRuntimeProcessesToSchema(ctx context.Context, tfProcesses policyAP
 func containerRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworking *models.RuntimeContainerPolicyNetworkingResourceModel) (policyAPI.RuntimeContainerNetwork, policyAPI.RuntimeContainerDns, diag.Diagnostics) {
     var (
         diags diag.Diagnostics
-        allowedListeningPorts []string
-        allowedOutboundInternetPorts []string
         allowedOutboundIPs []string
-        deniedListeningPorts []string
-        deniedOutboundInternetPorts []string
         deniedOutboundIPs []string 
         allowedDnsDomains []string 
         deniedDnsDomains []string 
@@ -615,33 +612,10 @@ func containerRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworking
         return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
     }
 
-    if schemaNetworking.AllowedListeningPorts.IsNull() {
-        allowedListeningPorts = []string{}
-    } else {
-        diags = schemaNetworking.AllowedListeningPorts.ElementsAs(ctx, &allowedListeningPorts, false)
-        if diags.HasError() {
-            return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-        }
-    }
+    // TODO: change it so that we only return on diags.HasError() at the end
 
-    allowedListeningPortRanges, diags := policy.PortRangesToTerraform(allowedListeningPorts)
-    if diags.HasError() {
-        return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-    }
-
-    if schemaNetworking.AllowedOutboundInternetPorts.IsNull() {
-        allowedOutboundInternetPorts = []string{}
-    } else {
-        diags = schemaNetworking.AllowedOutboundInternetPorts.ElementsAs(ctx, &allowedOutboundInternetPorts, false)
-        if diags.HasError() {
-            return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-        }
-    }
-
-    allowedOutboundInternetPortRanges, diags := policy.PortRangesToTerraform(allowedOutboundInternetPorts)
-    if diags.HasError() {
-        return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-    }
+    allowedListeningPorts, diags := models.PortRangesToTerraform(ctx, schemaNetworking.AllowedListeningPorts)
+    allowedOutboundInternetPorts, diags := models.PortRangesToTerraform(ctx, schemaNetworking.AllowedOutboundInternetPorts)
 
     if schemaNetworking.AllowedOutboundIPs.IsNull() {
         allowedOutboundIPs = []string{}
@@ -652,33 +626,8 @@ func containerRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworking
         }
     }
 
-    if schemaNetworking.DeniedListeningPorts.IsNull() {
-        deniedListeningPorts = []string{}
-    } else {
-        diags = schemaNetworking.DeniedListeningPorts.ElementsAs(ctx, &deniedListeningPorts, false)
-        if diags.HasError() {
-            return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-        }
-    }
-
-    deniedListeningPortRanges, diags := policy.PortRangesToTerraform(deniedListeningPorts)
-    if diags.HasError() {
-        return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-    }
-
-    if schemaNetworking.DeniedOutboundInternetPorts.IsNull() {
-        deniedOutboundInternetPorts = []string{}
-    } else {
-        diags = schemaNetworking.DeniedOutboundInternetPorts.ElementsAs(ctx, &deniedOutboundInternetPorts, false)
-        if diags.HasError() {
-            return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-        }
-    }
-
-    deniedOutboundInternetPortRanges, diags := policy.PortRangesToTerraform(deniedOutboundInternetPorts)
-    if diags.HasError() {
-        return policyAPI.RuntimeContainerNetwork{}, policyAPI.RuntimeContainerDns{}, diags
-    }
+    deniedListeningPorts, diags := models.PortRangesToTerraform(ctx, schemaNetworking.DeniedListeningPorts)
+    deniedOutboundInternetPorts, diags := models.PortRangesToTerraform(ctx, schemaNetworking.DeniedOutboundInternetPorts)
 
     if schemaNetworking.DeniedOutboundIPs.IsNull() {
         deniedOutboundIPs = []string{}
@@ -714,14 +663,14 @@ func containerRuntimeNetworkingToTerraform(ctx context.Context, schemaNetworking
         DeniedIpsEffect: schemaNetworking.DeniedOutboundIPsEffect.ValueString(),
         Disabled: !schemaNetworking.IpConnectivityEnabled.ValueBool(),
         ListeningPorts: policyAPI.NetworkPorts{
-            Allowed: allowedListeningPortRanges,
-            Denied: deniedListeningPortRanges,
+            Allowed: allowedListeningPorts,
+            Denied: deniedListeningPorts,
             Effect: schemaNetworking.DeniedListeningPortEffect.ValueString(),
         },
         ModifiedProcEffect: schemaNetworking.NetworkActivityFromModifiedBinaries.ValueString(),
         OutboundPorts: policyAPI.NetworkPorts{
-            Allowed: allowedOutboundInternetPortRanges,
-            Denied: deniedOutboundInternetPortRanges,
+            Allowed: allowedOutboundInternetPorts,
+            Denied: deniedOutboundInternetPorts,
             Effect: schemaNetworking.DeniedOutboundInternetPortsEffect.ValueString(),
         },
         PortScanEffect: schemaNetworking.PortScanning.ValueString(),
