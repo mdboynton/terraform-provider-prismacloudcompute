@@ -10,11 +10,6 @@ import (
     "github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-//var (
-//    SinglePortValueRegexp *regexp.Regexp = regexp.MustCompile(`^(\d{1,5}$`)
-//    RangePortValueRegxp *regexp.Regexp = regexp.MustCompile(`^(\d{0,5})-(\d{1,5})$`)
-//)
-
 // Converts basetypes.ListValue to string slice and populates it in response
 func ListToStringSlice(ctx context.Context, l *basetypes.ListValue, response *[]string) diag.Diagnostics {
     if (l == nil || (*l).IsNull()) {

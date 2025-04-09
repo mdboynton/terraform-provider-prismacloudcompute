@@ -83,19 +83,10 @@ func (m *RuntimeAppEmbeddedPolicyResourceModel) SortRules(ctx context.Context, p
     util.DLog(ctx, "Executing RuntimeAppEmbeddedPolicyResourceModel.SortRules()")
 
     if m.Rules != nil && len(*m.Rules) > 0 {
-        // TODO: check for mismatched lengths and return diags with error
-        // (if there's additional rules added outside of terraform, they will be reflected in m.SortRules. therefore,
-        // if this happens, return a diag error with message suggesting they check those rules, until we can put in logic
-        // to be able to automatically handle that scenario)
-
-        //if len(*m.Rules) != len(*planRules) {
-        //}
-
         if len(*m.Rules) == 1 && len(*planRules) == 1 {
             (*m.Rules)[0].Order = (*planRules)[0].Order
             return
         }
-
 
         if planRules == nil {
             for i := 0; i < len(*m.Rules); i++ {

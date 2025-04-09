@@ -261,7 +261,6 @@ func SortGenericPolicyRulesTerraform(ctx context.Context, policy *policyAPI.Poli
         var orderA, orderB int
         tupleA, okA := ruleOrderMap[a.Name]
         if !okA {
-            // TODO: is this right?
             orderA = len(ruleOrderMap) + 1
         } else {
             orderA = tupleA.Order

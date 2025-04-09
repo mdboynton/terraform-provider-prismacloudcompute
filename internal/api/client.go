@@ -59,6 +59,8 @@ func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPICli
         return nil, fmt.Errorf("Error occured while creating API client: Failed to parse request timeout value\n%s", err.Error())
     }
 
+    //            //    fmt.Sprintf("Error configuring provider: Invalid value specified for \"request_timeout\" in configuration file. Value must be an integer between 1 and %d", math.MaxInt),
+
     // Instantiate HTTP client
     httpClient := &http.Client{
         Timeout: requestTimeout,
