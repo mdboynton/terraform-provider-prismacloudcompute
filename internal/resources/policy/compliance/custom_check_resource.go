@@ -194,12 +194,12 @@ func (r *CustomComplianceCheckResource) Delete(ctx context.Context, req resource
 }
 
 func (r *CustomComplianceCheckResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	util.LogDebug(ctx, "executing ImportState")
+	util.HCLogDebug(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *CustomComplianceCheckResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	//var plan *CustomComplianceCheckResourceModel
 	//diags := req.Plan.Get(ctx, &plan)
@@ -210,11 +210,11 @@ func (r *CustomComplianceCheckResource) ModifyPlan(ctx context.Context, req reso
 
 	//ModifyCustomComplianceCheckResourcePlan(ctx, r.client, plan, resp)
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }
 
 func schemaToCheck(ctx context.Context, plan *CustomComplianceCheckResourceModel, client *api.PrismaCloudComputeAPIClient) (policyAPI.CustomComplianceCheck, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering schemaToCheck")
+	util.HCLogDebug(ctx, "entering schemaToCheck")
 
 	var diags diag.Diagnostics
 
@@ -231,13 +231,13 @@ func schemaToCheck(ctx context.Context, plan *CustomComplianceCheckResourceModel
 		check.Id = int(plan.Id.ValueInt32())
 	}
 
-	util.LogDebug(ctx, "exiting schemaToCheck")
+	util.HCLogDebug(ctx, "exiting schemaToCheck")
 
 	return check, diags
 }
 
 func checkToSchema(ctx context.Context, check policyAPI.CustomComplianceCheck) (CustomComplianceCheckResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering checkToSchema")
+	util.HCLogDebug(ctx, "entering checkToSchema")
 
 	var diags diag.Diagnostics
 
@@ -252,9 +252,9 @@ func checkToSchema(ctx context.Context, check policyAPI.CustomComplianceCheck) (
 		Severity:     types.StringValue(check.Severity),
 	}
 
-	util.LogfDebug(ctx, schemaCheck)
+	util.HCLogfDebug(ctx, schemaCheck)
 
-	util.LogDebug(ctx, "exiting checkToSchema")
+	util.HCLogDebug(ctx, "exiting checkToSchema")
 
 	return schemaCheck, diags
 }

@@ -31,7 +31,7 @@ func (v policyRuleNameIsUniqueValidator) MarkdownDescription(ctx context.Context
 }
 
 func (v policyRuleNameIsUniqueValidator) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-	util.LogDebug(ctx, "Executing PolicyRuleNameIsUnique")
+	util.HCLogDebug(ctx, "Executing PolicyRuleNameIsUnique")
 
 	var name basetypes.StringValue
 
@@ -54,7 +54,7 @@ func (v policyRuleNameIsUniqueValidator) ValidateList(ctx context.Context, req v
 		}
 	}
 
-	util.LogDebug(ctx, "Finishing PolicyRuleNameIsUnique execution")
+	util.HCLogDebug(ctx, "Finishing PolicyRuleNameIsUnique execution")
 
 	return
 }

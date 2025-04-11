@@ -541,7 +541,7 @@ func GetPolicyResourceTypeName(policyType string) (string, error) {
 }
 
 func PolicySchemaToTerraform(ctx context.Context, plan *models.PolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (policyAPI.Policy, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing PolicySchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing PolicySchemaToTerraform")
 
 	var (
 		diags    diag.Diagnostics
@@ -578,13 +578,13 @@ func PolicySchemaToTerraform(ctx context.Context, plan *models.PolicyResourceMod
 
 	models.SortPolicyRules(ctx, tfPolicy.PolicyType, &tfPolicy, plan.GetRuleOrderMap(), true)
 
-	util.LogDebug(ctx, "Finishing PolicySchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing PolicySchemaToTerraform execution")
 
 	return tfPolicy, diags
 }
 
 func PolicyRulesSchemaToTerraform(ctx context.Context, settings policyAPI.Settings, schemaRules []models.PolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient) ([]policyAPI.PolicyRule, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing PolicyRulesSchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing PolicyRulesSchemaToTerraform")
 
 	var (
 		diags                     diag.Diagnostics
@@ -717,13 +717,13 @@ func PolicyRulesSchemaToTerraform(ctx context.Context, settings policyAPI.Settin
 		rules = append(rules, rule)
 	}
 
-	util.LogDebug(ctx, "Finishing PolicyRulesSchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing PolicyRulesSchemaToTerraform execution")
 
 	return rules, diags
 }
 
 func PolicyTerraformToSchema(ctx context.Context, policy policyAPI.Policy, plan models.PolicyResourceModel) (models.PolicyResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing PolicyTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing PolicyTerraformToSchema")
 
 	var diags diag.Diagnostics
 
@@ -758,13 +758,13 @@ func PolicyTerraformToSchema(ctx context.Context, policy policyAPI.Policy, plan 
 
 	models.SortPolicyRules(ctx, policy.PolicyType, &schema, plan.GetRuleOrderMap(), false)
 
-	util.LogDebug(ctx, "Finishing PolicyTerraformToSchema execution")
+	util.HCLogDebug(ctx, "Finishing PolicyTerraformToSchema execution")
 
 	return schema, diags
 }
 
 func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules []policyAPI.PolicyRule, planRules *[]models.PolicyRuleResourceModel) ([]models.PolicyRuleResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing PolicyRulesTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing PolicyRulesTerraformToSchema")
 
 	var diags diag.Diagnostics
 
@@ -921,7 +921,7 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
 		schemaRules = append(schemaRules, schemaRule)
 	}
 
-	util.LogDebug(ctx, "Finishing PolicyRulesTerraformToSchema exection")
+	util.HCLogDebug(ctx, "Finishing PolicyRulesTerraformToSchema exection")
 
 	return schemaRules, diags
 }
@@ -1213,7 +1213,7 @@ func schemaToCondition(ctx context.Context, complianceVulnerabilities *[]systemA
 			}
 		}
 
-		util.LogDebug(ctx, fmt.Sprintf("matched %d vulnerabilities", vulnCount))
+		util.HCLogDebug(ctx, fmt.Sprintf("matched %d vulnerabilities", vulnCount))
 
 	}
 
@@ -1674,7 +1674,7 @@ func PortRangeToStringSlice(portRanges []policyAPI.PortRange) []string {
 }
 
 func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComputeAPIClient, plan tfsdk.Plan, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "Executing ModifyPolicyResourcePlan")
+	util.HCLogDebug(ctx, "Executing ModifyPolicyResourcePlan")
 
 	var (
 		rules                basetypes.ListValue
@@ -1705,7 +1705,7 @@ func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComput
 	}
 	policyType = policyTypeValue.ValueString()
 
-	util.LogDebug(ctx, "Retrieving collections")
+	util.HCLogDebug(ctx, "Retrieving collections")
 	collections, err := collectionAPI.ListCollections(*client)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -1715,7 +1715,7 @@ func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComput
 		return
 	}
 
-	util.LogDebug(ctx, "Beginning loop over rules")
+	util.HCLogDebug(ctx, "Beginning loop over rules")
 	for index := range rules.Elements() {
 		resp.Diagnostics.Append(plan.GetAttribute(ctx, path.Root("rules").AtListIndex(index).AtName("name"), &nameValue)...)
 		name = nameValue.ValueString()
@@ -1767,5 +1767,5 @@ func ModifyPolicyResourcePlan(ctx context.Context, client *api.PrismaCloudComput
 
 	resp.Plan = plan
 
-	util.LogDebug(ctx, "Finishing ModifyPolicyResourcePlan execution")
+	util.HCLogDebug(ctx, "Finishing ModifyPolicyResourcePlan execution")
 }

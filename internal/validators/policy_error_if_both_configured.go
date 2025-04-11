@@ -32,7 +32,7 @@ func (v errorIfBothListsConfigured) MarkdownDescription(ctx context.Context) str
 }
 
 func (v errorIfBothListsConfigured) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	util.LogDebug(ctx, "Executing ErrorIfBothListsConfigured")
+	util.HCLogDebug(ctx, "Executing ErrorIfBothListsConfigured")
 
 	var (
 		attribute1Value basetypes.ListValue

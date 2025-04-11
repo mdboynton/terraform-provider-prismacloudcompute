@@ -214,14 +214,14 @@ func (r *VmImageCompliancePolicyResource) Delete(ctx context.Context, req resour
 }
 
 func (r *VmImageCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	util.LogDebug(ctx, "executing ImportState")
+	util.HCLogDebug(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *VmImageCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	policy.ModifyPolicyResourcePlan(ctx, r.client, req.Plan, resp)
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }

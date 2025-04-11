@@ -238,15 +238,15 @@ func (r *ServerlessRuntimePolicyResource) ImportState(ctx context.Context, req r
 }
 
 func (r *ServerlessRuntimePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	//policy.ModifyPolicyResourcePlan(ctx, r.client, req.Plan, resp)
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }
 
 func ServerlessRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.RuntimeServerlessPolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (policyAPI.RuntimeServerlessPolicy, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing ServerlessRuntimePolicySchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing ServerlessRuntimePolicySchemaToTerraform")
 
 	var (
 		diags diag.Diagnostics
@@ -270,13 +270,13 @@ func ServerlessRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.
 
 	//tfPolicy.SortRules(ctx, plan.Rules)
 
-	util.LogDebug(ctx, "Finishing ServerlessRuntimePolicySchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing ServerlessRuntimePolicySchemaToTerraform execution")
 
 	return tfPolicy, diags
 }
 
 func ServerlessRuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []models.RuntimeServerlessPolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient) ([]policyAPI.RuntimeServerlessPolicyRule, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing ServerlessRuntimePolicyRulesSchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing ServerlessRuntimePolicyRulesSchemaToTerraform")
 
 	var (
 		diags           diag.Diagnostics
@@ -334,13 +334,13 @@ func ServerlessRuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRu
 		rules = append(rules, rule)
 	}
 
-	util.LogDebug(ctx, "Finishing ServerlessRuntimePolicyRulesSchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing ServerlessRuntimePolicyRulesSchemaToTerraform execution")
 
 	return rules, diags
 }
 
 func ServerlessRuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.RuntimeServerlessPolicy, plan models.RuntimeServerlessPolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (models.RuntimeServerlessPolicyResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing ServerlessRuntimePolicyTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing ServerlessRuntimePolicyTerraformToSchema")
 
 	var (
 		diags diag.Diagnostics
@@ -371,13 +371,13 @@ func ServerlessRuntimePolicyTerraformToSchema(ctx context.Context, policy policy
 
 	schema.SortRules(ctx, plan.Rules)
 
-	util.LogDebug(ctx, "Finishing RuntimeServerlessPolicyTerraformToSchema execution")
+	util.HCLogDebug(ctx, "Finishing RuntimeServerlessPolicyTerraformToSchema execution")
 
 	return schema, diags
 }
 
 func ServerlessRuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.RuntimeServerlessPolicyRule, planRules *[]models.RuntimeServerlessPolicyRuleResourceModel, customRuleIdMap map[int]string) ([]models.RuntimeServerlessPolicyRuleResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing RuntimeServerlessPolicyRulesTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing RuntimeServerlessPolicyRulesTerraformToSchema")
 
 	var diags diag.Diagnostics
 
@@ -471,7 +471,7 @@ func ServerlessRuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []
 		schemaRules = append(schemaRules, schemaRule)
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimeServerlessPolicyRulesTerraformToSchema exection")
+	util.HCLogDebug(ctx, "Finishing RuntimeServerlessPolicyRulesTerraformToSchema exection")
 
 	return schemaRules, diags
 }

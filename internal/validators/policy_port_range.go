@@ -25,7 +25,7 @@ func (v portRangesAreValid) MarkdownDescription(ctx context.Context) string {
 }
 
 func (v portRangesAreValid) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-	util.LogDebug(ctx, "Executing PortRangesAreValid")
+	util.HCLogDebug(ctx, "Executing PortRangesAreValid")
 
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
@@ -89,7 +89,7 @@ func (v portRangesAreValid) ValidateList(ctx context.Context, req validator.List
 		}
 	}
 
-	util.LogDebug(ctx, "Finishing PortRangesAreValid execution")
+	util.HCLogDebug(ctx, "Finishing PortRangesAreValid execution")
 
 	return
 }

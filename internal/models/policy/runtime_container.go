@@ -102,7 +102,7 @@ type RuntimeContainerPolicyFileSystemResourceModel struct {
 }
 
 func (m *RuntimeContainerPolicyResourceModel) SortRules(ctx context.Context, planRules *[]RuntimeContainerPolicyRuleResourceModel) {
-	util.LogDebug(ctx, "Executing RuntimeContainerPolicyResourceModel.SortRules()")
+	util.HCLogDebug(ctx, "Executing RuntimeContainerPolicyResourceModel.SortRules()")
 
 	if m.Rules != nil && len(*m.Rules) > 0 {
 		// TODO: check for mismatched lengths and return diags with error
@@ -147,5 +147,5 @@ func (m *RuntimeContainerPolicyResourceModel) SortRules(ctx context.Context, pla
 		}
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimeContainerPolicyResourceModel.SortRules() execution")
+	util.HCLogDebug(ctx, "Finishing RuntimeContainerPolicyResourceModel.SortRules() execution")
 }

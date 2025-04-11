@@ -112,7 +112,7 @@ type RuntimeHostPolicyNetworkingResourceModel struct {
 }
 
 func (m *RuntimeHostPolicyResourceModel) SortRules(ctx context.Context, planRules *[]RuntimeHostPolicyRuleResourceModel) {
-	util.LogDebug(ctx, "Executing RuntimeHostPolicyResourceModel.SortRules()")
+	util.HCLogDebug(ctx, "Executing RuntimeHostPolicyResourceModel.SortRules()")
 
 	if m.Rules != nil && len(*m.Rules) > 0 {
 		// TODO: check for mismatched lengths and return diags with error
@@ -157,5 +157,5 @@ func (m *RuntimeHostPolicyResourceModel) SortRules(ctx context.Context, planRule
 		}
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimeHostPolicyResourceModel.SortRules() execution")
+	util.HCLogDebug(ctx, "Finishing RuntimeHostPolicyResourceModel.SortRules() execution")
 }

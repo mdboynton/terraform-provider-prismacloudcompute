@@ -92,7 +92,7 @@ func (r *HostCompliancePolicyResource) Create(ctx context.Context, req resource.
 }
 
 func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	util.LogDebug(ctx, "starting Read() execution")
+	util.HCLogDebug(ctx, "starting Read() execution")
 
 	// Get current state
 	var state models.PolicyResourceModel
@@ -126,7 +126,7 @@ func (r *HostCompliancePolicyResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	util.LogDebug(ctx, "ending Read() execution")
+	util.HCLogDebug(ctx, "ending Read() execution")
 }
 
 func (r *HostCompliancePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -219,14 +219,14 @@ func (r *HostCompliancePolicyResource) Delete(ctx context.Context, req resource.
 }
 
 func (r *HostCompliancePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	util.LogDebug(ctx, "executing ImportState")
+	util.HCLogDebug(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *HostCompliancePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	policy.ModifyPolicyResourcePlan(ctx, r.client, req.Plan, resp)
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }

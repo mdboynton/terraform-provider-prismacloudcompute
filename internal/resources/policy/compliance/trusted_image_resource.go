@@ -226,12 +226,12 @@ func (r *TrustedImagesPolicyResource) Delete(ctx context.Context, req resource.D
 }
 
 func (r *TrustedImagesPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	util.LogDebug(ctx, "executing ImportState")
+	util.HCLogDebug(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *TrustedImagesPolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	var plan *models.TrustedImagesPolicyResourceModel
 	diags := req.Plan.Get(ctx, &plan)
@@ -249,11 +249,11 @@ func (r *TrustedImagesPolicyResource) ModifyPlan(ctx context.Context, req resour
 		return
 	}
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }
 
 func schemaToTrustedImagesPolicy(ctx context.Context, client api.PrismaCloudComputeAPIClient, plan *models.TrustedImagesPolicyResourceModel) (policyAPI.TrustedImages, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering schemaToTrustedImagesPolicy")
+	util.HCLogDebug(ctx, "entering schemaToTrustedImagesPolicy")
 	var diags diag.Diagnostics
 
 	policy := policyAPI.TrustedImages{}
@@ -282,12 +282,12 @@ func schemaToTrustedImagesPolicy(ctx context.Context, client api.PrismaCloudComp
 
 	// TODO: may want to raise an exception here if groups is empty but rules isnt
 
-	util.LogDebug(ctx, "exiting schemaToTrustedImagesPolicy")
+	util.HCLogDebug(ctx, "exiting schemaToTrustedImagesPolicy")
 	return policy, diags
 }
 
 func schemaToTrustedImagesPolicyGroups(ctx context.Context, schemaGroups []models.TrustGroupResourceModel) ([]policyAPI.TrustGroup, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering schemaToTrustedImagesPolicyGroups")
+	util.HCLogDebug(ctx, "entering schemaToTrustedImagesPolicyGroups")
 
 	var diags diag.Diagnostics
 	groups := make([]policyAPI.TrustGroup, 0, len(schemaGroups))
@@ -309,13 +309,13 @@ func schemaToTrustedImagesPolicyGroups(ctx context.Context, schemaGroups []model
 		})
 	}
 
-	util.LogDebug(ctx, "exiting schemaToTrustedImagesPolicyGroups")
+	util.HCLogDebug(ctx, "exiting schemaToTrustedImagesPolicyGroups")
 
 	return groups, diags
 }
 
 func schemaToTrustedImagesPolicyRules(ctx context.Context, client api.PrismaCloudComputeAPIClient, schemaRules models.TrustedImagesPolicyRulesResourceModel) (policyAPI.TrustedImagesPolicy, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering schemaToTrustedImagesPolicyRules")
+	util.HCLogDebug(ctx, "entering schemaToTrustedImagesPolicyRules")
 
 	var diags diag.Diagnostics
 	rules := policyAPI.TrustedImagesPolicy{
@@ -378,13 +378,13 @@ func schemaToTrustedImagesPolicyRules(ctx context.Context, client api.PrismaClou
 
 	rules.Rules = policyRules
 
-	util.LogDebug(ctx, "exiting schemaToTrustedImagesPolicyRules")
+	util.HCLogDebug(ctx, "exiting schemaToTrustedImagesPolicyRules")
 
 	return rules, diags
 }
 
 func trustedImagesPolicyToSchema(ctx context.Context, policy policyAPI.TrustedImages) (models.TrustedImagesPolicyResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering trustedImagesPolicyToSchema")
+	util.HCLogDebug(ctx, "entering trustedImagesPolicyToSchema")
 
 	schemaPolicy := models.TrustedImagesPolicyResourceModel{}
 
@@ -400,13 +400,13 @@ func trustedImagesPolicyToSchema(ctx context.Context, policy policyAPI.TrustedIm
 	}
 	schemaPolicy.Policy = schemaRules
 
-	util.LogDebug(ctx, "exiting trustedImagesPolicyToSchema")
+	util.HCLogDebug(ctx, "exiting trustedImagesPolicyToSchema")
 
 	return schemaPolicy, diags
 }
 
 func trustedImagesPolicyGroupsToSchema(ctx context.Context, groups []policyAPI.TrustGroup) ([]models.TrustGroupResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering trustedImagesPolicyGroupsToSchema")
+	util.HCLogDebug(ctx, "entering trustedImagesPolicyGroupsToSchema")
 
 	var diags diag.Diagnostics
 
@@ -431,13 +431,13 @@ func trustedImagesPolicyGroupsToSchema(ctx context.Context, groups []policyAPI.T
 		schemaGroups = append(schemaGroups, schemaGroup)
 	}
 
-	util.LogDebug(ctx, "exiting trustedImagesPolicyGroupsToSchema")
+	util.HCLogDebug(ctx, "exiting trustedImagesPolicyGroupsToSchema")
 
 	return schemaGroups, diags
 }
 
 func trustedImagesPolicyRulesToSchema(ctx context.Context, rules policyAPI.TrustedImagesPolicy) (models.TrustedImagesPolicyRulesResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "entering trustedImagesPolicyRulesToSchema")
+	util.HCLogDebug(ctx, "entering trustedImagesPolicyRulesToSchema")
 
 	var diags diag.Diagnostics
 
@@ -509,7 +509,7 @@ func trustedImagesPolicyRulesToSchema(ctx context.Context, rules policyAPI.Trust
 
 	schemaPolicy.Rules = &schemaRules
 
-	util.LogDebug(ctx, "exiting trustedImagesPolicyRulesToSchema")
+	util.HCLogDebug(ctx, "exiting trustedImagesPolicyRulesToSchema")
 
 	return schemaPolicy, diags
 }

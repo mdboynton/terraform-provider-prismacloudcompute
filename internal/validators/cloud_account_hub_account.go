@@ -25,7 +25,7 @@ func (v hubAccountNotTrueIfHubCredentialIdSet) MarkdownDescription(ctx context.C
 }
 
 func (v hubAccountNotTrueIfHubCredentialIdSet) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	util.LogDebug(ctx, "Executing HubAccountNotTrueIfHubCredentialIdSet")
+	util.HCLogDebug(ctx, "Executing HubAccountNotTrueIfHubCredentialIdSet")
 
 	var (
 		isHubAccount basetypes.BoolValue

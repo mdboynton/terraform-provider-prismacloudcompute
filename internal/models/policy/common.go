@@ -160,7 +160,7 @@ func (m *PolicyResourceModel) GetRuleOrderMap() map[string]util.PolicyRuleOrderM
 }
 
 func SortPolicyRules(ctx context.Context, policyType string, policy interface{}, ruleOrderMap map[string]util.PolicyRuleOrderMapTuple, toTerraform bool) {
-	util.LogDebug(ctx, "Executing SortPolicyRules()")
+	util.HCLogDebug(ctx, "Executing SortPolicyRules()")
 
 	if policy == nil {
 		return
@@ -171,7 +171,7 @@ func SortPolicyRules(ctx context.Context, policyType string, policy interface{},
 		if toTerraform {
 			typedPolicy, ok := (policy).(*policyAPI.Policy)
 			if !ok {
-				util.LogDebug(ctx, "conversion failed")
+				util.HCLogDebug(ctx, "conversion failed")
 				return
 			}
 
@@ -179,7 +179,7 @@ func SortPolicyRules(ctx context.Context, policyType string, policy interface{},
 		} else {
 			typedPolicy, ok := (policy).(*PolicyResourceModel)
 			if !ok {
-				util.LogDebug(ctx, "conversion failed")
+				util.HCLogDebug(ctx, "conversion failed")
 				return
 			}
 
@@ -208,12 +208,12 @@ func SortPolicyRules(ctx context.Context, policyType string, policy interface{},
 		return
 	}
 
-	util.LogDebug(ctx, "Finishing SortPolicyRules() execution")
+	util.HCLogDebug(ctx, "Finishing SortPolicyRules() execution")
 }
 
 // Change sorting of policy rules from the order returned by the API to the order specified in the plan
 func SortGenericPolicyRulesSchema(ctx context.Context, policy *PolicyResourceModel, ruleOrderMap map[string]util.PolicyRuleOrderMapTuple) {
-	util.LogDebug(ctx, "Executing SortGenericPolicyRulesSchema()")
+	util.HCLogDebug(ctx, "Executing SortGenericPolicyRulesSchema()")
 
 	rules := *policy.Rules
 
@@ -245,12 +245,12 @@ func SortGenericPolicyRulesSchema(ctx context.Context, policy *PolicyResourceMod
 	// Assign sorted collection to policy object
 	(*policy).Rules = &rules
 
-	util.LogDebug(ctx, "Finishing SortGenericPolicyRulesSchema() execution")
+	util.HCLogDebug(ctx, "Finishing SortGenericPolicyRulesSchema() execution")
 }
 
 // Sort policy rules according to their order values
 func SortGenericPolicyRulesTerraform(ctx context.Context, policy *policyAPI.Policy, ruleOrderMap map[string]util.PolicyRuleOrderMapTuple) {
-	util.LogDebug(ctx, "Executing SortGenericPolicyRulesTerraform()")
+	util.HCLogDebug(ctx, "Executing SortGenericPolicyRulesTerraform()")
 
 	rules := *policy.Rules
 
@@ -276,7 +276,7 @@ func SortGenericPolicyRulesTerraform(ctx context.Context, policy *policyAPI.Poli
 	// Assign sorted collection to policy object
 	(*policy).Rules = &rules
 
-	util.LogDebug(ctx, "Finishing SortGenericPolicyRulesTerraform() execution")
+	util.HCLogDebug(ctx, "Finishing SortGenericPolicyRulesTerraform() execution")
 }
 
 func PortRangesToTerraform(ctx context.Context, portRanges basetypes.ListValue) ([]policyAPI.PortRange, diag.Diagnostics) {

@@ -30,7 +30,7 @@ func (v policyRuleOrderIsPositiveNonZero) MarkdownDescription(ctx context.Contex
 }
 
 func (v policyRuleOrderIsPositiveNonZero) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-	util.LogDebug(ctx, "Executing PolicyRuleOrderIsPositiveNonZero")
+	util.HCLogDebug(ctx, "Executing PolicyRuleOrderIsPositiveNonZero")
 
 	var (
 		name  basetypes.StringValue
@@ -56,7 +56,7 @@ func (v policyRuleOrderIsPositiveNonZero) ValidateList(ctx context.Context, req 
 		}
 	}
 
-	util.LogDebug(ctx, "Finishing PolicyRuleOrderIsPositiveNonZero execution")
+	util.HCLogDebug(ctx, "Finishing PolicyRuleOrderIsPositiveNonZero execution")
 
 	return
 }

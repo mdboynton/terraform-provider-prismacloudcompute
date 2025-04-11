@@ -11,6 +11,7 @@ import (
     "net/url"
 
     "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
+    //"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
     "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/auth"
     compliance "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/compliance"
     vulnerability "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/vulnerability"

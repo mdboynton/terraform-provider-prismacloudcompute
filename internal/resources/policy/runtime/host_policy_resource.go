@@ -239,15 +239,15 @@ func (r *HostRuntimePolicyResource) ImportState(ctx context.Context, req resourc
 }
 
 func (r *HostRuntimePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	//policy.ModifyPolicyResourcePlan(ctx, r.client, req.Plan, resp)
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }
 
 func RuntimePolicySchemaToTerraform(ctx context.Context, plan *models.RuntimeHostPolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (policyAPI.RuntimeHostPolicy, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing RuntimePolicySchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing RuntimePolicySchemaToTerraform")
 
 	var (
 		diags diag.Diagnostics
@@ -280,13 +280,13 @@ func RuntimePolicySchemaToTerraform(ctx context.Context, plan *models.RuntimeHos
 
 	//tfPolicy.SortRules(ctx, plan.Rules)
 
-	util.LogDebug(ctx, "Finishing RuntimePolicySchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing RuntimePolicySchemaToTerraform execution")
 
 	return tfPolicy, diags
 }
 
 func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []models.RuntimeHostPolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, customRuleIdMap map[string]int) ([]policyAPI.RuntimeHostPolicyRule, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing RuntimePolicyRulesSchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing RuntimePolicyRulesSchemaToTerraform")
 
 	var (
 		diags           diag.Diagnostics
@@ -361,13 +361,13 @@ func RuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []mode
 		rules = append(rules, rule)
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimePolicyRulesSchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing RuntimePolicyRulesSchemaToTerraform execution")
 
 	return rules, diags
 }
 
 func RuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.RuntimeHostPolicy, plan models.RuntimeHostPolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (models.RuntimeHostPolicyResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing RuntimePolicyTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing RuntimePolicyTerraformToSchema")
 
 	var (
 		diags diag.Diagnostics
@@ -398,13 +398,13 @@ func RuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.Runtim
 
 	schema.SortRules(ctx, plan.Rules)
 
-	util.LogDebug(ctx, "Finishing RuntimeHostPolicyTerraformToSchema execution")
+	util.HCLogDebug(ctx, "Finishing RuntimeHostPolicyTerraformToSchema execution")
 
 	return schema, diags
 }
 
 func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.RuntimeHostPolicyRule, planRules *[]models.RuntimeHostPolicyRuleResourceModel, customRuleIdMap map[int]string) ([]models.RuntimeHostPolicyRuleResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing RuntimeHostPolicyRulesTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing RuntimeHostPolicyRulesTerraformToSchema")
 
 	var diags diag.Diagnostics
 
@@ -539,7 +539,7 @@ func RuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.
 		schemaRules = append(schemaRules, schemaRule)
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimeHostPolicyRulesTerraformToSchema exection")
+	util.HCLogDebug(ctx, "Finishing RuntimeHostPolicyRulesTerraformToSchema exection")
 
 	return schemaRules, diags
 }

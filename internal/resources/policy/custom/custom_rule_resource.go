@@ -211,15 +211,15 @@ func (r *CustomRuntimeRuleResource) ImportState(ctx context.Context, req resourc
 }
 
 func (r *CustomRuntimeRuleResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	//policy.ModifyPolicyResourcePlan(ctx, r.client, req.Plan, resp)
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }
 
 func schemaToTerraform(ctx context.Context, schema models.CustomRuntimeRuleResourceModel) (ruleAPI.CustomRule, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing CustomRuleResource.schemaToTerraform")
+	util.HCLogDebug(ctx, "Executing CustomRuleResource.schemaToTerraform")
 
 	var (
 		diags            diag.Diagnostics
@@ -251,13 +251,13 @@ func schemaToTerraform(ctx context.Context, schema models.CustomRuntimeRuleResou
 		VulnIDs:          vulnIDs,
 	}
 
-	util.LogDebug(ctx, "Finishing CustomRuleResource.schemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing CustomRuleResource.schemaToTerraform execution")
 
 	return resp, diags
 }
 
 func terraformToSchema(ctx context.Context, tf ruleAPI.CustomRule) (models.CustomRuntimeRuleResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing CustomRuleResource.terraformToSchema")
+	util.HCLogDebug(ctx, "Executing CustomRuleResource.terraformToSchema")
 
 	var diags diag.Diagnostics
 
@@ -285,7 +285,7 @@ func terraformToSchema(ctx context.Context, tf ruleAPI.CustomRule) (models.Custo
 		VulnIDs:          vulnIDs,
 	}
 
-	util.LogDebug(ctx, "Finishing CustomRuleResource.terraformToSchema execution")
+	util.HCLogDebug(ctx, "Finishing CustomRuleResource.terraformToSchema execution")
 
 	return resp, diags
 }

@@ -25,7 +25,7 @@ func (v errorIfAllowListNonEmptyWithBlock) MarkdownDescription(ctx context.Conte
 }
 
 func (v errorIfAllowListNonEmptyWithBlock) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	util.LogDebug(ctx, "Executing ErrorIfAllowListNonEmptyWithBlock")
+	util.HCLogDebug(ctx, "Executing ErrorIfAllowListNonEmptyWithBlock")
 
 	var (
 		allowList                   basetypes.ListValue

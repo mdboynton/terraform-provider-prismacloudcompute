@@ -25,7 +25,7 @@ func (v permissionsCheckNotEnforcedIfScanningWithHub) MarkdownDescription(ctx co
 }
 
 func (v permissionsCheckNotEnforcedIfScanningWithHub) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	util.LogDebug(ctx, "Executing PermissionsCheckNotEnforcedIfScanningWithHub")
+	util.HCLogDebug(ctx, "Executing PermissionsCheckNotEnforcedIfScanningWithHub")
 
 	var (
 		hubAccountId            basetypes.StringValue

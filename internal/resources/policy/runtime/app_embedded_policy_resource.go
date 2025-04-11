@@ -238,15 +238,15 @@ func (r *AppEmbeddedRuntimePolicyResource) ImportState(ctx context.Context, req 
 }
 
 func (r *AppEmbeddedRuntimePolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.LogDebug(ctx, "entering ModifyPlan")
+	util.HCLogDebug(ctx, "entering ModifyPlan")
 
 	//policy.ModifyPolicyResourcePlan(ctx, r.client, req.Plan, resp)
 
-	util.LogDebug(ctx, "exiting ModifyPlan")
+	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }
 
 func AppEmbeddedRuntimePolicySchemaToTerraform(ctx context.Context, plan *models.RuntimeAppEmbeddedPolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (policyAPI.RuntimeAppEmbeddedPolicy, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing AppEmbeddedRuntimePolicySchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing AppEmbeddedRuntimePolicySchemaToTerraform")
 
 	var (
 		diags diag.Diagnostics
@@ -278,13 +278,13 @@ func AppEmbeddedRuntimePolicySchemaToTerraform(ctx context.Context, plan *models
 
 	//tfPolicy.SortRules(ctx, plan.Rules)
 
-	util.LogDebug(ctx, "Finishing AppEmbeddedRuntimePolicySchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing AppEmbeddedRuntimePolicySchemaToTerraform execution")
 
 	return tfPolicy, diags
 }
 
 func AppEmbeddedRuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaRules []models.RuntimeAppEmbeddedPolicyRuleResourceModel, client *api.PrismaCloudComputeAPIClient, customRuleIdMap map[string]int) ([]policyAPI.RuntimeAppEmbeddedPolicyRule, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing AppEmbeddedRuntimePolicyRulesSchemaToTerraform")
+	util.HCLogDebug(ctx, "Executing AppEmbeddedRuntimePolicyRulesSchemaToTerraform")
 
 	var (
 		diags           diag.Diagnostics
@@ -349,13 +349,13 @@ func AppEmbeddedRuntimePolicyRulesSchemaToTerraform(ctx context.Context, schemaR
 		rules = append(rules, rule)
 	}
 
-	util.LogDebug(ctx, "Finishing AppEmbeddedRuntimePolicyRulesSchemaToTerraform execution")
+	util.HCLogDebug(ctx, "Finishing AppEmbeddedRuntimePolicyRulesSchemaToTerraform execution")
 
 	return rules, diags
 }
 
 func AppEmbeddedRuntimePolicyTerraformToSchema(ctx context.Context, policy policyAPI.RuntimeAppEmbeddedPolicy, plan models.RuntimeAppEmbeddedPolicyResourceModel, client *api.PrismaCloudComputeAPIClient) (models.RuntimeAppEmbeddedPolicyResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing AppEmbeddedRuntimePolicyTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing AppEmbeddedRuntimePolicyTerraformToSchema")
 
 	var (
 		diags diag.Diagnostics
@@ -386,13 +386,13 @@ func AppEmbeddedRuntimePolicyTerraformToSchema(ctx context.Context, policy polic
 
 	schema.SortRules(ctx, plan.Rules)
 
-	util.LogDebug(ctx, "Finishing RuntimeAppEmbeddedPolicyTerraformToSchema execution")
+	util.HCLogDebug(ctx, "Finishing RuntimeAppEmbeddedPolicyTerraformToSchema execution")
 
 	return schema, diags
 }
 
 func AppEmbeddedRuntimePolicyRulesTerraformToSchema(ctx context.Context, rules []policyAPI.RuntimeAppEmbeddedPolicyRule, planRules *[]models.RuntimeAppEmbeddedPolicyRuleResourceModel, customRuleIdMap map[int]string) ([]models.RuntimeAppEmbeddedPolicyRuleResourceModel, diag.Diagnostics) {
-	util.LogDebug(ctx, "Executing RuntimeAppEmbeddedPolicyRulesTerraformToSchema")
+	util.HCLogDebug(ctx, "Executing RuntimeAppEmbeddedPolicyRulesTerraformToSchema")
 
 	var diags diag.Diagnostics
 
@@ -498,7 +498,7 @@ func AppEmbeddedRuntimePolicyRulesTerraformToSchema(ctx context.Context, rules [
 		schemaRules = append(schemaRules, schemaRule)
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimeAppEmbeddedPolicyRulesTerraformToSchema exection")
+	util.HCLogDebug(ctx, "Finishing RuntimeAppEmbeddedPolicyRulesTerraformToSchema exection")
 
 	return schemaRules, diags
 }

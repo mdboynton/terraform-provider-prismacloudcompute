@@ -80,7 +80,7 @@ type RuntimeAppEmbeddedPolicyFileSystemResourceModel struct {
 }
 
 func (m *RuntimeAppEmbeddedPolicyResourceModel) SortRules(ctx context.Context, planRules *[]RuntimeAppEmbeddedPolicyRuleResourceModel) {
-	util.LogDebug(ctx, "Executing RuntimeAppEmbeddedPolicyResourceModel.SortRules()")
+	util.HCLogDebug(ctx, "Executing RuntimeAppEmbeddedPolicyResourceModel.SortRules()")
 
 	if m.Rules != nil && len(*m.Rules) > 0 {
 		if len(*m.Rules) == 1 && len(*planRules) == 1 {
@@ -117,5 +117,5 @@ func (m *RuntimeAppEmbeddedPolicyResourceModel) SortRules(ctx context.Context, p
 		}
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimeAppEmbeddedPolicyResourceModel.SortRules() execution")
+	util.HCLogDebug(ctx, "Finishing RuntimeAppEmbeddedPolicyResourceModel.SortRules() execution")
 }

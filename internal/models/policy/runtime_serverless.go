@@ -70,7 +70,7 @@ type RuntimeServerlessPolicyFileSystemResourceModel struct {
 }
 
 func (m *RuntimeServerlessPolicyResourceModel) SortRules(ctx context.Context, planRules *[]RuntimeServerlessPolicyRuleResourceModel) {
-	util.LogDebug(ctx, "Executing RuntimeServerlessPolicyResourceModel.SortRules()")
+	util.HCLogDebug(ctx, "Executing RuntimeServerlessPolicyResourceModel.SortRules()")
 
 	if m.Rules != nil && len(*m.Rules) > 0 {
 		// TODO: check for mismatched lengths and return diags with error
@@ -115,5 +115,5 @@ func (m *RuntimeServerlessPolicyResourceModel) SortRules(ctx context.Context, pl
 		}
 	}
 
-	util.LogDebug(ctx, "Finishing RuntimeServerlessPolicyResourceModel.SortRules() execution")
+	util.HCLogDebug(ctx, "Finishing RuntimeServerlessPolicyResourceModel.SortRules() execution")
 }

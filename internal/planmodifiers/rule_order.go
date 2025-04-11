@@ -30,7 +30,7 @@ func (m useIndexForUnknownOrder) MarkdownDescription(_ context.Context) string {
 }
 
 func (m useIndexForUnknownOrder) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	util.LogDebug(ctx, "Executing UseIndexForUnknownOrder")
+	util.HCLogDebug(ctx, "Executing UseIndexForUnknownOrder")
 
 	var rules basetypes.ListValue
 	diags := req.Plan.GetAttribute(ctx, path.Root("rules"), &rules)
@@ -52,7 +52,7 @@ func (m useIndexForUnknownOrder) PlanModifyList(ctx context.Context, req planmod
 
 	diags = req.Plan.GetAttribute(ctx, path.Root("rules"), &resp.PlanValue)
 
-	util.LogDebug(ctx, "Finishing UseIndexForUnknownOrder execution")
+	util.HCLogDebug(ctx, "Finishing UseIndexForUnknownOrder execution")
 
 	return
 }

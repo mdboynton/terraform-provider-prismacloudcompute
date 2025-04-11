@@ -28,7 +28,7 @@ func (v noSharedValuesBetweenProcessLists) MarkdownDescription(ctx context.Conte
 }
 
 func (v noSharedValuesBetweenProcessLists) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	util.LogDebug(ctx, "Executing NoSharedValuesBetweenProcessLists")
+	util.HCLogDebug(ctx, "Executing NoSharedValuesBetweenProcessLists")
 
 	var (
 		allowedProcesses   basetypes.ListValue
