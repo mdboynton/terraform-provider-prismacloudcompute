@@ -449,7 +449,6 @@ func TestAccAppEmbeddedRuntimePolicy_RuleOrder(t *testing.T) {
             },
         },
     })
-
 }
 
 func TestAccAppEmbeddedRuntimePolicy_Effects(t *testing.T) {
