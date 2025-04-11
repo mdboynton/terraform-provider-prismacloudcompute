@@ -14,12 +14,8 @@ import (
 // TODO: Defaults test
 // TODO: Rule ordering/sorting test
 
-const (
-    resourceType string = "prismacloudcompute_container_runtime_policy"
-)
-
 func TestAccContainerRuntimePolicy_EmptyRules(t *testing.T) {
-    resourceName := fmt.Sprintf("%s.accTestEmptyRules", resourceType)
+    resourceName := fmt.Sprintf("%s.accTestEmptyRules", resourceTypeContainer)
     resourceConfig := `
         resource "prismacloudcompute_container_runtime_policy" "accTestEmptyRules" {
             automatic_runtime_learning = false
@@ -43,7 +39,7 @@ func TestAccContainerRuntimePolicy_EmptyRules(t *testing.T) {
 }
 
 func TestAccContainerRuntimePolicy_Base(t *testing.T) {
-    resourceName1 := fmt.Sprintf("%s.accTestBase1", resourceType)
+    resourceName1 := fmt.Sprintf("%s.accTestBase1", resourceTypeContainer)
     resourceConfig1 := `
         resource "prismacloudcompute_container_runtime_policy" "accTestBase1" {
             automatic_runtime_learning = false
@@ -233,7 +229,11 @@ func TestAccContainerRuntimePolicy_Effects(t *testing.T) {
 }
 
 
-func TestAccContainerRuntimePolicy_ErrorOnSharedProcesses(t *testing.T) {
+// TestAccContainerRuntimePolicy_SharedProcesses tests the creation of
+// a container runtime policy where the allowed_processes and
+// the denied_processes.paths lists have shared values. This should trigger
+// a validation error with the appropriate message and flagged values.
+func TestAccContainerRuntimePolicy_SharedProcesses(t *testing.T) {
     resourceConfig := fmt.Sprintf(`
         resource "%s" "accTestSharedProcesses" {
             rules = [
@@ -250,7 +250,7 @@ func TestAccContainerRuntimePolicy_ErrorOnSharedProcesses(t *testing.T) {
                 }
             ]
         }
-    `, resourceType)
+    `, resourceTypeContainer)
 
     resource.UnitTest(t, resource.TestCase{
         PreCheck: func() { testAccPreCheck(t) },

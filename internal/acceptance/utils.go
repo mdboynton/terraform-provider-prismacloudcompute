@@ -9,12 +9,18 @@ import (
     "regexp"
     "errors"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/runtime"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/provider"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 var (
     providerConfig string
+    resourceTypeHost string = "prismacloudcompute_host_runtime_policy"
+    resourceTypeContainer string = "prismacloudcompute_container_runtime_policy"
+    resourceTypeServerless string = "prismacloudcompute_serverless_runtime_policy"
+    resourceTypeAppEmbedded string = "prismacloudcompute_app_embedded_runtime_policy"
 )
 
 func testAccPreCheck(t *testing.T) {
@@ -44,9 +50,33 @@ func testAccPreCheck(t *testing.T) {
     //    t.Fatalf("RequestTimeout is nil")
     //}
 
-    consoleUrl := os.Getenv("PRISMACLOUDCOMPUTE_CONSOLE_URL") 
-    username := os.Getenv("PRISMACLOUDCOMPUTE_USERNAME")
-    password := os.Getenv("PRISMACLOUDCOMPUTE_PASSWORD")
+    var (
+        consoleUrl string
+        username string
+        password string
+        unset []string = []string{}
+    )
+
+    // Pull provider configuration values from environment variables and populate providerConfig
+    consoleUrl = os.Getenv(provider.ConsoleUrlEnvVar) 
+    if consoleUrl == "" {
+        unset = append(unset, provider.ConsoleUrlEnvVar)
+    }
+
+    username = os.Getenv(provider.UsernameEnvVar)
+    if username == "" {
+        unset = append(unset, provider.UsernameEnvVar)
+    }
+
+    password = os.Getenv(provider.PasswordEnvVar)
+    if password == "" {
+        unset = append(unset, provider.PasswordEnvVar)
+    }
+
+    if len(unset) > 0 {
+        t.Fatalf(fmt.Sprintf("Environment variables unset/empty: %s", strings.Join(unset, ", ")))
+    }
+    
     providerConfig = fmt.Sprintf(`
         provider "prismacloudcompute" {
             console_url = "%s"
