@@ -93,6 +93,10 @@ func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
         return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: client uninitialized")
     }
 
+    if c.Config.ConsoleURL== nil {
+        return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: nil console URL")
+    }
+
     if c.Config.Username == nil {
         return fmt.Errorf("Error occured while authenticating to Prisma Cloud Compute API: nil username")
     }
