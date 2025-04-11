@@ -1,260 +1,260 @@
-package policy 
+package policy
 
 import (
-    "context"
+	"context"
 	"fmt"
-    "time"
+	"time"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	policyAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
-    //"github.com/hashicorp/terraform-plugin-log/tflog"
-    "github.com/hashicorp/terraform-plugin-framework/types"
-    "github.com/hashicorp/terraform-plugin-framework/path"
-    "github.com/hashicorp/terraform-plugin-framework/diag"
+	//"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func (r *CustomComplianceCheckResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-    resp.TypeName = req.ProviderTypeName + "_custom_compliance_check"
+	resp.TypeName = req.ProviderTypeName + "_custom_compliance_check"
 }
 
 func (r *CustomComplianceCheckResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-    resp.Schema = r.GetSchema()
+	resp.Schema = r.GetSchema()
 }
 
 func (r *CustomComplianceCheckResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-    if req.ProviderData == nil {
-        return
-    }
+	if req.ProviderData == nil {
+		return
+	}
 
-    client, ok := req.ProviderData.(*api.PrismaCloudComputeAPIClient)
+	client, ok := req.ProviderData.(*api.PrismaCloudComputeAPIClient)
 
-    if !ok {
-        resp.Diagnostics.AddError(
+	if !ok {
+		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
-        return
-    }
+		return
+	}
 
-    r.client = client
+	r.client = client
 }
 
 func (r *CustomComplianceCheckResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-    // Retrieve values from plan
-    var plan CustomComplianceCheckResourceModel
-    diags := req.Plan.Get(ctx, &plan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Generate API request body from plan
-    check, diags := schemaToCheck(ctx, &plan, r.client)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Upsert custom compliance checks with new values
-    createdCheck, err := policyAPI.UpsertCustomComplianceCheck(*r.client, check)
-	if err != nil {
-		resp.Diagnostics.AddError(
-            "Error creating Custom Compliance Check resource", 
-            fmt.Sprintf("Failed to create custom compliance check: %s", err.Error()),
-        )
-        return
+	// Retrieve values from plan
+	var plan CustomComplianceCheckResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-    // Convert created check to schema
-    createdCheckSchema, diags := checkToSchema(ctx, *createdCheck)
-    if diags.HasError() {
-        return
-    }
+	// Generate API request body from plan
+	check, diags := schemaToCheck(ctx, &plan, r.client)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    // Set state to created check data
-    diags = resp.State.Set(ctx, createdCheckSchema)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Upsert custom compliance checks with new values
+	createdCheck, err := policyAPI.UpsertCustomComplianceCheck(*r.client, check)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating Custom Compliance Check resource",
+			fmt.Sprintf("Failed to create custom compliance check: %s", err.Error()),
+		)
+		return
+	}
+
+	// Convert created check to schema
+	createdCheckSchema, diags := checkToSchema(ctx, *createdCheck)
+	if diags.HasError() {
+		return
+	}
+
+	// Set state to created check data
+	diags = resp.State.Set(ctx, createdCheckSchema)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *CustomComplianceCheckResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    // Get current state
-    var state CustomComplianceCheckResourceModel 
-    diags := req.State.Get(ctx, &state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Get current state
+	var state CustomComplianceCheckResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    // Get policy value from Prisma Cloud
-    check, err := policyAPI.GetCustomComplianceCheckById(*r.client, int(state.Id.ValueInt32()))
-    if err != nil {
-        resp.Diagnostics.AddError(
-            "Error reading Custom Compliance Check resource", 
-            fmt.Sprintf("Failed to read custom compliance check: %s", err.Error()),
-        )
-        return
-    }
+	// Get policy value from Prisma Cloud
+	check, err := policyAPI.GetCustomComplianceCheckById(*r.client, int(state.Id.ValueInt32()))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading Custom Compliance Check resource",
+			fmt.Sprintf("Failed to read custom compliance check: %s", err.Error()),
+		)
+		return
+	}
 
-    // Overwrite state values with Prisma Cloud data
-    checkSchema, diags := checkToSchema(ctx, *check)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Overwrite state values with Prisma Cloud data
+	checkSchema, diags := checkToSchema(ctx, *check)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    // Set refreshed state
-    diags = resp.State.Set(ctx, &checkSchema)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &checkSchema)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *CustomComplianceCheckResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-    // Get current state
-    var state CustomComplianceCheckResourceModel 
-    diags := req.State.Get(ctx, &state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Retrieve values from plan
-    var plan CustomComplianceCheckResourceModel 
-    diags = req.Plan.Get(ctx, &plan)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Generate API request body from plan
-    data, diags := schemaToCheck(ctx, &plan, r.client)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-
-    // Update existing policy
-    updatedPolicy, err := policyAPI.UpsertCustomComplianceCheck(*r.client, data)
-	if err != nil {
-		resp.Diagnostics.AddError(
-            "Error updating Custom Compliance Check resource", 
-            fmt.Sprintf("Failed to update custom compliance check: %s", err.Error()),
-        )
-        return
+	// Get current state
+	var state CustomComplianceCheckResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-    // Convert updated policy into schema
-    checkSchema, diags := checkToSchema(ctx, *updatedPolicy)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Retrieve values from plan
+	var plan CustomComplianceCheckResourceModel
+	diags = req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    // Set updated state
-    diags = resp.State.Set(ctx, checkSchema)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Generate API request body from plan
+	data, diags := schemaToCheck(ctx, &plan, r.client)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Update existing policy
+	updatedPolicy, err := policyAPI.UpsertCustomComplianceCheck(*r.client, data)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating Custom Compliance Check resource",
+			fmt.Sprintf("Failed to update custom compliance check: %s", err.Error()),
+		)
+		return
+	}
+
+	// Convert updated policy into schema
+	checkSchema, diags := checkToSchema(ctx, *updatedPolicy)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Set updated state
+	diags = resp.State.Set(ctx, checkSchema)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *CustomComplianceCheckResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-    // Retrieve value from state
-	var state CustomComplianceCheckResourceModel 
-    diags := req.State.Get(ctx, &state)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Retrieve value from state
+	var state CustomComplianceCheckResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    // Generate API request body from plan
-    data, diags := schemaToCheck(ctx, &state, r.client)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-    
-    // Delete existing check 
-    err := policyAPI.DeleteCustomComplianceCheck(*r.client, data.Id)
+	// Generate API request body from plan
+	data, diags := schemaToCheck(ctx, &state, r.client)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Delete existing check
+	err := policyAPI.DeleteCustomComplianceCheck(*r.client, data.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-            "Error deleting Container Compliance Policy resource", 
-            "Failed to delete container compliance policy: " + err.Error(),
-        )
-        return
+			"Error deleting Container Compliance Policy resource",
+			"Failed to delete container compliance policy: "+err.Error(),
+		)
+		return
 	}
 }
 
 func (r *CustomComplianceCheckResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-    util.DLog(ctx, "executing ImportState")
+	util.LogDebug(ctx, "executing ImportState")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *CustomComplianceCheckResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-    util.DLog(ctx, "entering ModifyPlan")
+	util.LogDebug(ctx, "entering ModifyPlan")
 
-    //var plan *CustomComplianceCheckResourceModel
-    //diags := req.Plan.Get(ctx, &plan)
-    //resp.Diagnostics.Append(diags...)
-    //if resp.Diagnostics.HasError() {
-    //    return
-    //}
+	//var plan *CustomComplianceCheckResourceModel
+	//diags := req.Plan.Get(ctx, &plan)
+	//resp.Diagnostics.Append(diags...)
+	//if resp.Diagnostics.HasError() {
+	//    return
+	//}
 
-    //ModifyCustomComplianceCheckResourcePlan(ctx, r.client, plan, resp)
+	//ModifyCustomComplianceCheckResourcePlan(ctx, r.client, plan, resp)
 
-    util.DLog(ctx, "exiting ModifyPlan")
+	util.LogDebug(ctx, "exiting ModifyPlan")
 }
 
 func schemaToCheck(ctx context.Context, plan *CustomComplianceCheckResourceModel, client *api.PrismaCloudComputeAPIClient) (policyAPI.CustomComplianceCheck, diag.Diagnostics) {
-    util.DLog(ctx, "entering schemaToCheck")
+	util.LogDebug(ctx, "entering schemaToCheck")
 
-    var diags diag.Diagnostics
+	var diags diag.Diagnostics
 
-    check := policyAPI.CustomComplianceCheck{
-        Owner: plan.Owner.ValueString(),
-        Modified: time.Now().Format("2006-01-02T15:04:05.000Z"),
-        Name: plan.Name.ValueString(),
-        Script: plan.Script.ValueString(),
-        Severity: plan.Severity.ValueString(),
-        Title: plan.Description.ValueString(),
-    }
+	check := policyAPI.CustomComplianceCheck{
+		Owner:    plan.Owner.ValueString(),
+		Modified: time.Now().Format("2006-01-02T15:04:05.000Z"),
+		Name:     plan.Name.ValueString(),
+		Script:   plan.Script.ValueString(),
+		Severity: plan.Severity.ValueString(),
+		Title:    plan.Description.ValueString(),
+	}
 
-    if !plan.Id.IsUnknown() && !plan.Id.IsNull() {
-        check.Id = int(plan.Id.ValueInt32())
-    }
+	if !plan.Id.IsUnknown() && !plan.Id.IsNull() {
+		check.Id = int(plan.Id.ValueInt32())
+	}
 
-    util.DLog(ctx, "exiting schemaToCheck")
+	util.LogDebug(ctx, "exiting schemaToCheck")
 
-    return check, diags
+	return check, diags
 }
 
 func checkToSchema(ctx context.Context, check policyAPI.CustomComplianceCheck) (CustomComplianceCheckResourceModel, diag.Diagnostics) {
-    util.DLog(ctx, "entering checkToSchema")
+	util.LogDebug(ctx, "entering checkToSchema")
 
-    var diags diag.Diagnostics
-    
-    schemaCheck := CustomComplianceCheckResourceModel{
-        Id: types.Int32Value(int32(check.Id)),
-        Modified: types.StringValue(""),
-        Description: types.StringValue(check.Title),
-        Owner: types.StringValue(check.Owner),
-        Name: types.StringValue(check.Name),
-        PreviousName: types.StringValue(check.PreviousName),
-        Script: types.StringValue(check.Script),
-        Severity: types.StringValue(check.Severity),
-    }
+	var diags diag.Diagnostics
 
-    util.DLogf(ctx, schemaCheck)
+	schemaCheck := CustomComplianceCheckResourceModel{
+		Id:           types.Int32Value(int32(check.Id)),
+		Modified:     types.StringValue(""),
+		Description:  types.StringValue(check.Title),
+		Owner:        types.StringValue(check.Owner),
+		Name:         types.StringValue(check.Name),
+		PreviousName: types.StringValue(check.PreviousName),
+		Script:       types.StringValue(check.Script),
+		Severity:     types.StringValue(check.Severity),
+	}
 
-    util.DLog(ctx, "exiting checkToSchema")
+	util.LogfDebug(ctx, schemaCheck)
 
-    return schemaCheck, diags
+	util.LogDebug(ctx, "exiting checkToSchema")
+
+	return schemaCheck, diags
 }
