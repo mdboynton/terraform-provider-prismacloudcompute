@@ -11,6 +11,8 @@ import (
 	"path"
 	"time"
     "math"
+
+    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 )
 
 type PrismaCloudComputeAPIClientConfig struct {
@@ -87,6 +89,8 @@ func Client(config PrismaCloudComputeAPIClientConfig) (*PrismaCloudComputeAPICli
 }
 
 func (c *PrismaCloudComputeAPIClient) Authenticate() (err error) {
+    util.LogDebug("Authenticating to Prisma Cloud Compute API")
+
 	res := AuthResponse{}
 
     if c == nil {

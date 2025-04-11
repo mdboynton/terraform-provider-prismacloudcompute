@@ -7,11 +7,10 @@ import (
     "io"
     "os"
     "strings"
-    "strconv"
-    "net/url"
+    //"net/url"
 
     "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-    //"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
     "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/auth"
     compliance "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/compliance"
     vulnerability "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/policy/vulnerability"
@@ -20,6 +19,7 @@ import (
     systemResource "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
     systemDataSource "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/data_sources/system"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/datasource"
     "github.com/hashicorp/terraform-plugin-framework/provider"
     "github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -141,12 +141,10 @@ func (p *PrismaCloudComputeProvider) DataSources(ctx context.Context) []func() d
 func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
     tflog.Debug(ctx, "Starting provider configuration")
 
-    var config api.PrismaCloudComputeAPIClientConfig
-    diags := req.Config.Get(ctx, &config)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+    var (
+        config api.PrismaCloudComputeAPIClientConfig
+        diags diag.Diagnostics
+    )
 
     if p.version == "test" {
         consoleUrl := os.Getenv(ConsoleUrlEnvVar)
@@ -174,21 +172,10 @@ func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider
         return
     }
 
-    // If a config file was specified in the provider configuration, attempt to parse and populate the values into the config object
-    if config.ConfigFile != nil {
-        overwriteApiClientConfigWithFile(ctx, &config, resp)
-        if resp.Diagnostics.HasError() {
-            return 
-        }
-    // Otherwise, attempt to parse and populate the values from the relevant environment variables, if they are defined
-    } else {
-        overwriteApiClientConfigurationWithEnvVars(ctx, &config, resp)
-        if resp.Diagnostics.HasError() {
-            return 
-        }
+    config, diags = GetProviderConfiguration(ctx, req)
+    if diags.HasError() {
+        return
     }
-
-   
 
     // TODO: fix this 
     //// Overwrite console URL value in config
@@ -216,202 +203,200 @@ func (p *PrismaCloudComputeProvider) Configure(ctx context.Context, req provider
     resp.ResourceData = client
 }
 
-//func GetConfigurationFromFile(filePath string) (*api.PrismaCloudComputeAPIClientConfig, error) {
-//    // Open config file specified 
-//    configFile, err := os.Open(filePath)
-//    if err != nil {
-//        return nil, fmt.Errorf(
-//            "Provider Configuration File Error",
-//            fmt.Sprintf("Error configuring provider: Configuration file specified but could not be opened. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
-//        )
-//    }
-//
-//    defer configFile.Close()
-//
-//    // Read contents of config file
-//    configFileContent, err := io.ReadAll(configFile)
-//    if err != nil {
-//
-//        return nil, fmt.Errorf(
-//            "Provider Configuration File Error",
-//            fmt.Sprintf("Error configuring provider: Failed to read configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
-//        )
-//    }
-//
-//    // Unmarshal config file contents
-//    config := api.PrismaCloudComputeAPIClientConfig{}
-//    err = json.Unmarshal(configFileContent, &config)
-//    if err != nil {
-//        return nil, fmt.Errorf(
-//            "Provider Configuration File Error",
-//            fmt.Sprintf("Error configuring provider: Failed to unmarshal configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
-//        )
-//    }
-//
-//    return &config, nil
-//}
-
-func overwriteApiClientConfigWithFile(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig, resp *provider.ConfigureResponse) {
-    tflog.Debug(ctx, "Attempting to create provider config from file")
-
-    // Open config file specified 
-    configFile, err := os.Open(*config.ConfigFile)
-    if err != nil {
-        resp.Diagnostics.AddWarning(
-            "Provider Configuration File Error",
-            fmt.Sprintf("Error configuring provider: Configuration file specified but could not be opened. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
-        )
-        return
+func GetProviderConfiguration(ctx context.Context, req provider.ConfigureRequest) (api.PrismaCloudComputeAPIClientConfig, diag.Diagnostics) {
+    // Retrieve configuration values from provider block
+    var config api.PrismaCloudComputeAPIClientConfig
+    diags := req.Config.Get(ctx, &config)
+    if diags.HasError() {
+        return config, diags
     }
 
-    defer configFile.Close()
+    // Attempt to retrieve configuration values from the provided config file path, overwriting the provider block values if it exist and can be deserialized
+    diags.Append(overwriteApiClientConfigWithFile(ctx, &config)...)
 
-    // Read contents of config file
-    configFileContent, err := io.ReadAll(configFile)
-    if err != nil {
-        resp.Diagnostics.AddWarning(
-            "Provider Configuration File Error",
-            fmt.Sprintf("Error configuring provider: Failed to read configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
-        )
-        return
+    // Attempt to retrieve configuration values from environment variables, overwriting the provider block values if they are succesfully retrieved and validated
+    diags.Append(overwriteApiClientConfigWithEnvVars(ctx, &config)...)
+    if diags.HasError() {
+        return config, diags
     }
 
-    // Unmarshal config file contents
-    err = json.Unmarshal(configFileContent, &config)
-    if err != nil {
-        resp.Diagnostics.AddWarning(
-            "Provider Configuration File Error",
-            fmt.Sprintf("Error configuring provider: Failed to unmarshal configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
+    unconfiguredValues := getUnconfiguredValues(config)
+    if len(unconfiguredValues) > 0 {
+        diags.AddError(
+            "Provider Configuration Error",
+            fmt.Sprintf("Required provider configuration values not found in provider block, config file or environment variables: %s", strings.Join(unconfiguredValues, ", ")),
         )
     }
 
-    return
+    return config, diags 
+}
+
+func overwriteApiClientConfigWithFile(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig) diag.Diagnostics {
+    var diags diag.Diagnostics
+
+    if config == nil {
+        diags.AddError(
+            "Provider Configuration Error",
+            "Error configuring provider: Expected *api.PrismaCloudComputeAPIClientConfig, got nil pointer. Please report this issue to the provider developers.",
+        )
+        return diags
+    }
+
+    if config.ConfigFile != nil {
+        tflog.Debug(ctx, fmt.Sprintf("Configuring provider from file %s", *config.ConfigFile))
+
+        // Open config file
+        configFile, err := os.Open(*config.ConfigFile)
+        if err != nil {
+            diags.AddWarning(
+                "Provider Configuration File Error",
+                fmt.Sprintf("Error configuring provider: Configuration file specified but could not be opened. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
+            )
+            return diags
+        }
+
+        defer configFile.Close()
+
+        // Read contents of config file
+        configFileContent, err := io.ReadAll(configFile)
+        if err != nil {
+            diags.AddWarning(
+                "Provider Configuration File Error",
+                fmt.Sprintf("Error configuring provider: Failed to read configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
+            )
+            return diags
+        }
+
+        // Unmarshal config file contents
+        err = json.Unmarshal(configFileContent, &config)
+        if err != nil {
+            diags.AddWarning(
+                "Provider Configuration File Error",
+                fmt.Sprintf("Error configuring provider: Failed to unmarshal configuration file. Provider will default to using configuration values in provider block or environment variables.\nError: %s", err),
+            )
+        }
+    }
+
+    return diags
 }
 
 // Overwrite API client configuration values with values from environment variables if they're set, non-empty and valid
-func overwriteApiClientConfigurationWithEnvVars(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig, resp *provider.ConfigureResponse) {
+func overwriteApiClientConfigWithEnvVars(ctx context.Context, config *api.PrismaCloudComputeAPIClientConfig) diag.Diagnostics {
     var (
+        diags diag.Diagnostics
         consoleUrl string
         username string
         password string
-        insecureString string
         insecure bool
-        //requestTimeoutString string 
-        //requestTimeout int
-        usedValues []string = []string{}
-        emptyValues []string = []string{}
-        failedParsedValues []string = []string{}
+        requestTimeout int
         err error
     )
 
-    // Check each environment variable for a non-empty/valid value.
-    // If a valid value is found, overwrite the relevent configuration value
-
-    if (config.ConsoleURL == nil || *config.ConsoleURL == "") {
-        consoleUrl = os.Getenv(ConsoleUrlEnvVar)
-        if consoleUrl != "" {
-            config.ConsoleURL = &consoleUrl
-            usedValues = append(usedValues, "console_url")
+    // For each nil/empty provider configuration parameter, check its
+    // respective environment variable for a non-empty/valid value. If a valid
+    // value is found, overwrite the relevent configuration value. Otherwise,
+    // raise an error, as this is the final place where this value can be
+    // retrieved from.
+    if util.IsNilOrEmpty(config.ConsoleURL) {
+        err = util.GetEnvironmentVariable(ConsoleUrlEnvVar, &consoleUrl)
+        if err != nil {
+            diags.AddError(
+                "Provider Configuration Error",
+                fmt.Sprintf("Error occured while attempting to parse provider configuration value \"console_url\" from environment variable \"%s\": %s", ConsoleUrlEnvVar, err.Error()),
+            )
         } else {
-            emptyValues = append(usedValues, "console_url")
+            util.HCLogInfo(ctx, "Using environment variable for provider configuration value \"console_url\"")
         }
     }
 
-    if config.Username == nil {
-        username = os.Getenv(UsernameEnvVar)
-        if username != "" {
-            config.Username = &username
-            usedValues = append(usedValues, "username")
+    if util.IsNilOrEmpty(config.Username) {
+        err = util.GetEnvironmentVariable(UsernameEnvVar, &username)
+        if err != nil {
+            diags.AddError(
+                "Provider Configuration Error",
+                fmt.Sprintf("Error occured while attempting to parse provider configuration value \"username\" from environment variable \"%s\": %s", UsernameEnvVar, err.Error()),
+            )
         } else {
-            emptyValues = append(emptyValues, "username")
+            util.HCLogInfo(ctx, "Using environment variable for provider configuration value \"password\"")
         }
     }
 
-    if config.Password == nil {
-        password = os.Getenv(PasswordEnvVar)
-        if password != "" {
-            config.Password = &password
-            usedValues = append(usedValues, "password")
+    if util.IsNilOrEmpty(config.Password) {
+        err = util.GetEnvironmentVariable(PasswordEnvVar, &password)
+        if err != nil {
+            diags.AddError(
+                "Provider Configuration Error",
+                fmt.Sprintf("Error occured while attempting to parse provider configuration value \"password\" from environment variable \"%s\": %s", PasswordEnvVar, err.Error()),
+            )
         } else {
-            emptyValues = append(usedValues, "password")
+            util.HCLogInfo(ctx, "Using environment variable for provider configuration value \"password\"")
         }
     }
     
     if config.Insecure == nil {
-        insecureString = os.Getenv(InsecureEnvVar)
-        if insecureString != "" {
-            insecure, err = strconv.ParseBool(insecureString)
-            if err != nil {
-                failedParsedValues = append(failedParsedValues, "insecure")
-            } else {
-                config.Insecure = &insecure
-                usedValues = append(usedValues, "insecure")
-            }
+        err = util.GetEnvironmentVariable(InsecureEnvVar, &insecure)
+        if err != nil {
+            diags.AddWarning(
+                "Provider Configuration Error",
+                fmt.Sprintf("Error occured while attempting to parse provider configuration value \"insecure\" from environment variable \"%s\": %s", InsecureEnvVar, err.Error()),
+            )
         } else {
-            emptyValues = append(emptyValues, "insecure")
+            util.HCLogInfo(ctx, "Using environment variable for provider configuration value \"insecure\"")
         }
     }
 
-    // request_timeout is optional, setting it to 60 seconds by default
-
-    //if config.RequestTimeout == nil {
-    //    requestTimeoutString = os.Getenv(RequestTimeoutEnvVar)
-    //    if requestTimeoutString != "" {
-    //        requestTimeout, err = strconv.Atoi(requestTimeoutString)
-    //        if err != nil {
-    //            failedParsedValues = append(failedParsedValues, "request_timeout")
-    //        } else {
-    //            config.RequestTimeout = &requestTimeout
-    //            usedValues = append(usedValues, "request_timeout")
-    //        }
-    //    } else {
-    //        emptyValues = append(emptyValues, "request_timeout")
-    //    }
-    //}
-
-    if (len(failedParsedValues) > 0 || len(emptyValues) > 0) {
-        errorMessage := "Error occured while attempting to populate provider configuration with environment variables for values not found in provider block/config file."
-        
-        if len(emptyValues) > 0 {
-            errorMessage += fmt.Sprintf("\nThe following environment variables are not set or are set to empty values: %s", strings.Join(emptyValues, ", "))
+    if config.RequestTimeout == nil {
+        err = util.GetEnvironmentVariable(RequestTimeoutEnvVar, &requestTimeout)
+        if err != nil {
+            diags.AddWarning(
+                "Provider Configuration Error",
+                fmt.Sprintf("Error occured while attempting to parse provider configuration value \"request_timeout\" from environment variable \"%s\": %s", RequestTimeoutEnvVar, err.Error()),
+            )
+        } else {
+            util.HCLogInfo(ctx, "Using environment variable for provider configuration value \"request_timeout\"")
         }
-
-        if len(failedParsedValues) > 0 {
-            errorMessage += fmt.Sprintf("\nThe following environment variables contained invalid values: %s", strings.Join(failedParsedValues, ", "))
-        }
-
-        resp.Diagnostics.AddError(
-            "Provider Configuration Error",
-            errorMessage,
-        )
-
-        return
     }
 
-    if len(usedValues) > 0 {
-        tflog.Debug(ctx, fmt.Sprintf("Using environment variable values for configuration fields: %s", strings.Join(usedValues, ", ")))
-    }
+    return diags
 }
 
-func validateConsoleUrl(consoleUrl *string) *string {
-    if consoleUrl == nil {
-        errorMessage := "Error occured while attempting to parse console URL: nil pointer reference"
-        return &errorMessage 
+func getUnconfiguredValues(config api.PrismaCloudComputeAPIClientConfig) []string {
+    unconfiguredValues := []string{}
+
+    if util.IsNilOrEmpty(config.ConsoleURL) {
+        unconfiguredValues = append(unconfiguredValues, "console_url")
     }
 
-    parsedConsoleUrl, err := url.Parse(*consoleUrl) 
-    if err != nil {
-        errorMessage := fmt.Sprintf("Error occured while attempting to parse console URL: %s", err.Error())
-        return &errorMessage
+    if util.IsNilOrEmpty(config.Username) {
+        unconfiguredValues = append(unconfiguredValues, "username")
     }
 
-    // Set URL scheme to https if not specified
-    if parsedConsoleUrl.Scheme == "" {
-        parsedConsoleUrl.Scheme = "https"
+    if util.IsNilOrEmpty(config.Password) {
+        unconfiguredValues = append(unconfiguredValues, "password")
     }
 
-    resp := parsedConsoleUrl.String()
-    consoleUrl = &resp
-
-    return nil
+    return unconfiguredValues
 }
+
+//func validateConsoleUrl(consoleUrl *string) *string {
+//    if consoleUrl == nil {
+//        errorMessage := "Error occured while attempting to parse console URL: nil pointer reference"
+//        return &errorMessage 
+//    }
+//
+//    parsedConsoleUrl, err := url.Parse(*consoleUrl) 
+//    if err != nil {
+//        errorMessage := fmt.Sprintf("Error occured while attempting to parse console URL: %s", err.Error())
+//        return &errorMessage
+//    }
+//
+//    // Set URL scheme to https if not specified
+//    if parsedConsoleUrl.Scheme == "" {
+//        parsedConsoleUrl.Scheme = "https"
+//    }
+//
+//    resp := parsedConsoleUrl.String()
+//    consoleUrl = &resp
+//
+//    return nil
+//}
