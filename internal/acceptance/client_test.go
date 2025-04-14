@@ -9,9 +9,11 @@ import (
     "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 )
 
+
+
 func TestAPIClient(t *testing.T) {
     // Open credentials file
-	credsFile, err := os.Open(credentialsFilePath)
+	credsFile, err := os.Open(configFilePath)
 	if err != nil {
 		t.Errorf("Error opening credentials file: %v", err)
         return 

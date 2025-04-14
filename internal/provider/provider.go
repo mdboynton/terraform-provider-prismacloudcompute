@@ -34,6 +34,9 @@ const (
     PasswordEnvVar = "PRISMACLOUDCOMPUTE_PASSWORD"
     InsecureEnvVar = "PRISMACLOUDCOMPUTE_INSECURE"
     RequestTimeoutEnvVar = "PRISMACLOUDCOMPUTE_REQUEST_TIMEOUT"
+
+    InsecureDefault = true
+    RequestTimeoutDefault = 60
 )
 
 var (
@@ -97,6 +100,59 @@ func (p *PrismaCloudComputeProvider) Metadata(_ context.Context, _ provider.Meta
     resp.TypeName = "prismacloudcompute"
     resp.Version = p.version
 }
+
+//func (p *PrismaCloudComputeProvider) ValidateConfig(ctx context.Context, req provider.ValidateConfigRequest, resp *provider.ValidateConfigResponse) {
+//    util.HCLogDebug(ctx, "ValidateConfig")
+//
+//    var config PrismaCloudComputeProviderModel
+//    resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+//    if resp.Diagnostics.HasError() {
+//        return
+//    }
+//
+//    // Validate required provider configuration arguments 
+//    if (config.ConsoleUrl.IsNull() || config.ConsoleUrl.IsUnknown()) {
+//        resp.Diagnostics.AddError(
+//            "Missing Provider Configuration Attribute",
+//            fmt.Sprintf("Missing value for provider configuration attribute 'console_url'. Please provide a value in the provider configuration block, in the file specified by the 'config_file' attribute, or set the %s environment variable.", ConsoleUrlEnvVar),
+//        )
+//    }
+//
+//    if (config.Username.IsNull() || config.Username.IsUnknown()) {
+//        resp.Diagnostics.AddError(
+//            "Missing Provider Configuration Attribute",
+//            fmt.Sprintf("Missing value for provider configuration attribute 'username'. Please provide a value in the provider configuration block, in the file specified by the 'config_file' attribute, or set the %s environment variable.", UsernameEnvVar),
+//        )
+//    }
+//
+//    if (config.Password.IsNull() || config.Password.IsUnknown()) {
+//        resp.Diagnostics.AddError(
+//            "Missing Provider Configuration Attribute",
+//            fmt.Sprintf("Missing value for provider configuration attribute 'username'. Please provide a value in the provider configuration block, in the file specified by the 'config_file' attribute, or set the %s environment variable.", UsernameEnvVar),
+//        )
+//    }
+//
+//    if resp.Diagnostics.HasError() {
+//        return
+//    }
+//
+//    // Check optional parameters and assign default value if null or unknown
+//    if (config.Insecure.IsNull() || config.Insecure.IsUnknown()) {
+//        resp.Diagnostics.AddWarning(
+//            "Missing Optional Provider Configuration Attribute",
+//            fmt.Sprintf("Missing value for provider configuration attribute 'insecure'. Using default value of %t.", InsecureDefault),
+//        )
+//        config.Insecure = types.BoolValue(InsecureDefault)
+//    }
+//
+//    if (config.RequestTimeout.IsNull() || config.RequestTimeout.IsUnknown()) {
+//        resp.Diagnostics.AddWarning(
+//            "Missing Optional Provider Configuration Attribute",
+//            fmt.Sprintf("Missing value for provider configuration attribute 'request_timeout'. Using default value of %d.", RequestTimeoutDefault),
+//        )
+//        config.RequestTimeout = types.Int32Value(RequestTimeoutDefault)
+//    }
+//}
 
 func (p *PrismaCloudComputeProvider) Resources(ctx context.Context) []func() resource.Resource {
     return []func() resource.Resource{
