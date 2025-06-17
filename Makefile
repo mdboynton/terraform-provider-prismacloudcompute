@@ -24,3 +24,6 @@ install: build
 
 clean:
 	rm -rf ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}
+
+acctest: build
+	go test -v ./internal/acceptance/ -count=1
