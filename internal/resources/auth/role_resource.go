@@ -3,17 +3,16 @@ package auth
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/auth"
 	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/auth"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	//"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func (r *RoleResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -142,8 +141,6 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	util.HCLogDebug(ctx, fmt.Sprintf("schemaToRole in Update() returned with value:\n\n %+v", role))
-
 	// Update existing role
 	err := auth.UpdateRole(*r.client, role)
 	if err != nil {
@@ -164,17 +161,12 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	util.HCLogDebug(ctx, fmt.Sprintf("updatedRole: \n\n %+v", updatedRole))
-
 	// Convert updated user to schema
 	plan, diags = roleToSchema(ctx, *updatedRole, getRoleToSchemaPermissionsMap())
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	util.HCLogDebug(ctx, fmt.Sprintf("setting state from Update() with value:\n\n %+v", plan))
-	util.HCLogDebug(ctx, fmt.Sprintf("%+v", *plan.Permissions))
 
 	// Set updated state
 	diags = resp.State.Set(ctx, plan)
@@ -210,8 +202,6 @@ func (r *RoleResource) ImportState(ctx context.Context, req resource.ImportState
 }
 
 func (r *RoleResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	util.HCLogDebug(ctx, "entering ModifyPlan")
-
 	//var plan *models.RoleResourceModel
 	//diags := req.Plan.Get(ctx, &plan)
 	//resp.Diagnostics.Append(diags...)
@@ -243,8 +233,6 @@ func (r *RoleResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
 	//    diags.Append(resp.Plan.SetAttribute(ctx, path.Root("permissions"), &plan.Permissions)...)
 	//    util.DLog(ctx, "no user permission")
 	//}
-
-	util.HCLogDebug(ctx, "exiting ModifyPlan")
 }
 
 func getSchemaToRolePermissionsMap() map[string]string {
@@ -349,9 +337,56 @@ func getRoleToSchemaPermissionsMap() map[string]string {
 	}
 }
 
-func schemaToRole(ctx context.Context, plan *models.RoleResourceModel, permissionsMap map[string]string) (auth.Role, diag.Diagnostics) {
-	util.HCLogDebug(ctx, "entering schemaToRole")
+var permissionNames = []string{
+	"radarsCloud",
+	"radarsHosts",
+	"radarsContainers",
+	"radarsServerless",
+	"policyContainers",
+	"policyHosts",
+	"policyServerless",
+	"policyComplianceCustomRules",
+	"policyRuntimeContainer",
+	"policyRuntimeHosts",
+	"policyRuntimeServerless",
+	"policyCNNF",
+	"policyWAAS",
+	"policyAccessSecrets",
+	"policyAccessKubernetes",
+	"policyCustomRules",
+	"monitorVuln",
+	"monitorCompliance",
+	"monitorRuntimeIncidents",
+	"monitorImages",
+	"monitorHosts",
+	"monitorServerless",
+	"monitorCI",
+	"monitorRuntimeContainers",
+	"monitorRuntimeHosts",
+	"monitorRuntimeServerless",
+	"sandbox",
+	"monitorWAAS",
+	"monitorCNNF",
+	"monitorAccessDocker",
+	"monitorAccessKubernetes",
+	"uIEventSubscriber",
+	"policyCloud",
+	"monitorCloud",
+	"systemLogs",
+	"manageDefenders",
+	"manageAlerts",
+	"collections",
+	"manageCreds",
+	"authConfiguration",
+	"userManagement",
+	"systemOperations",
+	"privilegedOperations",
+	"downloads",
+	"accessUI",
+	"user",
+}
 
+func schemaToRole(ctx context.Context, plan *models.RoleResourceModel, permissionsMap map[string]string) (auth.Role, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	role := auth.Role{
@@ -369,9 +404,15 @@ func schemaToRole(ctx context.Context, plan *models.RoleResourceModel, permissio
 
 	for _, planPermission := range *plan.Permissions {
 		planPermissionName := planPermission.Name.ValueString()
-		if permissionName, ok := permissionsMap[planPermissionName]; ok {
+
+		// Ignore the base "user" permission
+		if planPermissionName == "user" {
+			continue
+		}
+
+		if slices.Contains(permissionNames, planPermissionName) {
 			permission := auth.RolePermission{
-				Name:      permissionName,
+				Name:      planPermission.Name.ValueString(),
 				ReadWrite: planPermission.ReadWrite.ValueBool(),
 			}
 			permissions = append(permissions, permission)
@@ -384,14 +425,10 @@ func schemaToRole(ctx context.Context, plan *models.RoleResourceModel, permissio
 	}
 	role.Permissions = permissions
 
-	util.HCLogDebug(ctx, "exiting schemaToRole")
-
 	return role, diags
 }
 
 func roleToSchema(ctx context.Context, role auth.Role, permissionsMap map[string]string) (models.RoleResourceModel, diag.Diagnostics) {
-	util.HCLogDebug(ctx, "entering roleToSchema")
-
 	var diags diag.Diagnostics
 
 	schema := models.RoleResourceModel{
@@ -400,7 +437,12 @@ func roleToSchema(ctx context.Context, role auth.Role, permissionsMap map[string
 		System:      types.BoolValue(role.System),
 	}
 
-	permissions := []models.RolePermissionResourceModel{}
+	permissions := []models.RolePermissionResourceModel{
+		{
+			Name:      types.StringValue("user"),
+			ReadWrite: types.BoolValue(true),
+		},
+	}
 
 	for _, schemaPermission := range role.Permissions {
 		schemaPermissionName := schemaPermission.Name
@@ -409,9 +451,9 @@ func roleToSchema(ctx context.Context, role auth.Role, permissionsMap map[string
 			continue
 		}
 
-		if permissionName, ok := permissionsMap[schemaPermissionName]; ok {
+		if slices.Contains(permissionNames, schemaPermissionName) {
 			permission := models.RolePermissionResourceModel{
-				Name:      types.StringValue(permissionName),
+				Name:      types.StringValue(schemaPermissionName),
 				ReadWrite: types.BoolValue(schemaPermission.ReadWrite),
 			}
 			permissions = append(permissions, permission)
@@ -423,8 +465,6 @@ func roleToSchema(ctx context.Context, role auth.Role, permissionsMap map[string
 		}
 	}
 	schema.Permissions = &permissions
-
-	util.HCLogDebug(ctx, "exiting roleToSchema")
 
 	return schema, diags
 }
