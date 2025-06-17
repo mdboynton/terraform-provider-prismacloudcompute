@@ -1,16 +1,16 @@
 package policy
 
 import (
-    "context"
+    //"context"
 	"fmt"
 	"net/http"
-    "sort"
+    //"sort"
     "slices"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
 	collectionAPI "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api/collection"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 )
 
 type RuntimeAppEmbeddedPolicy struct {
@@ -83,57 +83,57 @@ func (p *RuntimeAppEmbeddedPolicy) GetRuleNames() []string {
     return ruleNames
 }
 
-func (p *RuntimeAppEmbeddedPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeAppEmbeddedPolicyRuleResourceModel) {
-	util.DLog(ctx, "Executing api.RuntimeAppEmbeddedPolicy.SortRules()")
-    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
-        return
-    }
-
-	rulesOrderMap := generateRuntimeAppEmbeddedPolicyRulesOrderMap(*planRules)
-	sort.Slice((*p.Rules), func(i, j int) bool {
-		return rulesOrderMap[(*p.Rules)[i].Name] < rulesOrderMap[(*p.Rules)[j].Name]
-	})
-
-	util.DLog(ctx, "Finishing api.RuntimeAppEmbeddedPolicy.SortRules() execution")
-}
+//func (p *RuntimeAppEmbeddedPolicy) SortRules(ctx context.Context, planRules *[]models.RuntimeAppEmbeddedPolicyRuleResourceModel) {
+//	util.DLog(ctx, "Executing api.RuntimeAppEmbeddedPolicy.SortRules()")
+//    if (p == nil || (*p).Rules == nil || len(*p.Rules) == 0) {
+//        return
+//    }
+//
+//	rulesOrderMap := generateRuntimeAppEmbeddedPolicyRulesOrderMap(*planRules)
+//	sort.Slice((*p.Rules), func(i, j int) bool {
+//		return rulesOrderMap[(*p.Rules)[i].Name] < rulesOrderMap[(*p.Rules)[j].Name]
+//	})
+//
+//	util.DLog(ctx, "Finishing api.RuntimeAppEmbeddedPolicy.SortRules() execution")
+//}
 
 // TODO: remove this duplicate function when we can move the logic somewhere that can be used here
 // and by internal/resources/policy/common.go
-func generateRuntimeAppEmbeddedPolicyRulesOrderMap(rules []models.RuntimeAppEmbeddedPolicyRuleResourceModel) map[string]int {
-	orderedRulesMap := make(map[int][]string)
-
-	for _, rule := range rules {
-		order := int(rule.Order.ValueInt32())
-		if _, exists := orderedRulesMap[order]; exists {
-			orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
-		} else {
-			orderedRulesMap[order] = []string{rule.Name.ValueString()}
-		}
-	}
-
-	sortedKeys := make([]int, 0, len(orderedRulesMap))
-	for key := range orderedRulesMap {
-		sortedKeys = append(sortedKeys, key)
-	}
-	sort.Ints(sortedKeys)
-
-	ruleOrders := make(map[string]int)
-	lastOrderValue := -1
-	for _, key := range sortedKeys {
-		offset := 0
-		if lastOrderValue != -1 && lastOrderValue >= key {
-			offset = lastOrderValue - key + 1
-		}
-
-		for sliceIndex, ruleName := range orderedRulesMap[key] {
-			orderValue := key + sliceIndex + offset
-			ruleOrders[ruleName] = orderValue
-			lastOrderValue = orderValue
-		}
-	}
-
-	return ruleOrders
-}
+//func generateRuntimeAppEmbeddedPolicyRulesOrderMap(rules []models.RuntimeAppEmbeddedPolicyRuleResourceModel) map[string]int {
+//	orderedRulesMap := make(map[int][]string)
+//
+//	for _, rule := range rules {
+//		order := int(rule.Order.ValueInt32())
+//		if _, exists := orderedRulesMap[order]; exists {
+//			orderedRulesMap[order] = append(orderedRulesMap[order], rule.Name.ValueString())
+//		} else {
+//			orderedRulesMap[order] = []string{rule.Name.ValueString()}
+//		}
+//	}
+//
+//	sortedKeys := make([]int, 0, len(orderedRulesMap))
+//	for key := range orderedRulesMap {
+//		sortedKeys = append(sortedKeys, key)
+//	}
+//	sort.Ints(sortedKeys)
+//
+//	ruleOrders := make(map[string]int)
+//	lastOrderValue := -1
+//	for _, key := range sortedKeys {
+//		offset := 0
+//		if lastOrderValue != -1 && lastOrderValue >= key {
+//			offset = lastOrderValue - key + 1
+//		}
+//
+//		for sliceIndex, ruleName := range orderedRulesMap[key] {
+//			orderValue := key + sliceIndex + offset
+//			ruleOrders[ruleName] = orderValue
+//			lastOrderValue = orderValue
+//		}
+//	}
+//
+//	return ruleOrders
+//}
 
 // Get app-embedded runtime policy
 func GetRuntimeAppEmbeddedPolicy(c api.PrismaCloudComputeAPIClient) (RuntimeAppEmbeddedPolicy, error) {

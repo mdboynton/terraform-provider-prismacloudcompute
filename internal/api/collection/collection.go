@@ -10,22 +10,22 @@ import (
 const CollectionsEndpoint = "api/v1/collections"
 
 type Collection struct {
-    AccountIDs  []string `json:"accountIDs,omitempty" tfsdk:"account_ids"`
-    AppIDs      []string `json:"appIDs,omitempty" tfsdk:"app_ids"`
-    Clusters    []string `json:"clusters,omitempty" tfsdk:"clusters"`
-    Color       string   `json:"color,omitempty" tfsdk:"color"`
-    Containers  []string `json:"containers,omitempty" tfsdk:"containers"`
-    Description string   `json:"description,omitempty" tfsdk:"description"`
-    Functions   []string `json:"functions,omitempty" tfsdk:"functions"`
-    Hosts       []string `json:"hosts,omitempty" tfsdk:"hosts"`
-    Images      []string `json:"images,omitempty" tfsdk:"images"`
-    Labels      []string `json:"labels,omitempty" tfsdk:"labels"`
-    Modified    string   `json:"modified,omitempty" tfsdk:"modified"`
-    Name        string   `json:"name,omitempty" tfsdk:"name"`
-    Namespaces  []string `json:"namespaces,omitempty" tfsdk:"namespaces"`
-    Owner       string   `json:"owner,omitempty" tfsdk:"owner"`
-    Prisma      bool     `json:"prisma,omitempty" tfsdk:"prisma"`
-    System      bool     `json:"system,omitempty" tfsdk:"system"`
+	AccountIDs  []string `json:"accountIDs,omitempty" tfsdk:"account_ids"`
+	AppIDs      []string `json:"appIDs,omitempty" tfsdk:"application_ids"`
+	Clusters    []string `json:"clusters,omitempty" tfsdk:"clusters"`
+	Color       string   `json:"color,omitempty" tfsdk:"color"`
+	Containers  []string `json:"containers,omitempty" tfsdk:"containers"`
+	Description string   `json:"description,omitempty" tfsdk:"description"`
+	Functions   []string `json:"functions,omitempty" tfsdk:"functions"`
+	Hosts       []string `json:"hosts,omitempty" tfsdk:"hosts"`
+	Images      []string `json:"images,omitempty" tfsdk:"images"`
+	Labels      []string `json:"labels,omitempty" tfsdk:"labels"`
+	Modified    string   `json:"modified,omitempty" tfsdk:"modified"`
+	Name        string   `json:"name,omitempty" tfsdk:"name"`
+	Namespaces  []string `json:"namespaces,omitempty" tfsdk:"namespaces"`
+	Owner       string   `json:"owner,omitempty" tfsdk:"owner"`
+	Prisma      bool     `json:"prisma,omitempty" tfsdk:"prisma"`
+	System      bool     `json:"system,omitempty" tfsdk:"system"`
 }
 
 // Get all collections.
@@ -52,27 +52,27 @@ func GetCollection(c api.PrismaCloudComputeAPIClient, name string) (*Collection,
 }
 
 func GetCollections(c api.PrismaCloudComputeAPIClient, names []string) ([]Collection, error) {
-    collections := []Collection{}
+	collections := []Collection{}
 
 	allCollections, err := ListCollections(c)
 	if err != nil {
 		return collections, err
 	}
 
-    var found bool
+	var found bool
 	for _, name := range names {
-        found = false
-        for _, collection := range allCollections {
-		    if collection.Name == name {
-                found = true
-		    	collections = append(collections, collection)
-                break
-		    }
-        }
+		found = false
+		for _, collection := range allCollections {
+			if collection.Name == name {
+				found = true
+				collections = append(collections, collection)
+				break
+			}
+		}
 
-        if !found {
-	        return collections, fmt.Errorf("collection '%s' not found", name)
-        }
+		if !found {
+			return collections, fmt.Errorf("collection '%s' not found", name)
+		}
 	}
 
 	return collections, nil

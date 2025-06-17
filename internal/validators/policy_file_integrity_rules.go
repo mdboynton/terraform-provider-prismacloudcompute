@@ -5,7 +5,7 @@ import (
     "context"
     "slices"
 
-    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models"
+    "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )

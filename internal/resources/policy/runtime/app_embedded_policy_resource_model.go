@@ -276,6 +276,9 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
                                     Computed: true,
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),
@@ -285,6 +288,9 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
                                     Computed: true,
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),
@@ -312,6 +318,9 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
                                     Computed: true,
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),
@@ -321,6 +330,9 @@ func (r *AppEmbeddedRuntimePolicyResource) GetSchema(ctx context.Context) schema
     			        			Optional:    true,
                                     Computed: true,
     			        			ElementType: types.StringType,
+                                    Validators: []validator.List{
+                                        validators.PortRangesAreValid(),
+                                    },
                                     Default: listdefault.StaticValue(
                                         types.ListValueMust(types.StringType, []attr.Value{}),
                                     ),

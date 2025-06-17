@@ -3,12 +3,14 @@ package acceptance
 import (
 	"testing"
 	"os"
+    "fmt"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/provider"
 )
 
+// TODO: Rule ordering/sorting test
 
 func TestAccAppEmbeddedRuntimePolicy_EmptyRules(t *testing.T) {
     resourceName := "prismacloudcompute_app_embedded_runtime_policy.accTestEmptyRules"
@@ -26,6 +28,114 @@ func TestAccAppEmbeddedRuntimePolicy_EmptyRules(t *testing.T) {
                 Config: providerConfig + resourceConfig,
                 Check: resource.ComposeAggregateTestCheckFunc(
                     resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+                ),
+            },
+        },
+    })
+}
+
+// TestAccAppEmbeddedRuntimePolicy_Defaults tests the creation of an
+// app-embedded runtime policy with rules that only have the required 
+// attributes configured. This should cause the provider to populate the rest
+// of the attributes with their default values.
+func TestAccAppEmbeddedRuntimePolicy_Defaults(t *testing.T) {
+    var (
+        resourceName string = "accTestDefaults"
+        fullResourceName string = fmt.Sprintf("%s.%s", resourceTypeAppEmbedded, resourceName)
+        ruleName1 string = "defaultTestRule1"
+        ruleName2 string = "defaultTestRule2"
+        resourceConfig string = fmt.Sprintf(`
+            resource "%s" "%s" {
+                rules = [
+                    {
+                        name = "%s"
+                    },
+                    {
+                        name = "%s"
+                    },
+                ]
+            }
+        `, resourceTypeAppEmbedded, resourceName, ruleName1, ruleName2)
+    )
+
+    resource.UnitTest(t, resource.TestCase{
+        PreCheck: func() { testAccPreCheck(t) },
+        ProtoV6ProviderFactories: protoV6ProviderFactories(),
+        Steps: []resource.TestStep{
+            {
+                Config: providerConfig + resourceConfig,
+                Check: resource.ComposeAggregateTestCheckFunc(
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.#", "2"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.order", "1"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.order", "2"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.name", ruleName1),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.name", ruleName2),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.collections.#", "1"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.collections.#", "1"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.collections.0", "All"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.collections.0", "All"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.disabled", "false"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.disabled", "false"),
+                    resource.TestCheckNoResourceAttr(fullResourceName, "rules.0.notes"),
+                    resource.TestCheckNoResourceAttr(fullResourceName, "rules.1.notes"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.owner", os.Getenv(provider.UsernameEnvVar)),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.owner", os.Getenv(provider.UsernameEnvVar)),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.previous_name", ""),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.previous_name", ""),
+                    // Processes
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.processes.enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.processes.enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.processes.allowed_processes.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.processes.allowed_processes.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.processes.denied_processes.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.processes.denied_processes.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.processes.denied_processes_effect", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.processes.denied_processes_effect", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.processes.crypto_miners", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.processes.crypto_miners", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.processes.processes_from_modified_binaries", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.processes.processes_from_modified_binaries", "true"),
+                    // Networking 
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.ip_connectivity_enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.ip_connectivity_enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.allowed_listening_ports.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.allowed_listening_ports.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.allowed_outbound_internet_ports.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.allowed_outbound_internet_ports.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.allowed_outbound_ips.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.allowed_outbound_ips.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.denied_ips_ports_effect", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.denied_ips_ports_effect", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.dns_enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.dns_enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.allowed_dns_domains.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.allowed_dns_domains.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.networking.denied_dns_domains_effect", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.networking.denied_dns_domains_effect", "alert"),
+                    // File System
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.enabled", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.denied_paths.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.denied_paths.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.allowed_paths.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.allowed_paths.#", "0"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.denied_paths_effect", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.denied_paths_effect", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.changes_to_binaries_and_certs", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.changes_to_binaries_and_certs", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.detection_of_encrypted_binaries", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.detection_of_encrypted_binaries", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.changes_to_ssh_admin_account_config_files", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.changes_to_ssh_admin_account_config_files", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.suspicious_elf_headers", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.suspicious_elf_headers", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.malware_from_custom_feed", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.malware_from_custom_feed", "true"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.file_system.wild_fire_analysis", "alert"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.file_system.wild_fire_analysis", "alert"),
+                    // Custom Rules
+                    resource.TestCheckNoResourceAttr(fullResourceName, "rules.0.custom_rules"),
+                    resource.TestCheckNoResourceAttr(fullResourceName, "rules.1.custom_rules"),
                 ),
             },
         },
@@ -266,6 +376,75 @@ func TestAccAppEmbeddedRuntimePolicy_Base(t *testing.T) {
                     resource.TestCheckResourceAttr(resourceName2, "rules.0.file_system.malware_from_custom_feed", "false"),
                     resource.TestCheckResourceAttr(resourceName2, "rules.0.file_system.wild_fire_analysis", "disable"),
                     // TODO: custom rules
+                ),
+            },
+        },
+    })
+}
+
+// TestAccAppEmbeddedRuntimePolicy_RuleOrder tests the creation of an
+// app-embedded runtime policy with rules that have configured order values
+// such that their order in Prisma Cloud will not be the same as the order in
+// which they're defined in the resource. The rules should be populated in the
+// Terraform state in their defined order and exist in Prisma Cloud in the
+// order specified by the configuration.
+//
+// The order of the rules in Prisma Cloud should be as follows:
+//     ruleOrderTestRule2
+//     ruleOrderTestRule3
+//     ruleOrderTestRule1
+//
+// This test confirms that the following principals on rule ordering behaviour
+// are adhered to:
+//   - Rules should appear in the Prisma Cloud console in decending order 
+//     of their order values.
+//   - Rules without a configured order value are assigned the value of their
+//     position index plus one (e.g. if the rule is defined first in the
+//     resource it should have a computed order value of 1, the second rule
+//     should have a value of 2, etc).
+//   - If two rules share the same order value, precedent is given to the rule
+//     that appears first in the resource definition.
+//
+func TestAccAppEmbeddedRuntimePolicy_RuleOrder(t *testing.T) {
+    var (
+        resourceName string = "accTestRuleOrder"
+        fullResourceName string = fmt.Sprintf("%s.%s", resourceTypeAppEmbedded, resourceName)
+        ruleName1 string = "ruleOrderTestRule1"
+        ruleName2 string = "ruleOrderTestRule2"
+        ruleName3 string = "ruleOrderTestRule3"
+        resourceConfig string = fmt.Sprintf(`
+            resource "%s" "%s" {
+                rules = [
+                    {
+                        name = "%s"
+                        order = 999
+                    },
+                    {
+                        name = "%s"
+                    },
+                    {
+                        name = "%s"
+                        order = 2
+                    },
+                ]
+            }
+        `, resourceTypeAppEmbedded, resourceName, ruleName1, ruleName2, ruleName3)
+    )
+
+    resource.UnitTest(t, resource.TestCase{
+        PreCheck: func() { testAccPreCheck(t) },
+        ProtoV6ProviderFactories: protoV6ProviderFactories(),
+        Steps: []resource.TestStep{
+            {
+                Config: providerConfig + resourceConfig,
+                Check: resource.ComposeAggregateTestCheckFunc(
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.#", "3"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.order", "999"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.order", "2"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.2.order", "2"),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.0.name", ruleName1),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.1.name", ruleName2),
+                    resource.TestCheckResourceAttr(fullResourceName, "rules.2.name", ruleName3),
                 ),
             },
         },

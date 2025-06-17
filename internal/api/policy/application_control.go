@@ -11,7 +11,6 @@ type ApplicationControlPolicyRule struct {
     Id              int                                         `json:"_id"`
     Applications    []ApplicationControlPolicyRuleApplication   `json:"applications"` 
     Description     string                                      `json:"description"` 
-    //Disabled        string                                      `json:"disabled"` 
     Modified        string                                      `json:"modified"` 
     Name            string                                      `json:"name"` 
     Notes           string                                      `json:"notes"` 
@@ -35,19 +34,19 @@ func UpsertApplicationControlPolicyRule(c api.PrismaCloudComputeAPIClient, polic
 }
 
 // Get application control policy
-func GetApplicationControlPolicy(c api.PrismaCloudComputeAPIClient) (*[]ApplicationControlPolicyRule, error) {
-    var ans []ApplicationControlPolicyRule 
+func GetApplicationControlPolicy(c api.PrismaCloudComputeAPIClient) ([]ApplicationControlPolicyRule, error) {
+    var response []ApplicationControlPolicyRule 
 
-    if err := c.Request(http.MethodGet, ApplicationControlEndpoint, nil, nil, &ans); err != nil {
-		return &ans, fmt.Errorf("error getting application control policy: %s", err)
+    if err := c.Request(http.MethodGet, ApplicationControlEndpoint, nil, nil, &response); err != nil {
+		return response, fmt.Errorf("error getting application control policy: %s", err)
     }
     
-    return &ans, nil
+    return response, nil
 }
 
 // Delete application control policy rule
-func DeleteApplicationControlPolicyRule(c api.PrismaCloudComputeAPIClient, policyRule ApplicationControlPolicyRule) error {
-    if err := c.Request(http.MethodDelete, fmt.Sprintf("%s/%d", ApplicationControlEndpoint, policyRule.Id), nil, nil, nil); err != nil {
+func DeleteApplicationControlPolicyRule(c api.PrismaCloudComputeAPIClient, ruleID int) error {
+    if err := c.Request(http.MethodDelete, fmt.Sprintf("%s/%d", ApplicationControlEndpoint, ruleID), nil, nil, nil); err != nil {
 		return fmt.Errorf("error deleting application control policy rule: %s", err)
     }
     

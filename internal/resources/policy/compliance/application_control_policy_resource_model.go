@@ -2,32 +2,22 @@ package policy
 
 import (
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/api"
-	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
-    //"github.com/hashicorp/terraform-plugin-log/tflog"
-	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/resources/system"
-    //"github.com/hashicorp/terraform-plugin-framework/attr"
-    "github.com/hashicorp/terraform-plugin-framework/types"
-	//"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	//"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/planmodifiers"
+	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/validators"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
-	//"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
-	//"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	//"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ resource.Resource = &ApplicationControlPolicyResource{}
 var _ resource.ResourceWithImportState = &ApplicationControlPolicyResource{}
-//var _ resource.ResourceWithModifyPlan = &ApplicationControlPolicyResource{}
 
 func NewApplicationControlPolicyResource() resource.Resource {
     return &ApplicationControlPolicyResource{}
@@ -49,14 +39,12 @@ func (r *ApplicationControlPolicyResource) GetSchema() schema.Schema {
                     Attributes: map[string]schema.Attribute{
                         "id": schema.Int32Attribute{
                             MarkdownDescription: "TODO",
-                            Optional: true,
                             Computed: true,
                             PlanModifiers: []planmodifier.Int32{
-                                // TODO: can probably just use the included UseStateForUnknown() here
-                                planmodifiers.UseStateRuleIdForUnknownIfExists(),
+                                int32planmodifier.UseStateForUnknown(),
                             },
                         },
-                        "applications": schema.SetNestedAttribute{
+                        "applications": schema.ListNestedAttribute{
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
@@ -66,12 +54,14 @@ func (r *ApplicationControlPolicyResource) GetSchema() schema.Schema {
                                         MarkdownDescription: "TODO",
                                         Optional: true,
                                         Computed: true,
+                                        Validators: []validator.String{
+                                            validators.IsNonEmpty("Application name"),
+                                        },
                                     },
-                                    "allowed_versions": schema.SetAttribute{
+                                    "allowed_versions": schema.ListAttribute{
                                         MarkdownDescription: "TODO",
-                                        Optional: true,
-                                        //Computed: true,
-                                        ElementType: types.SetType{
+                                        Required: true,
+                                        ElementType: types.ListType{
                                             ElemType: types.StringType,
                                         },
                                     },
@@ -82,48 +72,24 @@ func (r *ApplicationControlPolicyResource) GetSchema() schema.Schema {
                             MarkdownDescription: "TODO",
                             Optional: true,
                             Computed: true,
+                            Default: stringdefault.StaticString(""),
                         },
-                        //"disabled": schema.BoolAttribute{
-                        //    MarkdownDescription: "TODO",
-                        //    Optional: true,
-                        //    Computed: true,
-                        //    Default: booldefault.StaticBool(false), 
-                        //},
                         "modified": schema.StringAttribute{
-                           MarkdownDescription: "TODO",
-                            Optional: true,
+                            MarkdownDescription: "TODO",
                             Computed: true,
-                            //Default: stringdefault.StaticString(time.Now().Format("2006-01-02T15:04:05.000Z")),
-                            PlanModifiers: []planmodifier.String{
-                                planmodifiers.UseEmptyStringForNull(),
-                            },
                         },
                         "name": schema.StringAttribute{
                             MarkdownDescription: "TODO",
                             Required: true,
-                            //Optional: true,
-                            //Computed: true,
-                            //PlanModifiers: []planmodifier.String{
-                            //    stringplanmodifier.RequiresReplaceIf(
-                            //        func(ctx context.Context, sr planmodifier.StringRequest, rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-                            //            rrifr.RequiresReplace = (sr.PlanValue.ValueString() != sr.StateValue.ValueString())
-                            //        },
-                            //        "TODO",
-                            //        "TODO",
-                            //    ),
-                            //},
-                        },
-                        "notes": schema.StringAttribute{
-                            MarkdownDescription: "TODO",
-                            Optional: true,
-                            Computed: true,
                             PlanModifiers: []planmodifier.String{
-                                stringplanmodifier.UseStateForUnknown(),
+                                stringplanmodifier.RequiresReplace(),
+                            },
+                            Validators: []validator.String{
+                                validators.IsNonEmpty("Rule name"),
                             },
                         },
                         "owner": schema.StringAttribute{
                             MarkdownDescription: "TODO",
-                            Optional: true,
                             Computed: true,
                             PlanModifiers: []planmodifier.String{
                                 stringplanmodifier.UseStateForUnknown(),
@@ -131,7 +97,6 @@ func (r *ApplicationControlPolicyResource) GetSchema() schema.Schema {
                         },
                         "previous_name": schema.StringAttribute{
                             MarkdownDescription: "TODO",
-                            Optional: true,
                             Computed: true,
                             PlanModifiers: []planmodifier.String{
                                 stringplanmodifier.UseStateForUnknown(),
@@ -139,10 +104,9 @@ func (r *ApplicationControlPolicyResource) GetSchema() schema.Schema {
                         },
                         "severity": schema.StringAttribute{
                             MarkdownDescription: "TODO",
-                            Optional: true,
-                            Computed: true,
-                            PlanModifiers: []planmodifier.String{
-                                stringplanmodifier.UseStateForUnknown(),
+                            Required: true,
+                            Validators: []validator.String{
+                                stringvalidator.OneOf("low", "medium", "high", "critical"),
                             },
                         },
                     },
