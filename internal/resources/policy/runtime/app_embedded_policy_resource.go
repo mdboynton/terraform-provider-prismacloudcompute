@@ -53,8 +53,7 @@ func (r *AppEmbeddedRuntimePolicyResource) Configure(ctx context.Context, req re
 
 func (r *AppEmbeddedRuntimePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan models.RuntimeAppEmbeddedPolicyResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -67,8 +66,7 @@ func (r *AppEmbeddedRuntimePolicyResource) Create(ctx context.Context, req resou
 	}
 
 	// Create new app-embedded runtime policy
-	err := policyAPI.UpsertRuntimeAppEmbeddedPolicyFiltered(*r.client, data, []string{})
-	if err != nil {
+	if err := policyAPI.UpsertRuntimeAppEmbeddedPolicyFiltered(*r.client, data, []string{}); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating App-Embedded Runtime Policy resource",
 			"Failed to create app-embedded runtime policy: "+err.Error(),

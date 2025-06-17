@@ -54,6 +54,9 @@ func (r *ContainerRuntimePolicyResource) Configure(ctx context.Context, req reso
 }
 
 func (r *ContainerRuntimePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Lock()
+	defer r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Unlock()
+
 	var plan models.RuntimeContainerPolicyResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -96,12 +99,12 @@ func (r *ContainerRuntimePolicyResource) Create(ctx context.Context, req resourc
 	// Set state to collection data
 	diags = resp.State.Set(ctx, createdPolicy)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 func (r *ContainerRuntimePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Lock()
+	defer r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Unlock()
+
 	// Get current state
 	var state models.RuntimeContainerPolicyResourceModel
 	diags := req.State.Get(ctx, &state)
@@ -130,12 +133,12 @@ func (r *ContainerRuntimePolicyResource) Read(ctx context.Context, req resource.
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &policySchema)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 func (r *ContainerRuntimePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Lock()
+	defer r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Unlock()
+
 	// Get current state
 	var state models.RuntimeContainerPolicyResourceModel
 	diags := req.State.Get(ctx, &state)
@@ -198,12 +201,12 @@ func (r *ContainerRuntimePolicyResource) Update(ctx context.Context, req resourc
 	// Set updated state
 	diags = resp.State.Set(ctx, policySchema)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 func (r *ContainerRuntimePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Lock()
+	defer r.client.MutexMap[api.MutexMapKeyRuntimeContainer].Unlock()
+
 	// Retrieve values from state
 	var state models.RuntimeContainerPolicyResourceModel
 	diags := req.State.Get(ctx, &state)

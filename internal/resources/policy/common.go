@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -217,6 +216,9 @@ func GetPolicySchema(ctx context.Context, policyType string, policyTypeFormatted
 												MarkdownDescription: "TODO",
 												Optional:            true,
 											},
+											// TODO: add "name" string attr to
+											// allow users to provide either
+											// the check name or the id
 											"action": schema.StringAttribute{
 												// TODO: add validator
 												MarkdownDescription: "TODO",
@@ -855,6 +857,15 @@ func PolicyRulesTerraformToSchema(ctx context.Context, moduleType string, rules 
 		if diags.HasError() {
 			return []models.PolicyRuleResourceModel{}, diags
 		}
+		//var cveRules *[]models.PolicyRuleExceptionResourceModel
+		//if len(rule.CVERules) == 0 {
+		//	cveRules = &[]models.PolicyRuleExceptionResourceModel{}
+		//} else {
+		//	cveRules, diags = exceptionsToSchema(ctx, rule.CVERules, false)
+		//	if diags.HasError() {
+		//		return []models.PolicyRuleResourceModel{}, diags
+		//	}
+		//}
 
 		tags, diags := exceptionsToSchema(ctx, rule.Tags, true)
 		if diags.HasError() {
@@ -1197,20 +1208,20 @@ func schemaToCondition(ctx context.Context, complianceVulnerabilities *[]systemA
 				}
 			}
 
-			isMatchedOnTemplate := (isFilteredByTemplate && complianceVuln.Templates != nil && slices.Contains(*complianceVuln.Templates, templateValue.ValueString()))
-			isMatchedOnType := (isFilteredByType && slices.Contains(types, complianceVuln.Type))
-			isMatchedOnSeverity := (isFilteredBySeverity && slices.Contains(severities, complianceVuln.Severity))
+			//isMatchedOnTemplate := (isFilteredByTemplate && complianceVuln.Templates != nil && slices.Contains(*complianceVuln.Templates, templateValue.ValueString()))
+			//isMatchedOnType := (isFilteredByType && slices.Contains(types, complianceVuln.Type))
+			//isMatchedOnSeverity := (isFilteredBySeverity && slices.Contains(severities, complianceVuln.Severity))
 
-			if !isFilteredByTemplate || (isFilteredByTemplate && isMatchedOnTemplate) {
-				if (!isFilteredByType || (isFilteredByType && isMatchedOnType)) &&
-					(!isFilteredBySeverity || (isFilteredBySeverity && isMatchedOnSeverity)) {
-					conditionVulnerabilities = append(conditionVulnerabilities, policy.Vulnerability{
-						Id:    complianceVuln.Id,
-						Block: effect == "block",
-					})
-					vulnCount = vulnCount + 1
-				}
-			}
+			//if !isFilteredByTemplate || (isFilteredByTemplate && isMatchedOnTemplate) {
+			//	if (!isFilteredByType || (isFilteredByType && isMatchedOnType)) &&
+			//		(!isFilteredBySeverity || (isFilteredBySeverity && isMatchedOnSeverity)) {
+			//		conditionVulnerabilities = append(conditionVulnerabilities, policy.Vulnerability{
+			//			Id:    complianceVuln.Id,
+			//			Block: effect == "block",
+			//		})
+			//		vulnCount = vulnCount + 1
+			//	}
+			//}
 		}
 
 		util.HCLogDebug(ctx, fmt.Sprintf("matched %d vulnerabilities", vulnCount))

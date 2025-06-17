@@ -67,7 +67,7 @@ func (r *ServerlessRuntimePolicyResource) Create(ctx context.Context, req resour
 	}
 
 	// Create new serverless runtime policy
-	err := policyAPI.UpsertRuntimeServerlessPolicyFiltered(*r.client, data, []string{})
+	err := policyAPI.UpsertRuntimeServerlessPolicyFiltered(ctx, *r.client, data, []string{})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating Serverless Runtime Policy resource",
@@ -77,7 +77,7 @@ func (r *ServerlessRuntimePolicyResource) Create(ctx context.Context, req resour
 	}
 
 	// Retrieve newly created serverless runtime policy
-	response, err := policyAPI.GetRuntimeServerlessPolicyFiltered(*r.client, plan.GetRuleNames())
+	response, err := policyAPI.GetRuntimeServerlessPolicyFiltered(ctx, *r.client, plan.GetRuleNames())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving created Serverless Runtime Policy resource",
@@ -109,7 +109,7 @@ func (r *ServerlessRuntimePolicyResource) Read(ctx context.Context, req resource
 	}
 
 	// Get policy value from Prisma Cloud
-	data, err := policyAPI.GetRuntimeServerlessPolicyFiltered(*r.client, state.GetRuleNames())
+	data, err := policyAPI.GetRuntimeServerlessPolicyFiltered(ctx, *r.client, state.GetRuleNames())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading Serverless Runtime Policy resource",
@@ -167,7 +167,7 @@ func (r *ServerlessRuntimePolicyResource) Update(ctx context.Context, req resour
 	}
 
 	// Update existing policy
-	err := policyAPI.UpsertRuntimeServerlessPolicyFiltered(*r.client, planPolicy, deletedRuleNames)
+	err := policyAPI.UpsertRuntimeServerlessPolicyFiltered(ctx, *r.client, planPolicy, deletedRuleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating Serverless Runtime Policy resource",
@@ -177,7 +177,7 @@ func (r *ServerlessRuntimePolicyResource) Update(ctx context.Context, req resour
 	}
 
 	// Get updated policy value from Prisma Cloud
-	updatedPolicy, err := policyAPI.GetRuntimeServerlessPolicyFiltered(*r.client, plan.GetRuleNames())
+	updatedPolicy, err := policyAPI.GetRuntimeServerlessPolicyFiltered(ctx, *r.client, plan.GetRuleNames())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading Serverless Runtime Policy resource",
@@ -223,7 +223,7 @@ func (r *ServerlessRuntimePolicyResource) Delete(ctx context.Context, req resour
 	}
 
 	// Delete existing policy
-	err := policyAPI.UpsertRuntimeServerlessPolicyFiltered(*r.client, updatedPlan, ruleNames)
+	err := policyAPI.UpsertRuntimeServerlessPolicyFiltered(ctx, *r.client, updatedPlan, ruleNames)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting Serverless Runtime Policy resource",

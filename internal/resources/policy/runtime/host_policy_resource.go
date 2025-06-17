@@ -15,6 +15,7 @@ import (
 	models "github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/models/policy"
 	"github.com/PaloAltoNetworks/terraform-provider-prismacloudcompute/internal/util"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -984,9 +985,18 @@ func fileIntegrityRulesToSchema(ctx context.Context, tfFileIntegrityRules []poli
 			return fileIntegrityRules, diags
 		}
 
+		// NOTE: hotfix until this can be re-written
+		if excludedFilePatterns.IsNull() {
+			excludedFilePatterns = types.ListValueMust(types.StringType, []attr.Value{})
+		}
+
 		allowedProcesses, diags := types.ListValueFrom(ctx, types.StringType, rule.ProcWhitelist)
 		if diags.HasError() {
 			return fileIntegrityRules, diags
+		}
+		// NOTE: hotfix until this can be re-written
+		if allowedProcesses.IsNull() {
+			allowedProcesses = types.ListValueMust(types.StringType, []attr.Value{})
 		}
 
 		fileIntegrityRules = append(fileIntegrityRules, models.RuntimeHostPolicyFileIntegrityRuleResourceModel{
