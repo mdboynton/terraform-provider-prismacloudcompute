@@ -18,8 +18,8 @@ type User struct {
 }
 
 type UserPermission struct {
-	Collections []string `json:"collections,omitempty"`
-	Project     string   `json:"project,omitempty"`
+	Collections []string `json:"collections"`
+	Project     string   `json:"project"`
 }
 
 func ListUsers(c api.PrismaCloudComputeAPIClient) ([]User, error) {
@@ -36,7 +36,7 @@ func GetUser(c api.PrismaCloudComputeAPIClient, name string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-    
+
 	for _, val := range users {
 		if val.Username == name {
 			return &val, nil
@@ -47,12 +47,12 @@ func GetUser(c api.PrismaCloudComputeAPIClient, name string) (*User, error) {
 }
 
 func CreateUser(c api.PrismaCloudComputeAPIClient, user User) (*User, error) {
-    err := c.Request(http.MethodPost, UsersEndpoint, nil, user, nil)
+	err := c.Request(http.MethodPost, UsersEndpoint, nil, user, nil)
 	if err != nil {
 		return nil, err
 	}
 
-    return GetUser(c, user.Username)
+	return GetUser(c, user.Username)
 }
 
 func UpdateUser(c api.PrismaCloudComputeAPIClient, user User) error {

@@ -10,27 +10,27 @@ import (
 )
 
 const (
-    BaseEndpoint = "api/v1"
+	BaseEndpoint = "api/v1"
 
 	// Policy Type
-	PolicyTypeAdmission               = "admission"
-	PolicyTypeComplianceCiImage       = "ciImagesCompliance"
-	PolicyTypeComplianceContainer     = "containerCompliance"
-	PolicyTypeComplianceHost          = "hostCompliance"
-	PolicyTypeComplianceVmImage       = "vmCompliance"
-	PolicyTypeComplianceFunction      = "serverlessCompliance"
-	PolicyTypeComplianceCiFunction    = "ciServerlessCompliance"
-	PolicyTypeComplianceTrustedImages = "trust"
-	PolicyTypeVulnerabilityDeployedImage          = "containerVulnerability"
-	PolicyTypeVulnerabilityCiImage                = "ciImagesVulnerability"
-	PolicyTypeVulnerabilityHost                   = "hostVulnerability"
-	PolicyTypeVulnerabilityVmImage                = "vmVulnerability"
-	PolicyTypeVulnerabilityFunction               = "serverlessVulnerability"
-	PolicyTypeVulnerabilityCiFunction             = "ciServerlessVulnerability"
-	PolicyTypeRuntimeContainer                    = "containerRuntime"
-	PolicyTypeRuntimeHost                         = "hostRuntime"
-	PolicyTypeRuntimeServerless                   = "serverlessRuntime"
-	PolicyTypeRuntimeAppEmbedded                  = "appEmbeddedRuntime"
+	PolicyTypeAdmission                  = "admission"
+	PolicyTypeComplianceCiImage          = "ciImagesCompliance"
+	PolicyTypeComplianceContainer        = "containerCompliance"
+	PolicyTypeComplianceHost             = "hostCompliance"
+	PolicyTypeComplianceVmImage          = "vmCompliance"
+	PolicyTypeComplianceFunction         = "serverlessCompliance"
+	PolicyTypeComplianceCiFunction       = "ciServerlessCompliance"
+	PolicyTypeComplianceTrustedImages    = "trust"
+	PolicyTypeVulnerabilityDeployedImage = "containerVulnerability"
+	PolicyTypeVulnerabilityCiImage       = "ciImagesVulnerability"
+	PolicyTypeVulnerabilityHost          = "hostVulnerability"
+	PolicyTypeVulnerabilityVmImage       = "vmVulnerability"
+	PolicyTypeVulnerabilityFunction      = "serverlessVulnerability"
+	PolicyTypeVulnerabilityCiFunction    = "ciServerlessVulnerability"
+	PolicyTypeRuntimeContainer           = "containerRuntime"
+	PolicyTypeRuntimeHost                = "hostRuntime"
+	PolicyTypeRuntimeServerless          = "serverlessRuntime"
+	PolicyTypeRuntimeAppEmbedded         = "appEmbeddedRuntime"
 	// Policy Type Formatted
 	PolicyTypeComplianceCiImageFormatted          = "CI images compliance"
 	PolicyTypeComplianceContainerFormatted        = "container compliance"
@@ -49,311 +49,311 @@ const (
 	PolicyTypeRuntimeServerlessFormatted          = "serverless runtime"
 	PolicyTypeRuntimeAppEmbeddedFormatted         = "app-embedded runtime"
 	// Policy Context
-	PolicyContextImage            = "images"
-	PolicyContextContainer        = "container"
-	PolicyContextCiFunction       = "ciServerless"
-	PolicyContextCiImage          = "ciImages"
-	PolicyContextFunction         = "serverless"
-	PolicyContextHost             = "host"
-	PolicyContextVmImage          = "vms"
+	PolicyContextImage      = "images"
+	PolicyContextContainer  = "container"
+	PolicyContextCiFunction = "ciServerless"
+	PolicyContextCiImage    = "ciImages"
+	PolicyContextFunction   = "serverless"
+	PolicyContextHost       = "host"
+	PolicyContextVmImage    = "vms"
 	// Type
 	TypeCompliance    = "compliance"
 	TypeVulnerability = "vulnerability"
 )
 
 var (
-    // Compliance endpoints
-	ContainerComplianceEndpoint = fmt.Sprintf("%s/policies/compliance/container", BaseEndpoint)
-	CiImageComplianceEndpoint   = fmt.Sprintf("%s/policies/compliance/ci/images", BaseEndpoint)
-	HostComplianceEndpoint      = fmt.Sprintf("%s/policies/compliance/host", BaseEndpoint)
-	VmImageComplianceEndpoint   = fmt.Sprintf("%s/policies/compliance/vms", BaseEndpoint)
-    ApplicationControlEndpoint = fmt.Sprintf("%s/application-control/host", BaseEndpoint)
-    FunctionComplianceEndpoint  = fmt.Sprintf("%s/policies/compliance/serverless", BaseEndpoint)
-    CiFunctionComplianceEndpoint  = fmt.Sprintf("%s/policies/compliance/ci/serverless", BaseEndpoint)
-    TrustedImagesEndpoint = fmt.Sprintf("%s/trust/data", BaseEndpoint)
-    CustomComplianceChecksEndpoint = fmt.Sprintf("%s/custom-compliance", BaseEndpoint)
-    // Vulnerabilities endpoints
-	DeployedImageVulnerabilityEndpoint      = fmt.Sprintf("%s/policies/vulnerability/images", BaseEndpoint)
-	CiImageVulnerabilityEndpoint            = fmt.Sprintf("%s/policies/vulnerability/ci/images", BaseEndpoint)
-	HostVulnerabilityEndpoint               = fmt.Sprintf("%s/policies/vulnerability/host", BaseEndpoint)
-	VmImageVulnerabilityEndpoint            = fmt.Sprintf("%s/policies/vulnerability/vms", BaseEndpoint)
-	FunctionVulnerabilityEndpoint           = fmt.Sprintf("%s/policies/vulnerability/serverless", BaseEndpoint)
-	CiFunctionVulnerabilityEndpoint         = fmt.Sprintf("%s/policies/vulnerability/ci/serverless", BaseEndpoint)
-    // Runtime endpoints
-    RuntimeContainerEndpoint = fmt.Sprintf("%s/policies/runtime/container", BaseEndpoint)
-    RuntimeHostEndpoint = fmt.Sprintf("%s/policies/runtime/host", BaseEndpoint)
-    RuntimeServerlessEndpoint = fmt.Sprintf("%s/policies/runtime/serverless", BaseEndpoint)
-    RuntimeAppEmbeddedEndpoint = fmt.Sprintf("%s/policies/runtime/app-embedded", BaseEndpoint)
+	// Compliance endpoints
+	ContainerComplianceEndpoint    = fmt.Sprintf("%s/policies/compliance/container", BaseEndpoint)
+	CiImageComplianceEndpoint      = fmt.Sprintf("%s/policies/compliance/ci/images", BaseEndpoint)
+	HostComplianceEndpoint         = fmt.Sprintf("%s/policies/compliance/host", BaseEndpoint)
+	VmImageComplianceEndpoint      = fmt.Sprintf("%s/policies/compliance/vms", BaseEndpoint)
+	ApplicationControlEndpoint     = fmt.Sprintf("%s/application-control/host", BaseEndpoint)
+	FunctionComplianceEndpoint     = fmt.Sprintf("%s/policies/compliance/serverless", BaseEndpoint)
+	CiFunctionComplianceEndpoint   = fmt.Sprintf("%s/policies/compliance/ci/serverless", BaseEndpoint)
+	TrustedImagesEndpoint          = fmt.Sprintf("%s/trust/data", BaseEndpoint)
+	CustomComplianceChecksEndpoint = fmt.Sprintf("%s/custom-compliance", BaseEndpoint)
+	// Vulnerabilities endpoints
+	DeployedImageVulnerabilityEndpoint = fmt.Sprintf("%s/policies/vulnerability/images", BaseEndpoint)
+	CiImageVulnerabilityEndpoint       = fmt.Sprintf("%s/policies/vulnerability/ci/images", BaseEndpoint)
+	HostVulnerabilityEndpoint          = fmt.Sprintf("%s/policies/vulnerability/host", BaseEndpoint)
+	VmImageVulnerabilityEndpoint       = fmt.Sprintf("%s/policies/vulnerability/vms", BaseEndpoint)
+	FunctionVulnerabilityEndpoint      = fmt.Sprintf("%s/policies/vulnerability/serverless", BaseEndpoint)
+	CiFunctionVulnerabilityEndpoint    = fmt.Sprintf("%s/policies/vulnerability/ci/serverless", BaseEndpoint)
+	// Runtime endpoints
+	RuntimeContainerEndpoint   = fmt.Sprintf("%s/policies/runtime/container", BaseEndpoint)
+	RuntimeHostEndpoint        = fmt.Sprintf("%s/policies/runtime/host", BaseEndpoint)
+	RuntimeServerlessEndpoint  = fmt.Sprintf("%s/policies/runtime/serverless", BaseEndpoint)
+	RuntimeAppEmbeddedEndpoint = fmt.Sprintf("%s/policies/runtime/app-embedded", BaseEndpoint)
 
-    OrderedGenericPolicyTypes = []string{ 
-	    PolicyTypeComplianceCiImage,
-	    PolicyTypeComplianceContainer,
-	    PolicyTypeComplianceHost,
-	    PolicyTypeComplianceVmImage,
-	    PolicyTypeComplianceFunction,
-	    PolicyTypeComplianceCiFunction,
-	    PolicyTypeVulnerabilityDeployedImage,
-	    PolicyTypeVulnerabilityCiImage,
-	    PolicyTypeVulnerabilityHost,
-	    PolicyTypeVulnerabilityVmImage,
-	    PolicyTypeVulnerabilityFunction,
-	    PolicyTypeVulnerabilityCiFunction,
-    }
+	OrderedGenericPolicyTypes = []string{
+		PolicyTypeComplianceCiImage,
+		PolicyTypeComplianceContainer,
+		PolicyTypeComplianceHost,
+		PolicyTypeComplianceVmImage,
+		PolicyTypeComplianceFunction,
+		PolicyTypeComplianceCiFunction,
+		PolicyTypeVulnerabilityDeployedImage,
+		PolicyTypeVulnerabilityCiImage,
+		PolicyTypeVulnerabilityHost,
+		PolicyTypeVulnerabilityVmImage,
+		PolicyTypeVulnerabilityFunction,
+		PolicyTypeVulnerabilityCiFunction,
+	}
 
-    IsAttributeSupported = map[string]map[string]bool{
-        "block_message": {
-            PolicyTypeComplianceContainer: true, 
-            PolicyTypeComplianceCiImage: false, 
-            PolicyTypeComplianceHost: true, 
-            PolicyTypeComplianceVmImage: true,
-            PolicyTypeComplianceFunction: false,
-            PolicyTypeComplianceCiFunction: false,
-            PolicyTypeVulnerabilityDeployedImage: true,
-            PolicyTypeVulnerabilityCiImage: false,
-            PolicyTypeVulnerabilityHost: false,
-            PolicyTypeVulnerabilityVmImage: false,
-            PolicyTypeVulnerabilityFunction: false,
-            PolicyTypeVulnerabilityCiFunction: false,
-        },
-        "report_passed_and_failed_checks": {
-            PolicyTypeComplianceContainer: true, 
-            PolicyTypeComplianceCiImage: false, 
-            PolicyTypeComplianceHost: true, 
-            PolicyTypeComplianceVmImage: true,
-            PolicyTypeComplianceFunction: false,
-            PolicyTypeComplianceCiFunction: false,
-            PolicyTypeVulnerabilityDeployedImage: false,
-            PolicyTypeVulnerabilityCiImage: false,
-            PolicyTypeVulnerabilityHost: false,
-            PolicyTypeVulnerabilityVmImage: false,
-            PolicyTypeVulnerabilityFunction: false,
-            PolicyTypeVulnerabilityCiFunction: false,
-        },
-        "exclude_base_image_vulns": {
-            PolicyTypeComplianceContainer: true, 
-            PolicyTypeComplianceCiImage: false, 
-            PolicyTypeComplianceHost: true, 
-            PolicyTypeComplianceVmImage: true,
-            PolicyTypeComplianceFunction: false,
-            PolicyTypeComplianceCiFunction: false,
-            PolicyTypeVulnerabilityDeployedImage: true,
-            PolicyTypeVulnerabilityCiImage: true,
-            PolicyTypeVulnerabilityHost: false,
-            PolicyTypeVulnerabilityVmImage: false,
-            PolicyTypeVulnerabilityFunction: false,
-            PolicyTypeVulnerabilityCiFunction: false,
-        },
-    }
+	IsAttributeSupported = map[string]map[string]bool{
+		"block_message": {
+			PolicyTypeComplianceContainer:        true,
+			PolicyTypeComplianceCiImage:          false,
+			PolicyTypeComplianceHost:             true,
+			PolicyTypeComplianceVmImage:          true,
+			PolicyTypeComplianceFunction:         false,
+			PolicyTypeComplianceCiFunction:       false,
+			PolicyTypeVulnerabilityDeployedImage: true,
+			PolicyTypeVulnerabilityCiImage:       false,
+			PolicyTypeVulnerabilityHost:          false,
+			PolicyTypeVulnerabilityVmImage:       false,
+			PolicyTypeVulnerabilityFunction:      false,
+			PolicyTypeVulnerabilityCiFunction:    false,
+		},
+		"report_passed_and_failed_checks": {
+			PolicyTypeComplianceContainer:        true,
+			PolicyTypeComplianceCiImage:          false,
+			PolicyTypeComplianceHost:             true,
+			PolicyTypeComplianceVmImage:          true,
+			PolicyTypeComplianceFunction:         false,
+			PolicyTypeComplianceCiFunction:       false,
+			PolicyTypeVulnerabilityDeployedImage: false,
+			PolicyTypeVulnerabilityCiImage:       false,
+			PolicyTypeVulnerabilityHost:          false,
+			PolicyTypeVulnerabilityVmImage:       false,
+			PolicyTypeVulnerabilityFunction:      false,
+			PolicyTypeVulnerabilityCiFunction:    false,
+		},
+		"exclude_base_image_vulns": {
+			PolicyTypeComplianceContainer:        true,
+			PolicyTypeComplianceCiImage:          false,
+			PolicyTypeComplianceHost:             true,
+			PolicyTypeComplianceVmImage:          true,
+			PolicyTypeComplianceFunction:         false,
+			PolicyTypeComplianceCiFunction:       false,
+			PolicyTypeVulnerabilityDeployedImage: true,
+			PolicyTypeVulnerabilityCiImage:       true,
+			PolicyTypeVulnerabilityHost:          false,
+			PolicyTypeVulnerabilityVmImage:       false,
+			PolicyTypeVulnerabilityFunction:      false,
+			PolicyTypeVulnerabilityCiFunction:    false,
+		},
+	}
 )
 
 type Settings struct {
-    FormattedName string
-    Module string 
-    Endpoint string
-    Context string
-    IsApplicableVuln func(v system.Vulnerability) bool
+	FormattedName    string
+	Module           string
+	Endpoint         string
+	Context          string
+	IsApplicableVuln func(v system.Vulnerability) bool
 }
 
 // TODO: review all policies to make sure there's no policy types missing from these IsApplicableVuln functions
-var SettingsMap map[string]Settings = map[string]Settings {
-    PolicyTypeComplianceContainer: {
-        FormattedName: "Deployed Containers and Images Compliance",
-        Module: "compliance",
-        Context: "container",
-        Endpoint: fmt.Sprintf("%s/policies/compliance/container", BaseEndpoint),
-        IsApplicableVuln: func(v system.Vulnerability) bool {
-            if v.Type == "container" {
-                return true
-            }
+var SettingsMap map[string]Settings = map[string]Settings{
+	PolicyTypeComplianceContainer: {
+		FormattedName: "Deployed Containers and Images Compliance",
+		Module:        "compliance",
+		Context:       "container",
+		Endpoint:      fmt.Sprintf("%s/policies/compliance/container", BaseEndpoint),
+		IsApplicableVuln: func(v system.Vulnerability) bool {
+			if v.Type == "container" {
+				return true
+			}
 
-            if v.Type == "image" {
-                return true
-            }
+			if v.Type == "image" {
+				return true
+			}
 
-            if v.Type == "istio" {
-                return true
-            }
+			if v.Type == "istio" {
+				return true
+			}
 
-            return false
-        },
-    },
-    PolicyTypeComplianceCiImage: {
-        FormattedName: "CI Images Compliance",
-        Module: "compliance",
-        Context: "ciImages",
-        Endpoint: fmt.Sprintf("%s/policies/compliance/ci/container", BaseEndpoint),
-        IsApplicableVuln: func(v system.Vulnerability) bool {
-            if v.Type == "image" && (v.Id == 406 || v.Id == 408 || v.Id == 41 || v.Id == 422 || v.Id == 424 || v.Id == 425 || v.Id == 426 || v.Id == 448 || v.Id == 5041 || v.Id == 5048) {
-                return true
-            }
+			return false
+		},
+	},
+	PolicyTypeComplianceCiImage: {
+		FormattedName: "CI Images Compliance",
+		Module:        "compliance",
+		Context:       "ciImages",
+		Endpoint:      fmt.Sprintf("%s/policies/compliance/ci/container", BaseEndpoint),
+		IsApplicableVuln: func(v system.Vulnerability) bool {
+			if v.Type == "image" && (v.Id == 406 || v.Id == 408 || v.Id == 41 || v.Id == 422 || v.Id == 424 || v.Id == 425 || v.Id == 426 || v.Id == 448 || v.Id == 5041 || v.Id == 5048) {
+				return true
+			}
 
-            return false
-        },
-    },
-    PolicyTypeComplianceHost: {
-        FormattedName: "Host Compliance",
-        Module: "compliance",
-        Context: "host",
-        Endpoint: fmt.Sprintf("%s/policies/compliance/host", BaseEndpoint),
-        IsApplicableVuln: func(v system.Vulnerability) bool {
-            if v.Type == "host_config" {
-                return true
-            }
+			return false
+		},
+	},
+	PolicyTypeComplianceHost: {
+		FormattedName: "Host Compliance",
+		Module:        "compliance",
+		Context:       "host",
+		Endpoint:      fmt.Sprintf("%s/policies/compliance/host", BaseEndpoint),
+		IsApplicableVuln: func(v system.Vulnerability) bool {
+			if v.Type == "host_config" {
+				return true
+			}
 
-            if v.Type == "daemon_config" {
-                return true
-            }
+			if v.Type == "daemon_config" {
+				return true
+			}
 
-            if v.Type == "daemon_config_files" {
-                return true
-            }
+			if v.Type == "daemon_config_files" {
+				return true
+			}
 
-            if v.Type == "security_operations" {
-                return true
-            }
+			if v.Type == "security_operations" {
+				return true
+			}
 
-            if v.Type == "linux" {
-                return true
-            }
+			if v.Type == "linux" {
+				return true
+			}
 
-            if v.Type == "windows" {
-                return true
-            }
+			if v.Type == "windows" {
+				return true
+			}
 
-            if v.Type == "k8s_worker" {
-                return true
-            }
-            
-            if v.Type == "gke_worker" {
-                return true
-            }
+			if v.Type == "k8s_worker" {
+				return true
+			}
 
-            if v.Type == "eks_worker" {
-                return true
-            }
+			if v.Type == "gke_worker" {
+				return true
+			}
 
-            if v.Type == "aks_worker" {
-                return true
-            }
+			if v.Type == "eks_worker" {
+				return true
+			}
 
-            if v.Type == "openshift_worker" {
-                return true
-            }
+			if v.Type == "aks_worker" {
+				return true
+			}
 
-            if v.Type == "k8s_master" {
-                return true
-            }
+			if v.Type == "openshift_worker" {
+				return true
+			}
 
-            if v.Type == "openshift_master" {
-                return true
-            }
+			if v.Type == "k8s_master" {
+				return true
+			}
 
-            if v.Type == "k8s_federation" {
-                return true
-            }
-            
-            if v.Type == "docker_stig" {
-                return true
-            }
+			if v.Type == "openshift_master" {
+				return true
+			}
 
-            return false
-        },
-    },
-    PolicyTypeComplianceVmImage: {
-        FormattedName: "VM Image Compliance",
-        Module: "compliance",
-        Context: "vms",
-        Endpoint: fmt.Sprintf("%s/policies/compliance/vms", BaseEndpoint),
-        IsApplicableVuln: func(v system.Vulnerability) bool {
-            if v.Type == "host" {
-                return true
-            }
+			if v.Type == "k8s_federation" {
+				return true
+			}
 
-            if v.Type == "host_config" {
-                return true
-            }
+			if v.Type == "docker_stig" {
+				return true
+			}
 
-            if v.Type == "daemon_config" {
-                return true
-            }
+			return false
+		},
+	},
+	PolicyTypeComplianceVmImage: {
+		FormattedName: "VM Image Compliance",
+		Module:        "compliance",
+		Context:       "vms",
+		Endpoint:      fmt.Sprintf("%s/policies/compliance/vms", BaseEndpoint),
+		IsApplicableVuln: func(v system.Vulnerability) bool {
+			if v.Type == "host" {
+				return true
+			}
 
-            if v.Type == "daemon_config_files" {
-                return true
-            }
+			if v.Type == "host_config" {
+				return true
+			}
 
-            if v.Type == "security_operations" {
-                return true
-            }
+			if v.Type == "daemon_config" {
+				return true
+			}
 
-            if v.Type == "linux" {
-                return true
-            }
+			if v.Type == "daemon_config_files" {
+				return true
+			}
 
-            return false
-        },
-    },
-    PolicyTypeComplianceFunction: {
-        FormattedName: "Serverless Compliance",
-        Module: "compliance",
-        Context: "serverless",
-        Endpoint: fmt.Sprintf("%s/policies/compliance/serverless", BaseEndpoint),
-        IsApplicableVuln: func(v system.Vulnerability) bool {
-            if v.Type == "serverless" {
-                return true
-            }
+			if v.Type == "security_operations" {
+				return true
+			}
 
-            return false
-        },
-    },
-    PolicyTypeComplianceCiFunction: {
-        FormattedName: "CI Serverless Compliance",
-        Module: "compliance",
-        Context: "ciServerless",
-        Endpoint: fmt.Sprintf("%s/policies/compliance/ci/serverless", BaseEndpoint),
-        IsApplicableVuln: func(v system.Vulnerability) bool {
-            if v.Type == "serverless" {
-                return true
-            }
+			if v.Type == "linux" {
+				return true
+			}
 
-            return false
-        },
-    },
-    PolicyTypeVulnerabilityDeployedImage: {
-        FormattedName: PolicyTypeVulnerabilityDeployedImageFormatted,
-        Module: TypeVulnerability,
-        Context: PolicyContextImage,
-        Endpoint: DeployedImageVulnerabilityEndpoint,
-    },
-    PolicyTypeVulnerabilityCiImage: {
-        FormattedName: PolicyTypeVulnerabilityCiImageFormatted,
-        Module: TypeVulnerability,
-        Context: PolicyContextCiImage,
-        Endpoint: CiImageVulnerabilityEndpoint,
-    },
-    PolicyTypeVulnerabilityHost: {
-        FormattedName: PolicyTypeVulnerabilityHostFormatted,
-        Module: TypeVulnerability,
-        Context: PolicyContextHost,
-        Endpoint: HostVulnerabilityEndpoint,
-    },
-    PolicyTypeVulnerabilityVmImage: {
-        FormattedName: PolicyTypeVulnerabilityVmImageFormatted,
-        Module: TypeVulnerability,
-        Context: PolicyContextVmImage,
-        Endpoint: VmImageVulnerabilityEndpoint,
-    },
-    PolicyTypeVulnerabilityFunction: {
-        FormattedName: PolicyTypeVulnerabilityFunctionFormatted,
-        Module: TypeVulnerability,
-        Context: PolicyContextFunction,
-        Endpoint: FunctionVulnerabilityEndpoint,
-    },
-    PolicyTypeVulnerabilityCiFunction: {
-        FormattedName: "CI Serverless Vulnerability",
-        Module: TypeVulnerability,
-        Context: PolicyContextCiFunction,
-        Endpoint: CiFunctionVulnerabilityEndpoint,
-    },
+			return false
+		},
+	},
+	PolicyTypeComplianceFunction: {
+		FormattedName: "Serverless Compliance",
+		Module:        "compliance",
+		Context:       "serverless",
+		Endpoint:      fmt.Sprintf("%s/policies/compliance/serverless", BaseEndpoint),
+		IsApplicableVuln: func(v system.Vulnerability) bool {
+			if v.Type == "serverless" {
+				return true
+			}
+
+			return false
+		},
+	},
+	PolicyTypeComplianceCiFunction: {
+		FormattedName: "CI Serverless Compliance",
+		Module:        "compliance",
+		Context:       "ciServerless",
+		Endpoint:      fmt.Sprintf("%s/policies/compliance/ci/serverless", BaseEndpoint),
+		IsApplicableVuln: func(v system.Vulnerability) bool {
+			if v.Type == "serverless" {
+				return true
+			}
+
+			return false
+		},
+	},
+	PolicyTypeVulnerabilityDeployedImage: {
+		FormattedName: PolicyTypeVulnerabilityDeployedImageFormatted,
+		Module:        TypeVulnerability,
+		Context:       PolicyContextImage,
+		Endpoint:      DeployedImageVulnerabilityEndpoint,
+	},
+	PolicyTypeVulnerabilityCiImage: {
+		FormattedName: PolicyTypeVulnerabilityCiImageFormatted,
+		Module:        TypeVulnerability,
+		Context:       PolicyContextCiImage,
+		Endpoint:      CiImageVulnerabilityEndpoint,
+	},
+	PolicyTypeVulnerabilityHost: {
+		FormattedName: PolicyTypeVulnerabilityHostFormatted,
+		Module:        TypeVulnerability,
+		Context:       PolicyContextHost,
+		Endpoint:      HostVulnerabilityEndpoint,
+	},
+	PolicyTypeVulnerabilityVmImage: {
+		FormattedName: PolicyTypeVulnerabilityVmImageFormatted,
+		Module:        TypeVulnerability,
+		Context:       PolicyContextVmImage,
+		Endpoint:      VmImageVulnerabilityEndpoint,
+	},
+	PolicyTypeVulnerabilityFunction: {
+		FormattedName: PolicyTypeVulnerabilityFunctionFormatted,
+		Module:        TypeVulnerability,
+		Context:       PolicyContextFunction,
+		Endpoint:      FunctionVulnerabilityEndpoint,
+	},
+	PolicyTypeVulnerabilityCiFunction: {
+		FormattedName: "CI Serverless Vulnerability",
+		Module:        TypeVulnerability,
+		Context:       PolicyContextCiFunction,
+		Endpoint:      CiFunctionVulnerabilityEndpoint,
+	},
 }
 
 type Policy struct {
@@ -366,63 +366,63 @@ type Policy struct {
 
 func (p *Policy) EndpointUrl() string {
 	switch p.PolicyType {
-	    case PolicyTypeComplianceHost:
-		    return HostComplianceEndpoint
-	    case PolicyTypeComplianceContainer:
-	    	return ContainerComplianceEndpoint
-        case PolicyTypeComplianceCiImage:
-	    	return CiImageComplianceEndpoint
-        case PolicyTypeComplianceVmImage:
-	    	return VmImageComplianceEndpoint
-        case PolicyTypeComplianceFunction:
-	    	return FunctionComplianceEndpoint
-        case PolicyTypeComplianceCiFunction:
-	    	return CiFunctionComplianceEndpoint
-        case PolicyTypeVulnerabilityDeployedImage: 
-	    	return DeployedImageVulnerabilityEndpoint
-        case PolicyTypeVulnerabilityCiImage:
-	    	return CiImageVulnerabilityEndpoint
-        case PolicyTypeVulnerabilityHost:
-	    	return HostVulnerabilityEndpoint
-        case PolicyTypeVulnerabilityVmImage:
-	    	return VmImageVulnerabilityEndpoint
-        case PolicyTypeVulnerabilityFunction:
-	    	return FunctionVulnerabilityEndpoint
-        case PolicyTypeVulnerabilityCiFunction:
-	    	return CiFunctionVulnerabilityEndpoint
-	    default:
-	    	return ""
+	case PolicyTypeComplianceHost:
+		return HostComplianceEndpoint
+	case PolicyTypeComplianceContainer:
+		return ContainerComplianceEndpoint
+	case PolicyTypeComplianceCiImage:
+		return CiImageComplianceEndpoint
+	case PolicyTypeComplianceVmImage:
+		return VmImageComplianceEndpoint
+	case PolicyTypeComplianceFunction:
+		return FunctionComplianceEndpoint
+	case PolicyTypeComplianceCiFunction:
+		return CiFunctionComplianceEndpoint
+	case PolicyTypeVulnerabilityDeployedImage:
+		return DeployedImageVulnerabilityEndpoint
+	case PolicyTypeVulnerabilityCiImage:
+		return CiImageVulnerabilityEndpoint
+	case PolicyTypeVulnerabilityHost:
+		return HostVulnerabilityEndpoint
+	case PolicyTypeVulnerabilityVmImage:
+		return VmImageVulnerabilityEndpoint
+	case PolicyTypeVulnerabilityFunction:
+		return FunctionVulnerabilityEndpoint
+	case PolicyTypeVulnerabilityCiFunction:
+		return CiFunctionVulnerabilityEndpoint
+	default:
+		return ""
 	}
 }
 
 func (p *Policy) FormattedType() string {
 	switch p.PolicyType {
-	    case PolicyTypeComplianceHost:
-		    return PolicyTypeComplianceHostFormatted
-	    case PolicyTypeComplianceContainer:
-	    	return PolicyTypeComplianceContainerFormatted 
-        case PolicyTypeComplianceCiImage:
-	    	return PolicyTypeComplianceCiImageFormatted
-        case PolicyTypeComplianceVmImage:
-	    	return PolicyTypeComplianceVmImageFormatted
-        case PolicyTypeComplianceFunction:
-	    	return PolicyTypeComplianceFunctionFormatted
-        case PolicyTypeComplianceCiFunction:
-	    	return PolicyTypeComplianceCiFunctionFormatted
-        case PolicyTypeVulnerabilityDeployedImage: 
-	    	return PolicyTypeVulnerabilityDeployedImageFormatted
-        case PolicyTypeVulnerabilityCiImage:
-	    	return PolicyTypeVulnerabilityCiImageFormatted
-        case PolicyTypeVulnerabilityHost:
-	    	return PolicyTypeVulnerabilityHostFormatted
-        case PolicyTypeVulnerabilityVmImage:
-	    	return PolicyTypeVulnerabilityVmImageFormatted
-        case PolicyTypeVulnerabilityFunction:
-	    	return PolicyTypeVulnerabilityFunctionFormatted
-        case PolicyTypeVulnerabilityCiFunction:
-	    	return PolicyTypeVulnerabilityCiFunctionFormatted
-	    default:
-	    	return ""
+	case PolicyTypeComplianceHost:
+		return PolicyTypeComplianceHostFormatted
+	case PolicyTypeComplianceContainer:
+		return PolicyTypeComplianceContainerFormatted
+	case PolicyTypeComplianceCiImage:
+		return PolicyTypeComplianceCiImageFormatted
+	case PolicyTypeComplianceVmImage:
+		return PolicyTypeComplianceVmImageFormatted
+	case PolicyTypeComplianceFunction:
+		return PolicyTypeComplianceFunctionFormatted
+	case PolicyTypeComplianceCiFunction:
+		return PolicyTypeComplianceCiFunctionFormatted
+	case PolicyTypeVulnerabilityDeployedImage:
+		return PolicyTypeVulnerabilityDeployedImageFormatted
+	case PolicyTypeVulnerabilityCiImage:
+		return PolicyTypeVulnerabilityCiImageFormatted
+	case PolicyTypeVulnerabilityHost:
+		return PolicyTypeVulnerabilityHostFormatted
+	case PolicyTypeVulnerabilityVmImage:
+		return PolicyTypeVulnerabilityVmImageFormatted
+	case PolicyTypeVulnerabilityFunction:
+		return PolicyTypeVulnerabilityFunctionFormatted
+	case PolicyTypeVulnerabilityCiFunction:
+		return PolicyTypeVulnerabilityCiFunctionFormatted
+	default:
+		return ""
 	}
 }
 
@@ -504,24 +504,24 @@ type ExceptionExpiration struct {
 }
 
 type PortRange struct {
-    Deny    bool `json:"deny,omitempty"`
-    Start   int `json:"start,omitempty"`
-    End     int `json:"end,omitempty"`
+	Deny  bool `json:"deny,omitempty"`
+	Start int  `json:"start,omitempty"`
+	End   int  `json:"end,omitempty"`
 }
 
 type NetworkPorts struct {
 	Allowed []PortRange `json:"allowed,omitempty"`
 	Denied  []PortRange `json:"denied,omitempty"`
-	Effect  string                 `json:"effect,omitempty"`
+	Effect  string      `json:"effect,omitempty"`
 }
 
 type DeniedProcesses struct {
-	Effect string `json:"effect"`
+	Effect string   `json:"effect"`
 	Paths  []string `json:"paths"`
 }
 
 type CustomRule struct {
-	ID     int      `json:"_id"`
+	ID     int    `json:"_id"`
 	Action string `json:"action"`
 	Effect string `json:"effect"`
 }
@@ -531,7 +531,6 @@ type DnsDomainList struct {
 	Denied  []string `json:"denied,omitempty"`
 	Effect  string   `json:"effect,omitempty"`
 }
-
 
 func getEndpointAndPolicyName(policyType string) (string, string, error) {
 	switch policyType {
@@ -566,7 +565,7 @@ func getEndpointAndPolicyName(policyType string) (string, string, error) {
 
 func UpsertPolicy(c api.PrismaCloudComputeAPIClient, policy Policy) error {
 	if err := c.Request(http.MethodPut, policy.EndpointUrl(), nil, policy, nil); err != nil {
-		return fmt.Errorf("Error occured while attempting to upsert %s policy: %s", policy.FormattedType(), err)
+		return fmt.Errorf("error upserting %s policy: %s", policy.FormattedType(), err)
 	}
 
 	return nil

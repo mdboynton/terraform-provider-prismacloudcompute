@@ -11,7 +11,7 @@ const CustomRulesEndpoint = "api/v1/custom-rules"
 
 type CustomRule struct {
 	Id               int      `json:"_id,omitempty"`
-	AttackTechniques []string `json:"attackTechniques,omitempty"`
+	AttackTechniques []string `json:"attackTechniques"`
 	Description      string   `json:"description,omitempty"`
 	Message          string   `json:"message,omitempty"`
     Modified         int      `json:"modified,omitempty"`
@@ -19,7 +19,7 @@ type CustomRule struct {
 	Name             string   `json:"name,omitempty"`
 	Script           string   `json:"script,omitempty"`
 	Type             string   `json:"type,omitempty"`
-	VulnIDs          []string `json:"vulnIds,omitempty"`
+	VulnIDs          []string `json:"vulnIds"`
 	Owner            string   `json:"owner,omitempty"`
 }
 
